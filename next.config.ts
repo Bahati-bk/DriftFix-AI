@@ -5,8 +5,11 @@ const nextConfig: NextConfig = {
   /* config options here */
   typescript: {
     ignoreBuildErrors: true,
+    jsx: "preserve",
+    reactStrictMode: false,
+    target: "es2022",
+    lib: ["dom", "dom.iterable", "esnext"],
   },
-  reactStrictMode: false,
 };
 
 export default nextConfig;

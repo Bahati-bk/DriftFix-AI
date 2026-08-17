@@ -24,7 +24,7 @@ interface Report {
   createdAt: string;
 }
 
-export default function ReportsView() {
+export function ReportsView() {
   const [framework, setFramework] = useState('SOC2');
   const [generating, setGenerating] = useState(false);
   const [reports, setReports] = useState<Report[]>([]);

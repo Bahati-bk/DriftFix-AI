@@ -28,28 +28,27 @@ export async function POST(request: NextRequest) {
 
 async function handleLogin(body: { email?: string; password?: string }) {
   const { email, password } = body;
-
   if (!email || !password) {
     return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
   }
 
   const user = await db.user.findUnique({ where: { email: email.toLowerCase() } });
-
   if (!user || user.passwordHash !== simpleHash(password)) {
     return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
   }
 
+  const member = await db.organizationMember.findFirst({ where: { userId: user.id } });
+  const orgId = member?.organizationId || null;
+
   const { passwordHash: _, ...safeUser } = user;
-  return NextResponse.json({ user: safeUser, token: `demo-${user.id}` });
+  return NextResponse.json({ user: safeUser, orgId });
 }
 
 async function handleRegister(body: { email?: string; password?: string; name?: string }) {
   const { email, password, name } = body;
-
   if (!email || !password) {
     return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
   }
-
   if (password.length < 6) {
     return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 });
   }
@@ -68,68 +67,43 @@ async function handleRegister(body: { email?: string; password?: string; name?: 
     },
   });
 
-  await db.organization.create({
+  const org = await db.organization.create({
     data: {
       name: `${user.name}'s Organization`,
       slug: `${user.name?.toLowerCase().replace(/\s+/g, '-') || 'org'}-${user.id.slice(0, 6)}`,
-      members: {
-        create: {
-          userId: user.id,
-          role: 'OWNER',
-        },
-      },
-      policies: {
-        create: {
-          name: 'default',
-          blockOnCritical: true,
-          blockOnHigh: true,
-          blockOnMedium: false,
-          minimumScore: 80,
-        },
-      },
+      members: { create: { userId: user.id, role: 'OWNER' } },
+      policies: { create: { name: 'default', blockOnCritical: true, blockOnHigh: true, blockOnMedium: false, minimumScore: 80 } },
     },
   });
 
   const { passwordHash: _, ...safeUser } = user;
-  return NextResponse.json({ user: safeUser, token: `demo-${user.id}` }, { status: 201 });
+  return NextResponse.json({ user: safeUser, orgId: org.id }, { status: 201 });
 }
 
 async function handleDemoLogin() {
-  let demoUser = await db.user.findUnique({ where: { email: 'demo@driftfix.dev' } });
+  // Find or create demo user matching the seed data
+  let demoUser = await db.user.findUnique({ where: { email: 'demo@driftfix.ai' } });
 
   if (!demoUser) {
     demoUser = await db.user.create({
-      data: {
-        email: 'demo@driftfix.dev',
-        name: 'Demo User',
-        passwordHash: simpleHash('demo-password'),
-        role: 'ADMIN',
-      },
+      data: { email: 'demo@driftfix.ai', name: 'Alex Chen', passwordHash: simpleHash('demo123'), role: 'OWNER' },
     });
-
-    await db.organization.create({
-      data: {
-        name: 'DriftFix Demo Org',
-        slug: 'driftfix-demo',
-        members: {
-          create: {
-            userId: demoUser.id,
-            role: 'OWNER',
-          },
+    // Create org if it doesn't exist
+    const existingOrg = await db.organization.findFirst({ where: { name: 'Acme Corp' } });
+    if (!existingOrg) {
+      await db.organization.create({
+        data: {
+          name: 'Acme Corp', slug: 'acme-corp',
+          members: { create: { userId: demoUser.id, role: 'OWNER' } },
+          policies: { create: { name: 'default', blockOnCritical: true, blockOnHigh: true, blockOnMedium: false, minimumScore: 80 } },
         },
-        policies: {
-          create: {
-            name: 'default',
-            blockOnCritical: true,
-            blockOnHigh: true,
-            blockOnMedium: false,
-            minimumScore: 80,
-          },
-        },
-      },
-    });
+      });
+    } else {
+      await db.organizationMember.create({ data: { organizationId: existingOrg.id, userId: demoUser.id, role: 'OWNER' } }).catch(() => {});
+    }
   }
 
+  const member = await db.organizationMember.findFirst({ where: { userId: demoUser.id } });
   const { passwordHash: _, ...safeUser } = demoUser;
-  return NextResponse.json({ user: safeUser, token: `demo-${demoUser.id}` });
+  return NextResponse.json({ user: safeUser, orgId: member?.organizationId || null });
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useAppStore, type AppView } from '@/stores/app';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import {
-  LayoutDashboard, GitFork, GitPullRequest, AlertTriangle, ShieldCheck,
+  LayoutDashboard, GitPullRequest, AlertTriangle, ShieldCheck,
   Settings, FileText, Scale, Database, ChevronLeft, ChevronRight,
   LogOut, Search, Zap, Menu, X, History
 } from 'lucide-react';
@@ -37,28 +37,23 @@ const navItems: { view: AppView; label: string; icon: React.ComponentType<{ clas
   { view: 'settings', label: 'Settings', icon: Settings },
 ];
 
-export function DashboardLayout() {
-  const { view, currentUser, demoMode, sidebarOpen, setView, logout, toggleSidebar, selectFinding, selectPR } = useAppStore();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const renderView = () => {
-    switch (view) {
-      case 'overview': return <OverviewView />;
-      case 'repositories': return <RepositoriesView />;
-      case 'pull-requests': return <PullRequestsView />;
-      case 'findings': return <FindingsView />;
-      case 'finding-detail': return <FindingDetailView />;
-      case 'compliance': return <ComplianceView />;
-      case 'rules': return <RulesView />;
-      case 'evidence': return <EvidenceView />;
-      case 'reports': return <ReportsView />;
-      case 'settings': return <SettingsView />;
-      case 'pr-analysis': return <PRAnalysisView />;
-      default: return <OverviewView />;
-    }
+function SidebarNav({ sidebarOpen, view, onNav }: { sidebarOpen: boolean; view: string; onNav?: () => void }) {
+  const { setView, logout, toggleSidebar, selectFinding, selectPR } = useAppStore();
+  const { currentUser } = useAppStore();
+  const runDemoAnalysis = async () => {
+    try {
+      toast.info('Running demo analysis...');
+      const res = await fetch('/api/demo/analyze', { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        const run = data.analysisRun || data;
+        toast.success(`Analysis complete: ${run.findings?.length || run.findingsCount || 0} findings`);
+        setView('findings');
+      } else { toast.error('Analysis failed'); }
+    } catch { toast.error('Analysis failed'); }
   };
 
-  const NavContent = ({ onNav }: { onNav?: () => void }) => (
+  return (
     <div className="flex flex-col h-full">
       <div className="p-4 flex items-center gap-3">
         <img src="/logo.svg" alt="DriftFix" className="h-8 w-8 shrink-0" />
@@ -122,28 +117,36 @@ export function DashboardLayout() {
       </div>
     </div>
   );
+}
 
-  const runDemoAnalysis = async () => {
-    try {
-      toast.info('Running demo analysis...');
-      const res = await fetch('/api/demo/analyze', { method: 'POST' });
-      if (res.ok) {
-        const data = await res.json();
-        toast.success(`Analysis complete: ${data.findings?.length || 0} findings`);
-        setView('findings');
-      } else {
-        toast.error('Analysis failed');
-      }
-    } catch {
-      toast.error('Analysis failed');
+export function DashboardLayout() {
+  const view = useAppStore((s) => s.view);
+  const demoMode = useAppStore((s) => s.demoMode);
+  const sidebarOpen = useAppStore((s) => s.sidebarOpen);
+  const toggleSidebar = useAppStore((s) => s.toggleSidebar);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const renderView = () => {
+    switch (view) {
+      case 'overview': return <OverviewView />;
+      case 'repositories': return <RepositoriesView />;
+      case 'pull-requests': return <PullRequestsView />;
+      case 'findings': return <FindingsView />;
+      case 'finding-detail': return <FindingDetailView />;
+      case 'compliance': return <ComplianceView />;
+      case 'rules': return <RulesView />;
+      case 'evidence': return <EvidenceView />;
+      case 'reports': return <ReportsView />;
+      case 'settings': return <SettingsView />;
+      case 'pr-analysis': return <PRAnalysisView />;
+      default: return <OverviewView />;
     }
   };
 
   return (
     <div className="h-screen flex overflow-hidden bg-background">
-      {/* Desktop sidebar */}
       <aside className={`hidden lg:flex flex-col border-r border-border/50 bg-card transition-all duration-200 ${sidebarOpen ? 'w-56' : 'w-16'}`}>
-        <NavContent />
+        <SidebarNav sidebarOpen={sidebarOpen} view={view} />
         <button
           onClick={toggleSidebar}
           className="hidden lg:flex absolute top-1/2 -right-3 h-6 w-6 items-center justify-center rounded-full border border-border bg-card text-muted-foreground hover:text-foreground z-10"
@@ -152,14 +155,12 @@ export function DashboardLayout() {
         </button>
       </aside>
 
-      {/* Mobile overlay */}
       {mobileMenuOpen && <div className="lg:hidden fixed inset-0 bg-black/50 z-40" onClick={() => setMobileMenuOpen(false)} />}
       <aside className={`lg:hidden fixed inset-y-0 left-0 z-50 w-64 border-r border-border/50 bg-card transition-transform ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <button onClick={() => setMobileMenuOpen(false)} className="absolute top-3 right-3 p-1 text-muted-foreground"><X className="h-5 w-5" /></button>
-        <NavContent onNav={() => setMobileMenuOpen(false)} />
+        <SidebarNav sidebarOpen={true} view={view} onNav={() => setMobileMenuOpen(false)} />
       </aside>
 
-      {/* Main area */}
       <div className="flex-1 flex flex-col min-w-0">
         <header className="h-14 border-b border-border/50 flex items-center gap-4 px-4 shrink-0">
           <button onClick={() => setMobileMenuOpen(true)} className="lg:hidden p-1.5 rounded hover:bg-accent">

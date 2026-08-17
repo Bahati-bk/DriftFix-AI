@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useEffect, useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAppStore } from '@/stores/app';
-import { Search, Filter, AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export function FindingsView() {
   const selectFinding = useAppStore((s) => s.selectFinding);
@@ -20,23 +20,7 @@ export function FindingsView() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  const fetchFindings = useCallback(async () => {
-    setLoading(true);
-    const params = new URLSearchParams({ page: String(page), limit: '20' });
-    if (severity !== 'ALL') params.set('severity', severity);
-    if (status !== 'ALL') params.set('status', status);
-    if (category !== 'ALL') params.set('category', category);
-    if (search) params.set('search', search);
-    try {
-      const res = await fetch(`/api/findings?${params}`);
-      const data = await res.json();
-      setFindings(data.findings || []);
-      setTotalPages(data.totalPages || 1);
-    } catch { /* empty */ }
-    setLoading(false);
-  }, [severity, status, category, search, page]);
-
-  useEffect(() => { fetchFindings(); }, [fetchFindings]);
+  useEffect(() => { let cancelled = false; (async () => { setLoading(true); try { const params = new URLSearchParams({ page: String(page), limit: '20' }); if (severity !== 'ALL') params.set('severity', severity); if (status !== 'ALL') params.set('status', status); if (category !== 'ALL') params.set('category', category); if (search) params.set('search', search); const res = await fetch(`/api/findings?${params}`); if (cancelled) return; const data = await res.json(); setFindings(data.findings || []); setTotalPages(data.pagination?.totalPages || 1); } catch { /* empty */ } if (!cancelled) setLoading(false); })(); return () => { cancelled = true; }; }, [severity, status, category, search, page]);
 
   return (
     <div className="p-4 lg:p-6 space-y-6">

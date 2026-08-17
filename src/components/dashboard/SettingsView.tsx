@@ -21,7 +21,7 @@ import {
   XCircle,
 } from 'lucide-react';
 
-export default function SettingsView() {
+export function SettingsView() {
   const { currentUser, demoMode, setDemoMode } = useAppStore();
   const [orgName, setOrgName] = useState('');
   const [githubConnected, setGithubConnected] = useState(false);
