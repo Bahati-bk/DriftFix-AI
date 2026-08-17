@@ -1,0 +1,2002 @@
+     1→# BUILD DRIFTGUARD AI — PRODUCTION-READY AI COMPLIANCE ENGINEERING PLATFORM
+     2→
+     3→## 0. ROLE
+     4→
+     5→You are a senior staff-level full-stack engineer, AI engineer, DevOps engineer, security engineer, product designer, and technical architect.
+     6→
+     7→Your task is to design, implement, test, debug, document, and deploy a complete production-quality application called:
+     8→
+     9→# DriftGuard AI
+    10→
+    11→### Tagline
+    12→
+    13→**Catch compliance drift before it ships.**
+    14→
+    15→### One-line description
+    16→
+    17→DriftGuard AI is an AI-powered compliance engineering platform that continuously analyzes software changes, identifies high-risk security and compliance issues before deployment, explains the relevant control or regulation, recommends concrete fixes, and automatically maintains an audit-ready evidence ledger.
+    18→
+    19→---
+    20→
+    21→# 1. IMPORTANT EXECUTION RULES
+    22→
+    23→Do NOT create a mockup.
+    24→
+    25→Do NOT create a static frontend.
+    26→
+    27→Do NOT create fake API responses.
+    28→
+    29→Do NOT create placeholder buttons that do nothing.
+    30→
+    31→Do NOT implement only the UI.
+    32→
+    33→Do NOT stop after generating the architecture.
+    34→
+    35→Do NOT leave core functionality as TODO comments.
+    36→
+    37→The final application must be:
+    38→
+    39→- fully functional
+    40→- responsive
+    41→- polished
+    42→- secure
+    43→- testable
+    44→- deployable
+    45→- documented
+    46→- demo-ready
+    47→- submission-ready
+    48→
+    49→Every major button must perform a real action.
+    50→
+    51→Every dashboard metric must come from real persisted data.
+    52→
+    53→Every AI result must be generated through the configured AI provider or a deterministic fallback when explicitly necessary for local development.
+    54→
+    55→Every GitHub integration must use real GitHub APIs.
+    56→
+    57→Every compliance finding must be persisted.
+    58→
+    59→Every remediation action must update the database.
+    60→
+    61→Every PR review must be traceable.
+    62→
+    63→Every audit evidence record must have provenance.
+    64→
+    65→---
+    66→
+    67→# 2. THE CORE PROBLEM
+    68→
+    69→Software teams often discover compliance and security problems AFTER code has already shipped.
+    70→
+    71→Examples:
+    72→
+    73→- personally identifiable information is written to logs
+    74→- secrets are accidentally committed
+    75→- insecure CORS configuration is introduced
+    76→- authentication controls are weakened
+    77→- encryption is missing
+    78→- rate limiting disappears
+    79→- sensitive data is sent to third-party services
+    80→- security controls are removed during refactoring
+    81→- compliance evidence is scattered across GitHub, cloud dashboards, tickets, and documents
+    82→
+    83→Traditional compliance tools often focus on periodic audits.
+    84→
+    85→DriftGuard moves compliance into the development workflow.
+    86→
+    87→Instead of:
+    88→
+    89→CODE → DEPLOY → AUDIT → DISCOVER PROBLEM
+    90→
+    91→DriftGuard creates:
+    92→
+    93→CODE CHANGE → ANALYZE → EXPLAIN → REMEDIATE → APPROVE → DEPLOY → EVIDENCE
+    94→
+    95→---
+    96→
+    97→# 3. PRODUCT VISION
+    98→
+    99→DriftGuard should feel like:
+   100→
+   101→> "GitHub security review + AI compliance engineer + continuous audit evidence."
+   102→
+   103→The platform should allow a company to:
+   104→
+   105→1. Connect a GitHub repository.
+   106→2. Select compliance frameworks.
+   107→3. Configure compliance policies.
+   108→4. Analyze pull requests.
+   109→5. Detect compliance/security risks.
+   110→6. Map findings to specific controls.
+   111→7. Explain why the change is risky.
+   112→8. Suggest a fix.
+   113→9. Generate a patch suggestion where possible.
+   114→10. Allow a human reviewer to approve/reject/dismiss findings.
+   115→11. Maintain an immutable compliance ledger.
+   116→12. Track compliance posture over time.
+   117→13. Generate an audit-ready evidence package.
+   118→14. View historical compliance drift.
+   119→15. Integrate the analysis into CI/CD through GitHub Actions.
+   120→16. Expose DriftGuard's capabilities through an MCP-compatible interface where practical.
+   121→
+   122→---
+   123→
+   124→# 4. WINNING HACKATHON DEMO
+   125→
+   126→The product MUST support this exact demo flow.
+   127→
+   128→## Demo scenario
+   129→
+   130→Create a demo repository containing a small web application.
+   131→
+   132→A developer opens a pull request that introduces something similar to:
+   133→
+   134→```python
+   135→logger.info("User email: %s", user.email)
+   136→```
+   137→
+   138→or:
+   139→
+   140→```javascript
+   141→console.log("Customer email:", user.email);
+   142→```
+   143→
+   144→DriftGuard receives the pull request.
+   145→
+   146→Within seconds:
+   147→
+   148→1. DriftGuard retrieves the PR diff.
+   149→2. The analysis engine identifies potential PII exposure.
+   150→3. The AI reasoning layer determines the risk.
+   151→4. The system maps the finding to relevant controls.
+   152→5. The dashboard updates.
+   153→6. A GitHub PR comment is posted.
+   154→7. The finding receives a severity score.
+   155→8. A remediation recommendation is generated.
+   156→9. The developer can mark it as fixed.
+   157→10. The compliance ledger records the event.
+   158→11. The compliance score changes.
+   159→12. The user can generate an evidence report.
+   160→
+   161→The UI should make this visually obvious.
+   162→
+   163→---
+   164→
+   165→# 5. INITIAL COMPLIANCE SCOPE
+   166→
+   167→Do NOT attempt to implement every SOC 2 or GDPR requirement.
+   168→
+   169→The MVP should explicitly focus on a limited but high-value rule set.
+   170→
+   171→Implement at least these detection categories:
+   172→
+   173→## Rule 1 — PII Logging
+   174→
+   175→Detect patterns suggesting sensitive information is written to logs.
+   176→
+   177→Examples:
+   178→
+   179→- email
+   180→- phone
+   181→- national ID
+   182→- address
+   183→- customer identifiers
+   184→- authentication tokens
+   185→
+   186→Severity:
+   187→
+   188→HIGH
+   189→
+   190→Potential mappings:
+   191→
+   192→- SOC 2 security/privacy controls
+   193→- GDPR data minimization/privacy principles
+   194→
+   195→---
+   196→
+   197→## Rule 2 — Hardcoded Secrets
+   198→
+   199→Detect:
+   200→
+   201→- API keys
+   202→- access tokens
+   203→- passwords
+   204→- private keys
+   205→- secret-looking environment values
+   206→
+   207→Severity:
+   208→
+   209→CRITICAL
+   210→
+   211→---
+   212→
+   213→## Rule 3 — Insecure CORS
+   214→
+   215→Detect configurations equivalent to:
+   216→
+   217→```javascript
+   218→origin: "*"
+   219→```
+   220→
+   221→especially where credentials are enabled.
+   222→
+   223→Severity:
+   224→
+   225→HIGH
+   226→
+   227→---
+   228→
+   229→## Rule 4 — Missing Authentication
+   230→
+   231→Identify routes or endpoints that appear to expose sensitive operations without authentication.
+   232→
+   233→Severity:
+   234→
+   235→HIGH
+   236→
+   237→---
+   238→
+   239→## Rule 5 — Missing Rate Limiting
+   240→
+   241→Detect public or sensitive API endpoints without obvious rate limiting.
+   242→
+   243→Severity:
+   244→
+   245→MEDIUM/HIGH
+   246→
+   247→---
+   248→
+   249→## Rule 6 — Sensitive Data Exposure
+   250→
+   251→Detect:
+   252→
+   253→- passwords returned in API responses
+   254→- tokens returned to clients
+   255→- secrets included in error messages
+   256→- sensitive database fields exposed through serialization
+   257→
+   258→Severity:
+   259→
+   260→CRITICAL/HIGH
+   261→
+   262→---
+   263→
+   264→## Rule 7 — Weak Encryption / Insecure Transport
+   265→
+   266→Detect:
+   267→
+   268→- HTTP usage where HTTPS is expected
+   269→- weak cryptographic algorithms
+   270→- disabled TLS verification
+   271→- plaintext sensitive storage
+   272→
+   273→Severity:
+   274→
+   275→HIGH
+   276→
+   277→---
+   278→
+   279→## Rule 8 — Dangerous Dependency Changes
+   280→
+   281→Detect dependency additions or upgrades with suspicious characteristics.
+   282→
+   283→Where practical, integrate dependency/security information from GitHub.
+   284→
+   285→Severity:
+   286→
+   287→MEDIUM/HIGH
+   288→
+   289→---
+   290→
+   291→# 6. IMPORTANT AI DESIGN PRINCIPLE
+   292→
+   293→AI must NOT be the only detection mechanism.
+   294→
+   295→Build a hybrid architecture:
+   296→
+   297→STATIC RULE ENGINE
+   298→+
+   299→DIFF ANALYSIS
+   300→+
+   301→SECURITY SIGNALS
+   302→+
+   303→AI REASONING
+   304→+
+   305→COMPLIANCE MAPPING
+   306→
+   307→This prevents the application from becoming merely:
+   308→
+   309→"Send the diff to an LLM and ask if it looks safe."
+   310→
+   311→---
+   312→
+   313→# 7. AI ANALYSIS PIPELINE
+   314→
+   315→Implement the following pipeline:
+   316→
+   317→```text
+   318→GitHub PR
+   319→    ↓
+   320→Webhook
+   321→    ↓
+   322→Retrieve PR metadata
+   323→    ↓
+   324→Retrieve changed files
+   325→    ↓
+   326→Generate diff
+   327→    ↓
+   328→Static security/compliance rules
+   329→    ↓
+   330→Extract candidate findings
+   331→    ↓
+   332→AI contextual analysis
+   333→    ↓
+   334→Compliance mapping
+   335→    ↓
+   336→Severity scoring
+   337→    ↓
+   338→Remediation generation
+   339→    ↓
+   340→Persist findings
+   341→    ↓
+   342→Post GitHub review/comment
+   343→    ↓
+   344→Update compliance posture
+   345→    ↓
+   346→Create audit evidence
+   347→```
+   348→
+   349→---
+   350→
+   351→# 8. AI OUTPUT CONTRACT
+   352→
+   353→Never rely on free-form AI text.
+   354→
+   355→The AI must return structured JSON.
+   356→
+   357→Example schema:
+   358→
+   359→```json
+   360→{
+   361→  "findings": [
+   362→    {
+   363→      "title": "Potential PII exposure in application logs",
+   364→      "description": "The pull request introduces logging of user email addresses.",
+   365→      "severity": "HIGH",
+   366→      "confidence": 0.94,
+   367→      "category": "PII_LOGGING",
+   368→      "file": "src/users/service.py",
+   369→      "line_start": 42,
+   370→      "line_end": 42,
+   371→      "evidence": "logger.info(...)",
+   372→      "impact": "User email addresses may become accessible through application logs.",
+   373→      "recommendation": "Remove the email value from the log statement and log a non-sensitive user identifier instead.",
+   374→      "compliance_mappings": [
+   375→        {
+   376→          "framework": "SOC2",
+   377→          "control": "CC6",
+   378→          "reason": "Sensitive information should be appropriately protected."
+   379→        },
+   380→        {
+   381→          "framework": "GDPR",
+   382→          "control": "Data Minimisation",
+   383→          "reason": "Personal data should be limited to what is necessary."
+   384→        }
+   385→      ],
+   386→      "autofix_available": true
+   387→    }
+   388→  ]
+   389→}
+   390→```
+   391→
+   392→Validate all AI responses against a strict schema.
+   393→
+   394→If validation fails:
+   395→
+   396→1. attempt a safe retry
+   397→2. otherwise return a controlled error
+   398→3. never blindly parse arbitrary AI output
+   399→
+   400→---
+   401→
+   402→# 9. AI PROVIDER ARCHITECTURE
+   403→
+   404→Do not tightly couple the application to one AI vendor.
+   405→
+   406→Create an abstraction:
+   407→
+   408→```text
+   409→AIProvider
+   410→ ├── AnthropicProvider
+   411→ ├── OpenAIProvider
+   412→ ├── GeminiProvider
+   413→ └── MockProvider
+   414→```
+   415→
+   416→Configuration should determine the active provider.
+   417→
+   418→Environment variables:
+   419→
+   420→```env
+   421→AI_PROVIDER=anthropic
+   422→ANTHROPIC_API_KEY=
+   423→OPENAI_API_KEY=
+   424→GEMINI_API_KEY=
+   425→```
+   426→
+   427→The application should work with one provider configured.
+   428→
+   429→For local tests, use MockProvider.
+   430→
+   431→---
+   432→
+   433→# 10. COMPLIANCE KNOWLEDGE BASE
+   434→
+   435→Create a compliance knowledge layer.
+   436→
+   437→Initially support:
+   438→
+   439→## SOC 2
+   440→
+   441→Focus on relevant Trust Services Criteria and security controls.
+   442→
+   443→## GDPR
+   444→
+   445→Focus on practical software-development principles such as:
+   446→
+   447→- data minimization
+   448→- confidentiality
+   449→- integrity
+   450→- security of processing
+   451→- privacy by design
+   452→
+   453→Store the knowledge base in structured records.
+   454→
+   455→Example:
+   456→
+   457→```text
+   458→Framework
+   459→  ↓
+   460→Control
+   461→  ↓
+   462→Description
+   463→  ↓
+   464→Risk patterns
+   465→  ↓
+   466→Detection rules
+   467→  ↓
+   468→Remediation guidance
+   469→```
+   470→
+   471→Do not claim that DriftGuard provides complete legal compliance.
+   472→
+   473→The product must clearly state:
+   474→
+   475→> DriftGuard provides engineering compliance guidance and evidence automation. It is not legal advice or a certification.
+   476→
+   477→---
+   478→
+   479→# 11. DATABASE ARCHITECTURE
+   480→
+   481→Use PostgreSQL in production.
+   482→
+   483→Recommended ORM:
+   484→
+   485→SQLAlchemy if using Python backend.
+   486→
+   487→Create models for at least:
+   488→
+   489→### User
+   490→
+   491→- id
+   492→- email
+   493→- name
+   494→- password_hash
+   495→- role
+   496→- created_at
+   497→- updated_at
+   498→
+   499→### Organization
+   500→
+   501→- id
+   502→- name
+   503→- slug
+   504→- created_at
+   505→
+   506→### OrganizationMember
+   507→
+   508→- id
+   509→- organization_id
+   510→- user_id
+   511→- role
+   512→
+   513→### Repository
+   514→
+   515→- id
+   516→- organization_id
+   517→- github_repo_id
+   518→- owner
+   519→- name
+   520→- full_name
+   521→- default_branch
+   522→- installation_id
+   523→- connected_at
+   524→
+   525→### PullRequest
+   526→
+   527→- id
+   528→- repository_id
+   529→- github_pr_id
+   530→- number
+   531→- title
+   532→- author
+   533→- source_branch
+   534→- target_branch
+   535→- status
+   536→- created_at
+   537→- updated_at
+   538→
+   539→### AnalysisRun
+   540→
+   541→- id
+   542→- pull_request_id
+   543→- status
+   544→- started_at
+   545→- completed_at
+   546→- duration_ms
+   547→- score
+   548→- files_analyzed
+   549→- findings_count
+   550→
+   551→### Finding
+   552→
+   553→- id
+   554→- analysis_run_id
+   555→- category
+   556→- title
+   557→- description
+   558→- severity
+   559→- confidence
+   560→- status
+   561→- file_path
+   562→- line_start
+   563→- line_end
+   564→- evidence
+   565→- impact
+   566→- recommendation
+   567→- ai_explanation
+   568→- created_at
+   569→- resolved_at
+   570→
+   571→### ComplianceMapping
+   572→
+   573→- id
+   574→- finding_id
+   575→- framework
+   576→- control
+   577→- control_name
+   578→- rationale
+   579→
+   580→### Rule
+   581→
+   582→- id
+   583→- name
+   584→- category
+   585→- description
+   586→- severity
+   587→- enabled
+   588→- configuration
+   589→
+   590→### EvidenceRecord
+   591→
+   592→- id
+   593→- organization_id
+   594→- repository_id
+   595→- finding_id
+   596→- event_type
+   597→- actor
+   598→- payload
+   599→- hash
+   600→- created_at
+   601→
+   602→### AuditReport
+   603→
+   604→- id
+   605→- organization_id
+   606→- framework
+   607→- generated_by
+   608→- file_path
+   609→- generated_at
+   610→
+   611→### WebhookEvent
+   612→
+   613→- id
+   614→- repository_id
+   615→- event_type
+   616→- delivery_id
+   617→- payload
+   618→- processed
+   619→- created_at
+   620→
+   621→### Integration
+   622→
+   623→- id
+   624→- organization_id
+   625→- provider
+   626→- status
+   627→- credentials_reference
+   628→- created_at
+   629→
+   630→Never store GitHub access tokens in plaintext.
+   631→
+   632→---
+   633→
+   634→# 12. AUTHENTICATION
+   635→
+   636→Implement secure authentication.
+   637→
+   638→Support:
+   639→
+   640→- email/password authentication
+   641→- secure password hashing
+   642→- session/JWT authentication
+   643→- logout
+   644→- protected routes
+   645→- role-based authorization
+   646→
+   647→Roles:
+   648→
+   649→```text
+   650→OWNER
+   651→ADMIN
+   652→MEMBER
+   653→AUDITOR
+   654→VIEWER
+   655→```
+   656→
+   657→Do not expose sensitive organization data across tenants.
+   658→
+   659→Every organization-scoped query must enforce tenant isolation.
+   660→
+   661→---
+   662→
+   663→# 13. GITHUB INTEGRATION
+   664→
+   665→GitHub is the primary integration.
+   666→
+   667→Implement:
+   668→
+   669→## OAuth/App connection
+   670→
+   671→Allow the user to connect GitHub.
+   672→
+   673→## Repository selection
+   674→
+   675→After authentication:
+   676→
+   677→```text
+   678→Select repositories
+   679→```
+   680→
+   681→Display:
+   682→
+   683→- repository name
+   684→- owner
+   685→- language
+   686→- visibility
+   687→- last updated
+   688→
+   689→## Pull Request integration
+   690→
+   691→Retrieve:
+   692→
+   693→- PR title
+   694→- author
+   695→- branch
+   696→- changed files
+   697→- diff
+   698→- commits
+   699→
+   700→## Webhooks
+   701→
+   702→Support:
+   703→
+   704→```text
+   705→pull_request
+   706→push
+   707→installation
+   708→installation_repositories
+   709→```
+   710→
+   711→At minimum, trigger analysis for:
+   712→
+   713→```text
+   714→pull_request.opened
+   715→pull_request.synchronize
+   716→pull_request.reopened
+   717→```
+   718→
+   719→Verify webhook signatures.
+   720→
+   721→Prevent duplicate webhook processing.
+   722→
+   723→---
+   724→
+   725→# 14. GITHUB PR EXPERIENCE
+   726→
+   727→When an analysis completes, DriftGuard should be capable of posting a GitHub comment such as:
+   728→
+   729→```text
+   730→🛡 DriftGuard AI Compliance Review
+   731→
+   732→Status: ⚠️ Changes require attention
+   733→
+   734→Compliance Score: 72/100
+   735→
+   736→Findings:
+   737→🔴 1 Critical
+   738→🟠 2 High
+   739→🟡 1 Medium
+   740→
+   741→Critical:
+   742→Hardcoded API credential detected.
+   743→
+   744→File:
+   745→src/config.py:18
+   746→
+   747→Why this matters:
+   748→The credential may be committed to source control and exposed to unauthorized users.
+   749→
+   750→Recommended fix:
+   751→Move the credential to an environment variable or secret manager.
+   752→
+   753→Compliance:
+   754→SOC 2 — Security
+   755→GDPR — Security of Processing
+   756→
+   757→View full analysis:
+   758→https://your-domain.com/analyses/123
+   759→```
+   760→
+   761→---
+   762→
+   763→# 15. DASHBOARD
+   764→
+   765→Create a polished SaaS dashboard.
+   766→
+   767→Primary navigation:
+   768→
+   769→```text
+   770→Overview
+   771→Repositories
+   772→Pull Requests
+   773→Findings
+   774→Compliance
+   775→Rules
+   776→Evidence
+   777→Reports
+   778→Integrations
+   779→Settings
+   780→```
+   781→
+   782→---
+   783→
+   784→# 16. DASHBOARD OVERVIEW
+   785→
+   786→Display:
+   787→
+   788→### Compliance Score
+   789→
+   790→Large circular or radial indicator.
+   791→
+   792→Example:
+   793→
+   794→```text
+   795→87%
+   796→COMPLIANCE POSTURE
+   797→```
+   798→
+   799→### Open Findings
+   800→
+   801→```text
+   802→12
+   803→```
+   804→
+   805→### Critical Findings
+   806→
+   807→```text
+   808→2
+   809→```
+   810→
+   811→### PRs Analyzed
+   812→
+   813→```text
+   814→143
+   815→```
+   816→
+   817→### Risks Resolved
+   818→
+   819→```text
+   820→89
+   821→```
+   822→
+   823→### Evidence Records
+   824→
+   825→```text
+   826→327
+   827→```
+   828→
+   829→---
+   830→
+   831→# 17. COMPLIANCE TREND
+   832→
+   833→Create a chart:
+   834→
+   835→```text
+   836→Compliance Score
+   837→100 ┤
+   838→ 90 ┤              ╭───
+   839→ 80 ┤       ╭──────╯
+   840→ 70 ┤  ╭────╯
+   841→ 60 ┤──╯
+   842→    └────────────────────
+   843→      Week 1 Week 2 Week 3 Week 4
+   844→```
+   845→
+   846→Use real database data.
+   847→
+   848→---
+   849→
+   850→# 18. FINDINGS BREAKDOWN
+   851→
+   852→Visualize findings by:
+   853→
+   854→- severity
+   855→- category
+   856→- repository
+   857→- framework
+   858→- status
+   859→
+   860→Statuses:
+   861→
+   862→```text
+   863→OPEN
+   864→IN_REVIEW
+   865→RESOLVED
+   866→DISMISSED
+   867→ACCEPTED_RISK
+   868→```
+   869→
+   870→---
+   871→
+   872→# 19. PR ANALYSIS PAGE
+   873→
+   874→When opening an analysis:
+   875→
+   876→Header:
+   877→
+   878→```text
+   879→PR #42
+   880→Add customer webhook processing
+   881→
+   882→Compliance Score
+   883→72/100
+   884→```
+   885→
+   886→Show:
+   887→
+   888→### Summary
+   889→
+   890→AI-generated explanation.
+   891→
+   892→### Risk Overview
+   893→
+   894→```text
+   895→1 Critical
+   896→2 High
+   897→3 Medium
+   898→```
+   899→
+   900→### Changed Files
+   901→
+   902→Show every analyzed file.
+   903→
+   904→### Findings
+   905→
+   906→Each finding should have:
+   907→
+   908→- severity
+   909→- confidence
+   910→- file
+   911→- line
+   912→- explanation
+   913→- evidence
+   914→- impact
+   915→- compliance mappings
+   916→- recommendation
+   917→- remediation status
+   918→
+   919→---
+   920→
+   921→# 20. FINDING DETAIL PANEL
+   922→
+   923→Build a polished finding detail view.
+   924→
+   925→Example:
+   926→
+   927→```text
+   928→CRITICAL
+   929→
+   930→Hardcoded API credential detected
+   931→
+   932→src/config.py
+   933→Line 18
+   934→
+   935→Confidence
+   936→98%
+   937→
+   938→Why this matters
+   939→
+   940→This credential is embedded directly in application source code.
+   941→If committed to a public or compromised repository, it may allow
+   942→unauthorized access to the associated service.
+   943→
+   944→Compliance impact
+   945→
+   946→SOC 2
+   947→Security Controls
+   948→
+   949→Recommended remediation
+   950→
+   951→Move the credential into an environment variable or secret manager.
+   952→
+   953→Suggested patch
+   954→
+   955→- API_KEY = "sk_live_xxxxx"
+   956→+ API_KEY = os.environ["API_KEY"]
+   957→```
+   958→
+   959→Buttons:
+   960→
+   961→```text
+   962→[Mark Resolved]
+   963→[Accept Risk]
+   964→[Dismiss]
+   965→[Create GitHub Issue]
+   966→[View in GitHub]
+   967→```
+   968→
+   969→---
+   970→
+   971→# 21. AUTOFIX SYSTEM
+   972→
+   973→Where safe, generate a suggested patch.
+   974→
+   975→Do NOT automatically modify production code without explicit user approval.
+   976→
+   977→Flow:
+   978→
+   979→```text
+   980→Finding
+   981→ ↓
+   982→Generate patch
+   983→ ↓
+   984→Show before/after
+   985→ ↓
+   986→Human review
+   987→ ↓
+   988→Approve
+   989→ ↓
+   990→Create GitHub branch/commit/PR
+   991→```
+   992→
+   993→The UI should clearly distinguish:
+   994→
+   995→```text
+   996→AI SUGGESTED FIX
+   997→```
+   998→
+   999→from:
+  1000→
+  1001→```text
+  1002→VERIFIED FIX
+  1003→```
+  1004→
+  1005→---
+  1006→
+  1007→# 22. COMPLIANCE SCORE
+  1008→
+  1009→Create a transparent scoring algorithm.
+  1010→
+  1011→Do not allow AI to arbitrarily invent the score.
+  1012→
+  1013→Example:
+  1014→
+  1015→Start:
+  1016→
+  1017→```text
+  1018→100
+  1019→```
+  1020→
+  1021→Deduct based on findings.
+  1022→
+  1023→Example weights:
+  1024→
+  1025→```text
+  1026→CRITICAL = -20
+  1027→HIGH = -10
+  1028→MEDIUM = -5
+  1029→LOW = -2
+  1030→```
+  1031→
+  1032→Apply confidence weighting where appropriate.
+  1033→
+  1034→Clamp:
+  1035→
+  1036→```text
+  1037→0–100
+  1038→```
+  1039→
+  1040→The scoring logic must be deterministic and documented.
+  1041→
+  1042→Example:
+  1043→
+  1044→```python
+  1045→score = max(0, 100 - total_penalty)
+  1046→```
+  1047→
+  1048→---
+  1049→
+  1050→# 23. EVIDENCE LEDGER
+  1051→
+  1052→One of the most important differentiators.
+  1053→
+  1054→Every significant compliance event creates an evidence record.
+  1055→
+  1056→Examples:
+  1057→
+  1058→```text
+  1059→PR analyzed
+  1060→Finding detected
+  1061→Finding acknowledged
+  1062→Finding resolved
+  1063→Finding dismissed
+  1064→Policy changed
+  1065→Repository connected
+  1066→Audit report generated
+  1067→```
+  1068→
+  1069→Each event should contain:
+  1070→
+  1071→- timestamp
+  1072→- actor
+  1073→- organization
+  1074→- repository
+  1075→- event type
+  1076→- metadata
+  1077→- source
+  1078→- hash
+  1079→
+  1080→Create a chained integrity mechanism:
+  1081→
+  1082→```text
+  1083→hash(current_event + previous_hash)
+  1084→```
+  1085→
+  1086→This creates a tamper-evident ledger.
+  1087→
+  1088→Display:
+  1089→
+  1090→```text
+  1091→Evidence Integrity
+  1092→✓ VERIFIED
+  1093→```
+  1094→
+  1095→---
+  1096→
+  1097→# 24. AUDIT REPORT GENERATOR
+  1098→
+  1099→Allow:
+  1100→
+  1101→```text
+  1102→Generate Audit Evidence
+  1103→```
+  1104→
+  1105→Select:
+  1106→
+  1107→```text
+  1108→Framework
+  1109→Date Range
+  1110→Repository
+  1111→Finding Status
+  1112→```
+  1113→
+  1114→Generate a professional PDF.
+  1115→
+  1116→The report should include:
+  1117→
+  1118→1. Organization
+  1119→2. Report period
+  1120→3. Framework
+  1121→4. Executive summary
+  1122→5. Compliance posture
+  1123→6. Repositories monitored
+  1124→7. PRs analyzed
+  1125→8. Findings
+  1126→9. Resolutions
+  1127→10. Evidence timeline
+  1128→11. Control mappings
+  1129→12. Methodology
+  1130→13. Limitations
+  1131→14. Report generation timestamp
+  1132→15. Integrity hash
+  1133→
+  1134→Do not claim the report proves legal compliance.
+  1135→
+  1136→Call it:
+  1137→
+  1138→**Engineering Compliance Evidence Report**
+  1139→
+  1140→---
+  1141→
+  1142→# 25. RULE ENGINE
+  1143→
+  1144→Implement rules independently of AI.
+  1145→
+  1146→Example interface:
+  1147→
+  1148→```python
+  1149→class ComplianceRule:
+  1150→    name: str
+  1151→    category: str
+  1152→    severity: str
+  1153→
+  1154→    def evaluate(self, code, diff, context):
+  1155→        ...
+  1156→```
+  1157→
+  1158→Implement at least:
+  1159→
+  1160→```text
+  1161→PIILoggingRule
+  1162→HardcodedSecretRule
+  1163→InsecureCorsRule
+  1164→MissingAuthRule
+  1165→MissingRateLimitRule
+  1166→SensitiveDataExposureRule
+  1167→WeakEncryptionRule
+  1168→DangerousDependencyRule
+  1169→```
+  1170→
+  1171→Rules should return structured findings.
+  1172→
+  1173→---
+  1174→
+  1175→# 26. RULE MANAGEMENT UI
+  1176→
+  1177→Allow administrators to:
+  1178→
+  1179→- enable rule
+  1180→- disable rule
+  1181→- change severity
+  1182→- view description
+  1183→- view examples
+  1184→- view compliance mappings
+  1185→
+  1186→Example:
+  1187→
+  1188→```text
+  1189→PII Logging
+  1190→Enabled
+  1191→
+  1192→Severity
+  1193→HIGH
+  1194→
+  1195→Frameworks
+  1196→SOC 2
+  1197→GDPR
+  1198→
+  1199→[Configure]
+  1200→```
+  1201→
+  1202→---
+  1203→
+  1204→# 27. AI EXPLANATION LAYER
+  1205→
+  1206→The AI should receive:
+  1207→
+  1208→- PR metadata
+  1209→- diff
+  1210→- candidate rule findings
+  1211→- repository context
+  1212→- selected compliance frameworks
+  1213→- relevant compliance controls
+  1214→
+  1215→The AI should:
+  1216→
+  1217→1. validate candidate findings
+  1218→2. identify contextual false positives
+  1219→3. explain impact
+  1220→4. map controls
+  1221→5. generate remediation
+  1222→6. generate safe patch suggestions where possible
+  1223→
+  1224→Do not send the entire repository unnecessarily.
+  1225→
+  1226→Minimize data sent to external AI providers.
+  1227→
+  1228→---
+  1229→
+  1230→# 28. SECURITY
+  1231→
+  1232→Security is a major part of this project.
+  1233→
+  1234→Implement:
+  1235→
+  1236→- secure authentication
+  1237→- password hashing
+  1238→- CSRF protection where applicable
+  1239→- rate limiting
+  1240→- input validation
+  1241→- SQL injection protection
+  1242→- XSS protection
+  1243→- webhook signature verification
+  1244→- OAuth state verification
+  1245→- secure cookies
+  1246→- secret management
+  1247→- least privilege GitHub permissions
+  1248→- tenant isolation
+  1249→- audit logging
+  1250→- dependency scanning
+  1251→- security headers
+  1252→
+  1253→Never log:
+  1254→
+  1255→- OAuth tokens
+  1256→- API keys
+  1257→- passwords
+  1258→- private credentials
+  1259→
+  1260→---
+  1261→
+  1262→# 29. PRIVACY
+  1263→
+  1264→Add a clear privacy architecture.
+  1265→
+  1266→Before sending code to an external AI provider:
+  1267→
+  1268→Implement a preprocessing layer capable of:
+  1269→
+  1270→- secret redaction
+  1271→- token redaction
+  1272→- credential masking
+  1273→
+  1274→Example:
+  1275→
+  1276→```text
+  1277→sk_live_123456
+  1278→```
+  1279→
+  1280→becomes:
+  1281→
+  1282→```text
+  1283→[REDACTED_SECRET]
+  1284→```
+  1285→
+  1286→The UI should show:
+  1287→
+  1288→```text
+  1289→Sensitive values automatically redacted before AI analysis.
+  1290→```
+  1291→
+  1292→---
+  1293→
+  1294→# 30. MCP ARCHITECTURE
+  1295→
+  1296→Add MCP as a strategic differentiator.
+  1297→
+  1298→Design DriftGuard so its capabilities can eventually be consumed by AI agents.
+  1299→
+  1300→Expose tools conceptually such as:
+  1301→
+  1302→```text
+  1303→analyze_pull_request
+  1304→get_compliance_score
+  1305→list_open_findings
+  1306→get_finding
+  1307→get_repository_posture
+  1308→generate_audit_report
+  1309→get_evidence
+  1310→```
+  1311→
+  1312→The MCP layer must enforce authentication and organization-level authorization.
+  1313→
+  1314→Do not create an insecure unrestricted MCP endpoint.
+  1315→
+  1316→---
+  1317→
+  1318→# 31. API ARCHITECTURE
+  1319→
+  1320→Create a clean REST API.
+  1321→
+  1322→Example:
+  1323→
+  1324→```text
+  1325→POST /api/auth/login
+  1326→POST /api/auth/register
+  1327→POST /api/auth/logout
+  1328→
+  1329→GET /api/organizations
+  1330→GET /api/organizations/:id
+  1331→
+  1332→GET /api/repositories
+  1333→POST /api/repositories/connect
+  1334→
+  1335→GET /api/pull-requests
+  1336→GET /api/pull-requests/:id
+  1337→
+  1338→POST /api/analyses
+  1339→GET /api/analyses/:id
+  1340→
+  1341→GET /api/findings
+  1342→GET /api/findings/:id
+  1343→PATCH /api/findings/:id
+  1344→
+  1345→POST /api/findings/:id/resolve
+  1346→POST /api/findings/:id/dismiss
+  1347→POST /api/findings/:id/accept-risk
+  1348→
+  1349→GET /api/compliance/score
+  1350→GET /api/compliance/trends
+  1351→
+  1352→GET /api/evidence
+  1353→POST /api/reports/audit
+  1354→
+  1355→POST /api/webhooks/github
+  1356→```
+  1357→
+  1358→Use OpenAPI documentation.
+  1359→
+  1360→---
+  1361→
+  1362→# 32. FRONTEND TECHNOLOGY
+  1363→
+  1364→Use:
+  1365→
+  1366→```text
+  1367→Next.js
+  1368→TypeScript
+  1369→Tailwind CSS
+  1370→shadcn/ui
+  1371→Recharts
+  1372→Lucide icons
+  1373→```
+  1374→
+  1375→Use a clean component architecture.
+  1376→
+  1377→Avoid excessive animations.
+  1378→
+  1379→Use animations strategically for:
+  1380→
+  1381→- analysis progress
+  1382→- score changes
+  1383→- finding appearance
+  1384→- successful remediation
+  1385→- evidence verification
+  1386→
+  1387→---
+  1388→
+  1389→# 33. VISUAL DESIGN
+  1390→
+  1391→The UI should feel like a serious modern cybersecurity SaaS product.
+  1392→
+  1393→Design direction:
+  1394→
+  1395→```text
+  1396→Premium
+  1397→Technical
+  1398→Trustworthy
+  1399→Minimal
+  1400→Enterprise
+  1401→Modern
+  1402→```
+  1403→
+  1404→Do NOT make it look like a generic AI chatbot.
+  1405→
+  1406→Primary visual language:
+  1407→
+  1408→- deep navy/charcoal
+  1409→- white
+  1410→- subtle blue/purple security accents
+  1411→- restrained gradients
+  1412→- high contrast status colors
+  1413→- clean cards
+  1414→- compact data visualization
+  1415→
+  1416→Use:
+  1417→
+  1418→```text
+  1419→CRITICAL → red
+  1420→HIGH → orange
+  1421→MEDIUM → yellow
+  1422→LOW → blue/gray
+  1423→RESOLVED → green
+  1424→```
+  1425→
+  1426→Use color accessibly and never rely on color alone.
+  1427→
+  1428→---
+  1429→
+  1430→# 34. LANDING PAGE
+  1431→
+  1432→Create a highly polished landing page.
+  1433→
+  1434→Hero:
+  1435→
+  1436→```text
+  1437→Catch compliance drift
+  1438→before it ships.
+  1439→
+  1440→AI-powered compliance engineering
+  1441→for modern development teams.
+  1442→```
+  1443→
+  1444→CTA:
+  1445→
+  1446→```text
+  1447→Connect GitHub
+  1448→```
+  1449→
+  1450→Secondary:
+  1451→
+  1452→```text
+  1453→See how it works
+  1454→```
+  1455→
+  1456→Sections:
+  1457→
+  1458→1. Hero
+  1459→2. Problem
+  1460→3. How DriftGuard works
+  1461→4. Live compliance analysis demo
+  1462→5. Features
+  1463→6. Compliance frameworks
+  1464→7. Evidence ledger
+  1465→8. Architecture
+  1466→9. Security
+  1467→10. Pricing
+  1468→11. FAQ
+  1469→12. CTA
+  1470→13. Footer
+  1471→
+  1472→---
+  1473→
+  1474→# 35. LANDING PAGE DEMO
+  1475→
+  1476→Build an interactive visual demo.
+  1477→
+  1478→Show a fake-but-clearly-labeled demonstration repository.
+  1479→
+  1480→Animate:
+  1481→
+  1482→```text
+  1483→Pull Request Created
+  1484→       ↓
+  1485→Analyzing Diff
+  1486→       ↓
+  1487→Scanning Security Rules
+  1488→       ↓
+  1489→AI Context Analysis
+  1490→       ↓
+  1491→Mapping Compliance Controls
+  1492→       ↓
+  1493→Risk Identified
+  1494→       ↓
+  1495→Developer Notified
+  1496→```
+  1497→
+  1498→This should make the product understandable within 10 seconds.
+  1499→
+  1500→---
+  1501→
+  1502→# 36. ONBOARDING
+  1503→
+  1504→After signup:
+  1505→
+  1506→### Step 1
+  1507→
+  1508→Create organization.
+  1509→
+  1510→### Step 2
+  1511→
+  1512→Choose compliance frameworks.
+  1513→
+  1514→```text
+  1515→☐ SOC 2
+  1516→☐ GDPR
+  1517→```
+  1518→
+  1519→### Step 3
+  1520→
+  1521→Connect GitHub.
+  1522→
+  1523→### Step 4
+  1524→
+  1525→Select repositories.
+  1526→
+  1527→### Step 5
+  1528→
+  1529→Configure policies.
+  1530→
+  1531→### Step 6
+  1532→
+  1533→Run first analysis.
+  1534→
+  1535→### Step 7
+  1536→
+  1537→Show compliance dashboard.
+  1538→
+  1539→Provide progress indicators.
+  1540→
+  1541→---
+  1542→
+  1543→# 37. EMPTY STATES
+  1544→
+  1545→Never leave blank screens.
+  1546→
+  1547→Example:
+  1548→
+  1549→```text
+  1550→No findings yet.
+  1551→
+  1552→Your repository has not been analyzed.
+  1553→
+  1554→[Analyze First Pull Request]
+  1555→```
+  1556→
+  1557→---
+  1558→
+  1559→# 38. LOADING STATES
+  1560→
+  1561→Implement skeleton loaders.
+  1562→
+  1563→Analysis page should show:
+  1564→
+  1565→```text
+  1566→Fetching pull request...
+  1567→✓
+  1568→
+  1569→Analyzing changed files...
+  1570→✓
+  1571→
+  1572→Running compliance rules...
+  1573→...
+  1574→
+  1575→AI contextual review...
+  1576→...
+  1577→
+  1578→Mapping controls...
+  1579→...
+  1580→```
+  1581→
+  1582→---
+  1583→
+  1584→# 39. ERROR HANDLING
+  1585→
+  1586→Create polished error states.
+  1587→
+  1588→Examples:
+  1589→
+  1590→GitHub disconnected:
+  1591→
+  1592→```text
+  1593→GitHub connection expired.
+  1594→
+  1595→Reconnect GitHub to continue monitoring this repository.
+  1596→```
+  1597→
+  1598→AI unavailable:
+  1599→
+  1600→```text
+  1601→AI analysis is temporarily unavailable.
+  1602→
+  1603→Static security checks will continue running.
+  1604→```
+  1605→
+  1606→Webhook failure:
+  1607→
+  1608→```text
+  1609→Webhook delivery failed.
+  1610→Retry
+  1611→```
+  1612→
+  1613→Never show raw stack traces to users.
+  1614→
+  1615→---
+  1616→
+  1617→# 40. OBSERVABILITY
+  1618→
+  1619→Implement structured logging.
+  1620→
+  1621→Track:
+  1622→
+  1623→- analysis duration
+  1624→- AI latency
+  1625→- webhook processing time
+  1626→- API errors
+  1627→- GitHub API errors
+  1628→- failed analyses
+  1629→- rule execution time
+  1630→
+  1631→Create a basic admin health endpoint:
+  1632→
+  1633→```text
+  1634→/api/health
+  1635→```
+  1636→
+  1637→Return:
+  1638→
+  1639→```json
+  1640→{
+  1641→  "status": "healthy",
+  1642→  "database": "healthy",
+  1643→  "github": "configured",
+  1644→  "ai": "configured"
+  1645→}
+  1646→```
+  1647→
+  1648→---
+  1649→
+  1650→# 41. TESTING
+  1651→
+  1652→Create serious automated tests.
+  1653→
+  1654→## Backend unit tests
+  1655→
+  1656→Test:
+  1657→
+  1658→- rules
+  1659→- scoring
+  1660→- AI response validation
+  1661→- compliance mapping
+  1662→- hashing
+  1663→- authorization
+  1664→
+  1665→## Integration tests
+  1666→
+  1667→Test:
+  1668→
+  1669→- GitHub webhook
+  1670→- database persistence
+  1671→- analysis pipeline
+  1672→- finding lifecycle
+  1673→
+  1674→## Frontend tests
+  1675→
+  1676→Test:
+  1677→
+  1678→- authentication
+  1679→- dashboard rendering
+  1680→- finding interaction
+  1681→- filters
+  1682→- navigation
+  1683→
+  1684→## End-to-end test
+  1685→
+  1686→Implement:
+  1687→
+  1688→```text
+  1689→Login
+  1690→→ connect repository
+  1691→→ create analysis
+  1692→→ findings appear
+  1693→→ resolve finding
+  1694→→ compliance score updates
+  1695→→ generate report
+  1696→```
+  1697→
+  1698→---
+  1699→
+  1700→# 42. DEMO DATA
+  1701→
+  1702→Create a seed command:
+  1703→
+  1704→```bash
+  1705→npm run seed
+  1706→```
+  1707→
+  1708→or equivalent.
+  1709→
+  1710→Seed:
+  1711→
+  1712→- demo organization
+  1713→- demo users
+  1714→- demo repository
+  1715→- demo PRs
+  1716→- demo findings
+  1717→- compliance mappings
+  1718→- evidence events
+  1719→- historical scores
+  1720→
+  1721→The demo data must look realistic.
+  1722→
+  1723→Do not use meaningless lorem ipsum.
+  1724→
+  1725→---
+  1726→
+  1727→# 43. DEMO MODE
+  1728→
+  1729→Create an optional demo mode.
+  1730→
+  1731→The demo should allow judges to experience the product without configuring GitHub credentials.
+  1732→
+  1733→Clearly label:
+  1734→
+  1735→```text
+  1736→DEMO ENVIRONMENT
+  1737→```
+  1738→
+  1739→Do not represent simulated events as real production events.
+  1740→
+  1741→Allow switching between:
+  1742→
+  1743→```text
+  1744→Demo Mode
+  1745→Live Mode
+  1746→```
+  1747→
+  1748→---
+  1749→
+  1750→# 44. DEMO ATTACK SCENARIO
+  1751→
+  1752→Create a built-in demo repository or fixture.
+  1753→
+  1754→PR title:
+  1755→
+  1756→```text
+  1757→Add customer webhook logging
+  1758→```
+  1759→
+  1760→Vulnerable code:
+  1761→
+  1762→```python
+  1763→def process_customer(customer):
+  1764→    logger.info(
+  1765→        "Processing customer email=%s",
+  1766→        customer.email
+  1767→    )
+  1768→```
+  1769→
+  1770→Expected result:
+  1771→
+  1772→```text
+  1773→HIGH
+  1774→Potential PII exposure in application logs
+  1775→```
+  1776→
+  1777→Then provide a compliant patch:
+  1778→
+  1779→```python
+  1780→def process_customer(customer):
+  1781→    logger.info(
+  1782→        "Processing customer id=%s",
+  1783→        customer.id
+  1784→    )
+  1785→```
+  1786→
+  1787→Expected result:
+  1788→
+  1789→```text
+  1790→PASS
+  1791→No high-confidence PII logging detected
+  1792→```
+  1793→
+  1794→---
+  1795→
+  1796→# 45. PR STATUS CHECK
+  1797→
+  1798→Create GitHub status checks.
+  1799→
+  1800→Example:
+  1801→
+  1802→```text
+  1803→DriftGuard Compliance Check
+  1804→
+  1805→❌ Failed
+  1806→
+  1807→1 Critical
+  1808→2 High
+  1809→```
+  1810→
+  1811→For clean PR:
+  1812→
+  1813→```text
+  1814→DriftGuard Compliance Check
+  1815→
+  1816→✓ Passed
+  1817→
+  1818→No blocking compliance findings detected.
+  1819→```
+  1820→
+  1821→Allow organization policy to determine whether:
+  1822→
+  1823→- critical findings block merge
+  1824→- high findings block merge
+  1825→- medium findings warn only
+  1826→
+  1827→---
+  1828→
+  1829→# 46. POLICY ENGINE
+  1830→
+  1831→Create:
+  1832→
+  1833→```text
+  1834→Policy
+  1835→```
+  1836→
+  1837→with configuration:
+  1838→
+  1839→```text
+  1840→block_on_critical = true
+  1841→block_on_high = true
+  1842→block_on_medium = false
+  1843→minimum_score = 80
+  1844→```
+  1845→
+  1846→Allow administrators to modify these settings.
+  1847→
+  1848→---
+  1849→
+  1850→# 47. NOTIFICATION SYSTEM
+  1851→
+  1852→Implement notification abstraction.
+  1853→
+  1854→Support:
+  1855→
+  1856→```text
+  1857→GitHub
+  1858→Email
+  1859→Slack
+  1860→```
+  1861→
+  1862→Slack should be designed through an integration abstraction so the platform can support MCP/tool-based integrations later.
+  1863→
+  1864→Example notification:
+  1865→
+  1866→```text
+  1867→🛡 DriftGuard Alert
+  1868→
+  1869→Repository:
+  1870→acme/payments-api
+  1871→
+  1872→PR #42 introduced:
+  1873→
+  1874→1 Critical
+  1875→2 High
+  1876→
+  1877→Compliance score:
+  1878→68/100
+  1879→
+  1880→Review findings →
+  1881→```
+  1882→
+  1883→---
+  1884→
+  1885→# 48. BILLING ARCHITECTURE
+  1886→
+  1887→Design the system so SaaS billing can be added cleanly.
+  1888→
+  1889→Plans:
+  1890→
+  1891→### Free
+  1892→
+  1893→- 1 repository
+  1894→- limited analyses
+  1895→
+  1896→### Pro
+  1897→
+  1898→- multiple repositories
+  1899→- advanced compliance
+  1900→- evidence reports
+  1901→- notifications
+  1902→
+  1903→### Enterprise
+  1904→
+  1905→- unlimited repositories
+  1906→- advanced governance
+  1907→- SSO
+  1908→- audit controls
+  1909→- custom policies
+  1910→
+  1911→For the hackathon MVP, billing can remain feature-flagged or Stripe test-mode only.
+  1912→
+  1913→Do not spend most development time on billing.
+  1914→
+  1915→The core product comes first.
+  1916→
+  1917→---
+  1918→
+  1919→# 49. PROJECT STRUCTURE
+  1920→
+  1921→Prefer a monorepo:
+  1922→
+  1923→```text
+  1924→driftguard/
+  1925→│
+  1926→├── apps/
+  1927→│   ├── web/
+  1928→│   └── api/
+  1929→│
+  1930→├── packages/
+  1931→│   ├── ui/
+  1932→│   ├── config/
+  1933→│   ├── types/
+  1934→│   ├── compliance/
+  1935→│   └── ai/
+  1936→│
+  1937→├── services/
+  1938→│   ├── analyzer/
+  1939→│   ├── github/
+  1940→│   ├── evidence/
+  1941→│   └── notifications/
+  1942→│
+  1943→├── database/
+  1944→│   ├── migrations/
+  1945→│   └── seeds/
+  1946→│
+  1947→├── github-app/
+  1948→│
+  1949→├── tests/
+  1950→│
+  1951→├── docs/
+  1952→│
+  1953→├── docker/
+  1954→│
+  1955→├── .github/
+  1956→│   └── workflows/
+  1957→│
+  1958→├── docker-compose.yml
+  1959→├── README.md
+  1960→└── .env.example
+  1961→```
+  1962→
+  1963→You may adapt the structure if another architecture is demonstrably better, but maintain clean separation of concerns.
+  1964→
+  1965→---
+  1966→
+  1967→# 50. DOCKER
+  1968→
+  1969→Create Docker support.
+  1970→
+  1971→At minimum:
+  1972→
+  1973→```text
+  1974→frontend
+  1975→backend
+  1976→postgres
+  1977→```
+  1978→
+  1979→Optional:
+  1980→
+  1981→```text
+  1982→redis
+  1983→worker
+  1984→```
+  1985→
+  1986→Use Docker Compose for local development.
+  1987→
+  1988→Command:
+  1989→
+  1990→```bash
+  1991→docker compose up
+  1992→```
+  1993→
+  1994→should start the core stack.
+  1995→
+  1996→---
+  1997→
+  1998→# 51. BACKGROUND JOBS
+  1999→
+  2000→Analysis should be asynchronous.
+
+[showing lines 1-2000 of 3234; use offset=2001 with limit to continue reading]
