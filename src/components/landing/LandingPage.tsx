@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Shield, Zap, Eye, FileText, Lock, Cpu, GitBranch, Activity, ArrowRight, CheckCircle2, BarChart3, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -41,9 +42,37 @@ const pipelineSteps = [
   { label: 'Developer Notified', icon: Zap },
 ];
 
+const stats = [
+  { value: '500+', label: 'Compliance Checks' },
+  { value: 'SOC2 & GDPR', label: 'Frameworks' },
+  { value: '99.9%', label: 'Evidence Integrity' },
+  { value: '<2s', label: 'Analysis Time' },
+];
+
+const diffLines = [
+  { lineNum: '42', type: 'remove' as const, code: "app.use(cors({ origin: '*' }))", comment: '// INSECURE CORS' },
+  { lineNum: '42', type: 'add' as const, code: 'app.use(cors({ origin: env.ALLOWED_ORIGINS }))' },
+  { lineNum: '87', type: 'remove' as const, code: "console.log('User:', user.phone)", comment: '// PII LOGGING', gap: true },
+  { lineNum: '87', type: 'add' as const, code: "logger.info('User authenticated', { userId: user.id })" },
+];
+
+const trustedBy = [
+  'Acme Corp',
+  'Globex Inc',
+  'Initech',
+  'Umbrella Corp',
+  'Stark Industries',
+  'Wayne Enterprises',
+];
+
 export function LandingPage() {
   const login = useAppStore((s) => s.login);
   const setView = useAppStore((s) => s.setView);
+
+  // Smooth scroll
+  useEffect(() => {
+    document.documentElement.style.scrollBehavior = 'smooth';
+  }, []);
 
   const handleDemo = async () => {
     try {
@@ -81,6 +110,47 @@ export function LandingPage() {
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 grid-pattern opacity-30" />
+        {/* Animated gradient mesh */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div
+            className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full blur-[120px] opacity-60"
+            style={{
+              background: 'radial-gradient(circle, oklch(0.75 0.14 250 / 0.05) 0%, transparent 70%)',
+              animation: 'heroFloat1 12s ease-in-out infinite',
+            }}
+          />
+          <div
+            className="absolute -bottom-40 -right-40 w-[500px] h-[500px] rounded-full blur-[120px] opacity-60"
+            style={{
+              background: 'radial-gradient(circle, oklch(0.7 0.15 310 / 0.05) 0%, transparent 70%)',
+              animation: 'heroFloat2 15s ease-in-out infinite',
+            }}
+          />
+          <div
+            className="absolute top-1/3 right-1/4 w-[400px] h-[400px] rounded-full blur-[100px] opacity-50"
+            style={{
+              background: 'radial-gradient(circle, oklch(0.75 0.1 195 / 0.05) 0%, transparent 70%)',
+              animation: 'heroFloat3 10s ease-in-out infinite',
+            }}
+          />
+        </div>
+        <style>{`
+          @keyframes heroFloat1 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(80px, 40px) scale(1.1); }
+            66% { transform: translate(-40px, 80px) scale(0.95); }
+          }
+          @keyframes heroFloat2 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(-60px, -50px) scale(1.05); }
+            66% { transform: translate(50px, -30px) scale(0.9); }
+          }
+          @keyframes heroFloat3 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-70px, 60px) scale(1.15); }
+          }
+        `}</style>
+
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
         <motion.div {...fadeInUp} className="relative max-w-5xl mx-auto px-4 sm:px-6 pt-24 pb-20 text-center">
           <div className="inline-flex items-center gap-2 bg-secondary border border-border rounded-full px-4 py-1.5 text-sm text-muted-foreground mb-8">
@@ -108,6 +178,40 @@ export function LandingPage() {
               See How It Works
             </Button>
           </div>
+
+          {/* Code Diff Preview */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6, duration: 0.7, ease: 'easeOut' }}
+            className="mt-16 mx-auto max-w-2xl"
+          >
+            <div
+              className="rounded-xl border border-primary/30 bg-card overflow-hidden"
+              style={{ boxShadow: '0 0 30px oklch(0.75 0.14 250 / 0.08)' }}
+            >
+              {/* Terminal header */}
+              <div className="flex items-center gap-2 px-4 py-3 bg-secondary/80 border-b border-border/50">
+                <span className="h-3 w-3 rounded-full bg-red-500/80" />
+                <span className="h-3 w-3 rounded-full bg-yellow-500/80" />
+                <span className="h-3 w-3 rounded-full bg-green-500/80" />
+                <span className="ml-3 text-xs text-muted-foreground font-mono">driftfix-diff</span>
+              </div>
+              {/* Diff content */}
+              <div className="p-4 font-mono text-sm leading-relaxed">
+                {diffLines.map((line) => (
+                  <div key={`${line.lineNum}-${line.type}`} className={`flex gap-3 ${line.gap ? 'mt-2' : ''}`}>
+                    <span className="text-muted-foreground/50 w-6 text-right shrink-0 select-none">{line.lineNum}</span>
+                    <span className={line.type === 'remove' ? 'text-red-400/90' : 'text-emerald-400/90'}>
+                      <span className="select-none mr-2">{line.type === 'remove' ? '-' : '+'}</span>
+                      {line.code}
+                      {line.comment && <span className="text-red-400/50">{'  '}{line.comment}</span>}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
         </motion.div>
       </section>
 
@@ -256,6 +360,37 @@ export function LandingPage() {
                 </CardContent>
               </Card>
             </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Bar */}
+      <section className="border-t border-b border-border/50 py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            {stats.map((s) => (
+              <div key={s.label} className="flex flex-col items-center gap-1">
+                <span className="text-3xl sm:text-4xl font-bold tracking-tight">{s.value}</span>
+                <span className="text-sm text-muted-foreground">{s.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Trusted By */}
+      <section className="py-14">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center">
+          <p className="text-sm text-muted-foreground mb-8">Trusted by engineering teams at</p>
+          <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
+            {trustedBy.map((name) => (
+              <span
+                key={name}
+                className="text-lg font-semibold tracking-tight opacity-50 select-none"
+              >
+                {name}
+              </span>
+            ))}
           </div>
         </div>
       </section>

@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   ShieldCheck, CheckCircle2, XCircle, User, Clock, ChevronDown,
-  ChevronRight, ChevronLeft, Copy, Check, ScrollText,
+  ChevronRight, ChevronLeft, Copy, Check, ScrollText, FileSearch,
 } from 'lucide-react';
 
 const evtColors: Record<string, string> = {
@@ -245,11 +245,11 @@ export function EvidenceView() {
       ) : records.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="h-16 w-16 rounded-full bg-secondary flex items-center justify-center mb-4">
-            <ScrollText className="h-8 w-8 text-muted-foreground" />
+            <FileSearch className="h-8 w-8 text-muted-foreground" />
           </div>
           <h3 className="font-semibold text-lg mb-1">No evidence records yet</h3>
           <p className="text-sm text-muted-foreground max-w-sm">
-            Evidence records will appear here as compliance events occur, such as finding detections, resolutions, and policy changes.
+            Evidence records are created automatically when analyses run or actions are taken
           </p>
         </div>
       ) : (

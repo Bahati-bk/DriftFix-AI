@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAppStore } from '@/stores/app';
-import { Search, AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, ShieldOff, ChevronLeft, ChevronRight, Zap } from 'lucide-react';
 
 export function FindingsView() {
   const selectFinding = useAppStore((s) => s.selectFinding);
@@ -21,6 +21,29 @@ export function FindingsView() {
   const [search, setSearch] = useState(searchQuery);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [runningAnalysis, setRunningAnalysis] = useState(false);
+
+  const runAnalysis = async () => {
+    setRunningAnalysis(true);
+    try {
+      const res = await fetch('/api/demo/analyze', { method: 'POST' });
+      if (res.ok) {
+        // Reload findings
+        const params = new URLSearchParams({ page: '1', limit: '20' });
+        if (severity !== 'ALL') params.set('severity', severity);
+        if (status !== 'ALL') params.set('status', status);
+        if (category !== 'ALL') params.set('category', category);
+        if (search) params.set('search', search);
+        const data = await (await fetch(`/api/findings?${params}`)).json();
+        setFindings(data.findings || []);
+        setTotalPages(data.pagination?.totalPages || 1);
+        setPage(1);
+      }
+    } catch {
+      // empty
+    }
+    setRunningAnalysis(false);
+  };
 
   useEffect(() => { let cancelled = false; (async () => { setLoading(true); try { const params = new URLSearchParams({ page: String(page), limit: '20' }); if (severity !== 'ALL') params.set('severity', severity); if (status !== 'ALL') params.set('status', status); if (category !== 'ALL') params.set('category', category); if (search) params.set('search', search); const res = await fetch(`/api/findings?${params}`); if (cancelled) return; const data = await res.json(); setFindings(data.findings || []); setTotalPages(data.pagination?.totalPages || 1); } catch { /* empty */ } if (!cancelled) setLoading(false); })(); return () => { cancelled = true; }; }, [severity, status, category, search, page]);
 
@@ -83,7 +106,7 @@ export function FindingsView() {
       <div className="space-y-2">
         {loading ? Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-16 bg-muted rounded-lg animate-pulse" />) :
           findings.map((f) => (
-            <Card key={String(f.id)} className="border-border/50 hover:border-primary/30 transition-colors cursor-pointer" onClick={() => selectFinding(String(f.id))}>
+            <Card key={String(f.id)} className="border-border/50 card-hover cursor-pointer" onClick={() => selectFinding(String(f.id))}>
               <CardContent className="p-4 flex items-center gap-4">
                 <Badge className={`severity-${String(f.severity).toLowerCase()} text-[10px] px-1.5 py-0 font-bold shrink-0`}>{String(f.severity)}</Badge>
                 <div className="flex-1 min-w-0">
@@ -101,9 +124,13 @@ export function FindingsView() {
         }
         {findings.length === 0 && !loading && (
           <Card className="border-border/50"><CardContent className="p-12 text-center">
-            <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <ShieldOff className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="font-semibold mb-2">No findings match your filters</h3>
-            <p className="text-sm text-muted-foreground">Try adjusting the filter criteria above.</p>
+            <p className="text-sm text-muted-foreground mb-4">Run an analysis to discover compliance issues</p>
+            <Button onClick={runAnalysis} disabled={runningAnalysis} className="gap-2">
+              <Zap className="h-4 w-4" />
+              {runningAnalysis ? 'Running...' : 'Run Analysis'}
+            </Button>
           </CardContent></Card>
         )}
       </div>

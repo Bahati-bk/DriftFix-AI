@@ -13,6 +13,8 @@ import {
   Settings, FileText, Scale, Database,
   LogOut, Search, Zap, Menu, X, History, Bell, PanelLeftClose, PanelLeft
 } from 'lucide-react';
+import { CommandPalette } from '@/components/ui/command-palette';
+import { OnboardingTour } from '@/components/ui/onboarding-tour';
 import { OverviewView } from './OverviewView';
 import { RepositoriesView } from './RepositoriesView';
 import { PullRequestsView } from './PullRequestsView';
@@ -96,6 +98,7 @@ function SidebarNav({
                   <TooltipTrigger asChild>
                     <button
                       onClick={() => handleNav(item.view)}
+                      data-tour={item.view === 'overview' ? 'step-2' : item.view === 'findings' ? 'step-3' : undefined}
                       className={`w-full flex items-center gap-3 px-3 py-2 rounded-r-md text-sm transition-all ${
                         active
                           ? 'bg-primary/10 text-primary border-l-2 border-primary font-medium'
@@ -132,7 +135,7 @@ function SidebarNav({
           className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-primary hover:bg-primary/10 transition-colors ${!sidebarOpen ? 'justify-center' : ''}`}
         >
           <Zap className="h-4 w-4 shrink-0" />
-          {sidebarOpen && <span>Run Demo Analysis</span>}
+          {sidebarOpen && <span data-tour="step-1">Run Demo Analysis</span>}
         </button>
       </div>
       <Separator className="bg-border/50" />
@@ -306,12 +309,16 @@ export function DashboardLayout() {
             <div className="relative max-w-xs">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
+                data-tour="step-0"
                 value={headerSearch}
                 onChange={(e) => setHeaderSearch(e.target.value)}
                 onKeyDown={handleSearch}
                 placeholder="Search findings, repos, PRs..."
-                className="w-full h-9 pl-9 pr-3 rounded-md bg-secondary border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full h-9 pl-9 pr-16 rounded-md bg-secondary border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               />
+              <kbd className="absolute right-2 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-0.5 rounded border border-border bg-background px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground pointer-events-none">
+                <span className="text-xs">⌘</span>K
+              </kbd>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -346,6 +353,36 @@ export function DashboardLayout() {
           <div className="animate-slide-in">{renderView()}</div>
         </main>
       </div>
+      <CommandPalette />
+      <OnboardingTour
+        steps={[
+          {
+            target: 'step-0',
+            title: 'Search Anything',
+            description: 'Use the search bar or press ⌘K to find findings, repos, and PRs',
+            position: 'bottom',
+          },
+          {
+            target: 'step-1',
+            title: 'Run Analysis',
+            description: 'Click here to run a demo compliance analysis on sample code',
+            position: 'bottom',
+          },
+          {
+            target: 'step-2',
+            title: 'Dashboard Overview',
+            description: 'Your compliance posture at a glance with trends and recent findings',
+            position: 'right',
+          },
+          {
+            target: 'step-3',
+            title: 'Explore Findings',
+            description: 'View, filter, and manage all compliance findings across repositories',
+            position: 'right',
+          },
+        ]}
+        onComplete={() => {}}
+      />
     </div>
   );
 }

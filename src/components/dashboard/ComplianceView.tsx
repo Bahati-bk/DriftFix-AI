@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AnimatedScore } from '@/components/ui/animated-score';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip as RTooltip } from 'recharts';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
@@ -130,7 +131,7 @@ export function ComplianceView() {
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <div className="text-5xl font-bold" style={{ color: scoreColor }}>
-                {score}
+                <AnimatedScore value={score} duration={1200} />
               </div>
               <div className="text-xs text-muted-foreground mt-1 tracking-wider">COMPLIANCE SCORE</div>
             </div>

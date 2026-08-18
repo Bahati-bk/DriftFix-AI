@@ -114,8 +114,17 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes fadeSlideIn {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
 .animate-slide-in {
   animation: slide-in 0.3s ease-out;
+}
+
+.animate-fade-slide-in {
+  animation: fadeSlideIn 300ms ease-out;
 }
 
 .animate-pulse-glow {
@@ -147,4 +156,23 @@ pre, code {
     linear-gradient(oklch(0.25 0.01 260 / 0.5) 1px, transparent 1px),
     linear-gradient(90deg, oklch(0.25 0.01 260 / 0.5) 1px, transparent 1px);
   background-size: 40px 40px;
+}
+
+/* Card hover micro-interaction */
+.card-hover {
+  transition: all 200ms ease-out;
+}
+.card-hover:hover {
+  box-shadow: 0 10px 15px -3px oklch(0.75 0.14 250 / 0.05), 0 4px 6px -4px oklch(0.75 0.14 250 / 0.05);
+  transform: translateY(-2px);
+  border-color: oklch(0.75 0.14 250 / 0.3);
+}
+
+/* Badge pulse animation */
+.badge-pulse {
+  animation: badge-pulse-anim 2s ease-in-out infinite;
+}
+@keyframes badge-pulse-anim {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }

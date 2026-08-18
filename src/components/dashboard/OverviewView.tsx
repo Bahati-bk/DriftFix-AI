@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { AnimatedScore } from '@/components/ui/animated-score';
 import { useAppStore } from '@/stores/app';
 import { toast } from 'sonner';
 import {
@@ -352,7 +353,7 @@ export function OverviewView() {
                     textShadow: scoreGlow,
                   }}
                 >
-                  {score}
+                  <AnimatedScore value={score} duration={1200} />
                 </span>
                 <span className="text-[11px] text-muted-foreground mt-0.5">
                   out of 100

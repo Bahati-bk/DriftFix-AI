@@ -89,7 +89,7 @@ export function PullRequestsView() {
           return (
             <Card
               key={String(pr.id)}
-              className="border-border/50 hover:border-primary/30 transition-all duration-200 cursor-pointer group"
+              className="border-border/50 card-hover cursor-pointer group"
               onClick={() => selectPR(String(pr.id))}
             >
               <CardContent className="p-4 flex items-center gap-4">

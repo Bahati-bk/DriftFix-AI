@@ -125,7 +125,7 @@ export function RepositoriesView() {
             return (
               <Card
                 key={repo.id}
-                className="border-border/50 hover:border-primary/30 transition-all duration-200 group relative overflow-hidden"
+                className="border-border/50 card-hover group relative overflow-hidden"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
                 <CardContent className="p-5 relative">
