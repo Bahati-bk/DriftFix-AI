@@ -27,6 +27,7 @@ interface AppState {
   selectedPRId: string | null;
   selectedFindingId: string | null;
   sidebarOpen: boolean;
+  searchQuery: string;
   setView: (view: AppView) => void;
   login: (user: { id: string; email: string; name: string; role: string }, orgId: string) => void;
   logout: () => void;
@@ -34,6 +35,7 @@ interface AppState {
   selectPR: (id: string | null) => void;
   selectFinding: (id: string | null) => void;
   toggleSidebar: () => void;
+  setSearchQuery: (q: string) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -45,6 +47,7 @@ export const useAppStore = create<AppState>((set) => ({
   selectedPRId: null,
   selectedFindingId: null,
   sidebarOpen: true,
+  searchQuery: '',
   setView: (view) => set({ view }),
   login: (user, orgId) => set({ isAuthenticated: true, currentUser: user, currentOrgId: orgId, view: 'overview' }),
   logout: () => set({ isAuthenticated: false, currentUser: null, currentOrgId: null, view: 'landing' }),
@@ -52,4 +55,5 @@ export const useAppStore = create<AppState>((set) => ({
   selectPR: (id) => set({ selectedPRId: id, view: id ? 'pr-analysis' : 'pull-requests' }),
   selectFinding: (id) => set({ selectedFindingId: id, view: id ? 'finding-detail' : 'findings' }),
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
+  setSearchQuery: (q) => set({ searchQuery: q }),
 }));

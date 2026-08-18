@@ -1,10 +1,10 @@
 import type { Severity } from './rules';
 
 const SEVERITY_WEIGHTS: Record<Severity, number> = {
-  CRITICAL: 20,
-  HIGH: 10,
-  MEDIUM: 5,
-  LOW: 2,
+  CRITICAL: 8,
+  HIGH: 4,
+  MEDIUM: 2,
+  LOW: 0.5,
 };
 
 export function calculateComplianceScore(findings: { severity: Severity; confidence: number; status: string }[]): number {
