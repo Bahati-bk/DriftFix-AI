@@ -164,6 +164,7 @@ export function ComplianceView() {
   const trendColor = trendChange > 0 ? 'text-emerald-400' : trendChange < 0 ? 'text-red-400' : 'text-muted-foreground';
 
   const scoreLabel = score >= 90 ? 'Excellent' : score >= 80 ? 'Good' : score >= 60 ? 'Fair' : 'Needs Work';
+  const scoreLabelColor = score >= 90 ? 'text-emerald-400' : score >= 80 ? 'text-green-400' : score >= 60 ? 'text-yellow-400' : 'text-red-400';
   const gapToTarget = TARGET_SCORE - score;
 
   return (
@@ -242,7 +243,7 @@ export function ComplianceView() {
                 <div className="text-4xl font-extrabold tracking-tight" style={{ color: scoreColor, fontWeight: 800 }}>
                   <AnimatedScore value={score} duration={1200} />
                 </div>
-                <div className="text-[10px] text-muted-foreground mt-0.5 tracking-wider uppercase">{scoreLabel}</div>
+                <div className={`text-[10px] mt-0.5 tracking-wider uppercase font-semibold ${scoreLabelColor}`}>{scoreLabel}</div>
               </div>
             </div>
 
@@ -306,7 +307,7 @@ export function ComplianceView() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="h-56">
+            <div className="h-56 pr-3">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={trends as { weekLabel: string; score: number }[]}>
                   <defs>

@@ -42,13 +42,13 @@ function HealthBadge({ score, label, color }: { score: number; label: string; co
   const offset = circ - (score / 100) * circ;
   return (
     <div className="absolute top-3 right-3 group/badge" title={`Compliance Health: ${score}/100`}>
-      <svg width="32" height="32" viewBox="0 0 32 32" className="-rotate-90">
-        <circle cx="16" cy="16" r={r} fill="none" stroke="currentColor" strokeWidth="3" className="text-secondary" />
+      <svg width="36" height="36" viewBox="0 0 36 36" className="-rotate-90" style={{ filter: `drop-shadow(0 0 4px ${color}40)` }}>
+        <circle cx="18" cy="18" r={r} fill="none" stroke="currentColor" strokeWidth="3.5" className="text-secondary" />
         <circle
-          cx="16" cy="16" r={r}
+          cx="18" cy="18" r={r}
           fill="none"
           stroke={color}
-          strokeWidth="3"
+          strokeWidth="3.5"
           strokeLinecap="round"
           strokeDasharray={circ}
           strokeDashoffset={offset}

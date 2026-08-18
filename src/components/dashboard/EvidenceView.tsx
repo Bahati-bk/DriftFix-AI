@@ -255,7 +255,7 @@ export function EvidenceView() {
         </div>
       ) : (
         <div className="relative">
-          {/* Timeline vertical line */}
+          {/* Timeline vertical line — centered on 22px dots at 11px offset */}
           <div className="absolute left-[11px] top-0 bottom-0 w-0.5 bg-border/40" />
 
           <div className="space-y-3">
@@ -286,7 +286,7 @@ export function EvidenceView() {
 
                   {/* Content card */}
                   <div className={`flex-1 min-w-0 ${isLast ? '' : 'pb-3'}`}>
-                    <Card className="border-border/50 hover:border-border transition-colors rounded-xl hover:bg-accent/50 transition-colors">
+                    <Card className="border-border/50 rounded-xl hover:border-border/70 transition-all duration-200 hover:bg-accent/50">
                       <CardContent className="p-4">
                         {/* Top row: badge, actor, time */}
                         <div className="flex items-center gap-2 flex-wrap mb-2">

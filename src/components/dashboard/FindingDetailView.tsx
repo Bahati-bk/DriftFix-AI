@@ -23,10 +23,22 @@ export function FindingDetailView() {
   const [riskJust, setRiskJust] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const currentUser = useAppStore((s) => s.currentUser);
-  const [notes, setNotes] = useState<string[]>(finding?.notes ? JSON.parse(finding.notes) : []);
+  const [notes, setNotes] = useState<{ id: string; author: string; content: string; createdAt: string }[]>([]);
   const [newNote, setNewNote] = useState('');
 
   const fId = useAppStore.getState().selectedFindingId;
+
+  const fetchNotes = async (findingId: string) => {
+    try {
+      const res = await fetch(`/api/findings/${findingId}/notes`);
+      if (res.ok) {
+        const data = await res.json();
+        setNotes(data.notes || []);
+      }
+    } catch {
+      // silently fail
+    }
+  };
 
   useEffect(() => {
     if (!fId) return;
@@ -35,6 +47,7 @@ export function FindingDetailView() {
       setFinding(data.finding || null);
       setMappings(data.finding?.complianceMappings || []);
       setLoading(false);
+      fetchNotes(fId);
     }).catch(() => setLoading(false));
   }, [fId]);
 
@@ -87,7 +100,7 @@ export function FindingDetailView() {
               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
                 <span>{String(finding.filePath)}{finding.lineStart ? `:${finding.lineStart}` : ''}</span>
               </div>
-              <pre className="bg-secondary rounded-lg p-4 text-sm font-mono overflow-x-auto border border-border/50">{String(finding.evidence || finding.description)}</pre>
+              <pre className="bg-[#0d1117] rounded-lg p-4 text-sm font-mono overflow-x-auto border border-white/5">{String(finding.evidence || finding.description)}</pre>
             </CardContent>
           </Card>
 
@@ -168,21 +181,24 @@ export function FindingDetailView() {
           )}
 
           {/* Notes */}
-          <Card className="border-border/50 rounded-xl">
+          <Card className="border-border/50 rounded-xl card-elevated">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <MessageSquare className="h-4 w-4" />
-                Notes ({notes.length})
+                Notes {notes.length > 0 && <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 font-normal ml-1">{notes.length}</Badge>}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {notes.length === 0 && <p className="text-sm text-muted-foreground">No notes yet. Add your analysis or context.</p>}
-              {notes.map((note, i) => (
-                <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-secondary/30">
-                  <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary shrink-0">{currentUser?.name?.charAt(0) || 'U'}</div>
+              {notes.map((note) => (
+                <div key={note.id} className="flex items-start gap-3 p-3 rounded-lg bg-secondary/30">
+                  <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary shrink-0">{note.author?.charAt(0)?.toUpperCase() || 'U'}</div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-foreground">{note}</p>
-                    <p className="text-[10px] text-muted-foreground mt-1">Just now</p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-foreground">{note.author}</span>
+                      <span className="text-[10px] text-muted-foreground">{new Date(note.createdAt).toLocaleString()}</span>
+                    </div>
+                    <p className="text-sm text-foreground mt-0.5">{note.content}</p>
                   </div>
                 </div>
               ))}
@@ -190,19 +206,53 @@ export function FindingDetailView() {
                 <input
                   value={newNote}
                   onChange={e => setNewNote(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter' && newNote.trim()) {
-                      setNotes(prev => [...prev, newNote.trim()]);
+                  onKeyDown={async (e) => {
+                    if (e.key === 'Enter' && newNote.trim() && fId) {
+                      const content = newNote.trim();
                       setNewNote('');
+                      try {
+                        const res = await fetch(`/api/findings/${fId}/notes`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ content, author: currentUser?.name || 'Anonymous' }),
+                        });
+                        if (res.ok) {
+                          const data = await res.json();
+                          setNotes(data.notes || []);
+                        } else {
+                          setNewNote(content);
+                          toast.error('Failed to add note');
+                        }
+                      } catch {
+                        setNewNote(content);
+                        toast.error('Failed to add note');
+                      }
                     }
                   }}
                   placeholder="Add a note..."
                   className="flex-1 h-9 px-3 rounded-md bg-secondary border border-border text-sm text-foreground placeholder:text-muted-foreground input-glow focus:outline-none"
                 />
-                <Button size="sm" onClick={() => {
-                  if (newNote.trim()) {
-                    setNotes(prev => [...prev, newNote.trim()]);
+                <Button size="sm" onClick={async () => {
+                  if (newNote.trim() && fId) {
+                    const content = newNote.trim();
                     setNewNote('');
+                    try {
+                      const res = await fetch(`/api/findings/${fId}/notes`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content, author: currentUser?.name || 'Anonymous' }),
+                      });
+                      if (res.ok) {
+                        const data = await res.json();
+                        setNotes(data.notes || []);
+                      } else {
+                        setNewNote(content);
+                        toast.error('Failed to add note');
+                      }
+                    } catch {
+                      setNewNote(content);
+                      toast.error('Failed to add note');
+                    }
                   }
                 }} disabled={!newNote.trim()}>
                   <Send className="h-3.5 w-3.5" />
@@ -241,7 +291,10 @@ export function FindingDetailView() {
                   <div className="text-lg font-bold tabular-nums" style={{ color: confColor }}>{Math.round(confidence * 100)}%</div>
                 </div>
                 <div className="h-2 w-full rounded-full bg-secondary overflow-hidden">
-                  <div className={`h-full rounded-full ${confBarColor}`} style={{ width: `${confidence * 100}%`, transition: 'width 0.8s ease-out' }} />
+                  <div
+                    className={`h-full rounded-full confidence-bar ${confBarColor}`}
+                    style={{ width: `${confidence * 100}%`, transition: 'width 0.8s ease-out', boxShadow: `0 0 12px ${confColor}40` }}
+                  />
                 </div>
                 <div className="text-[10px] text-muted-foreground mt-1">{confLabel}</div>
               </div>

@@ -224,7 +224,7 @@ export function ReportsView() {
                 <p className="text-xs text-muted-foreground">{frameworkDescriptions[framework]}</p>
               )}
             </div>
-            <Button onClick={handleGenerate} disabled={generating} className="gap-2">
+            <Button onClick={handleGenerate} disabled={generating} className="gap-2 btn-press">
               {generating ? <Loader2 className="size-4 animate-spin" /> : <FileText className="size-4" />}
               {generating ? 'Generating...' : 'Generate Report'}
             </Button>
@@ -238,12 +238,18 @@ export function ReportsView() {
         </CardHeader>
         <CardContent>
           {reports.length === 0 ? (
-            <div className="py-12 text-center">
-              <FileBarChart className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+            <div className="py-14 text-center">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
+                <FileBarChart className="h-8 w-8 text-primary/60" />
+              </div>
               <h3 className="text-lg font-semibold mb-2">No reports generated yet</h3>
-              <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                Select a compliance framework and click &quot;Generate Report&quot; to create your first audit report.
+              <p className="text-sm text-muted-foreground max-w-sm mx-auto mb-6">
+                Select a compliance framework and click "Generate Report" to create your first audit report.
               </p>
+              <Button variant="outline" className="gap-2 btn-press" onClick={handleGenerate} disabled={generating}>
+                {generating ? <Loader2 className="size-4 animate-spin" /> : <FileText className="size-4" />}
+                Generate Your First Report
+              </Button>
             </div>
           ) : (
             <div className="space-y-3 max-h-96 overflow-y-auto">

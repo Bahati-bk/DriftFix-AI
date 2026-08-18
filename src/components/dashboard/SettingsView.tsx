@@ -180,7 +180,7 @@ export function SettingsView() {
                     value={orgName}
                     onChange={(e) => setOrgName(e.target.value)}
                     placeholder="Enter organization name"
-                    className="flex-1 bg-secondary/50 border border-border input-glow focus:ring-2 focus:ring-primary/30"
+                    className="flex-1 bg-secondary/50 border border-border/80 input-glow focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
                   />
                   <Button
                     variant="outline"

@@ -217,6 +217,7 @@ export function RulesView() {
                             <Switch
                               checked={Boolean(rule.enabled)}
                               onCheckedChange={() => toggleRule(rule)}
+                              className="toggle-glow"
                             />
                           </div>
                         </div>

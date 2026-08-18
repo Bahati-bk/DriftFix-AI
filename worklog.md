@@ -1,8 +1,145 @@
 # DriftFix - Worklog
 
-## Premium Visual Polish + 3 New Features (Round 6)
+## Styling Polish + 4 New Features (Round 7)
 
-**Date**: 2025-08-18 (Round 6 - cron-triggered webDevReview)
+**Date**: 2025-08-19 (Round 7 - cron-triggered webDevReview)
+
+### Current Project Status Assessment
+- Application is fully stable: all 11+ views compile and render without errors
+- Lint: 0 errors, 0 warnings
+- Dev log: 10+ successful compilations, zero errors
+- Browser QA: All views + new features tested, zero console errors
+- VLM visual QA: Views rated 7-7.5/10 (up from 6-6.5 at start of Round 6)
+- Finding notes now persist to database (new FindingNote model)
+- Command palette now searches real findings, repos, PRs from API
+- Bulk actions available on findings (resolve/dismiss/accept risk)
+
+### Changes Completed
+
+#### Styling Fixes (12 VLM-identified issues)
+
+1. **Dark-themed toast notifications** (globals.css)
+   - Added `.dark [data-sonner-toaster]` override with dark background (`oklch(0.18 0.008 260 / 0.95)`), border, and backdrop blur
+   - Toasts now blend seamlessly with dark theme
+
+2. **Sidebar user profile truncation fix** (DashboardLayout.tsx)
+   - Added `min-h-[40px]` to user profile container
+   - Name span gets `truncate block`, Badge gets `shrink-0`
+   - Prevents text overflow on small sidebars
+
+3. **Sidebar nav smooth transitions** (globals.css + DashboardLayout.tsx)
+   - Added `.nav-item-smooth` class with `transition: all 200ms ease-in-out` and `hover: translateX(2px)`
+   - Increased nav item vertical padding from `py-2` to `py-2.5`
+   - Non-active hover changed from `hover:bg-accent` to `hover:bg-accent/80`
+
+4. **Search bar contrast improvement** (DashboardLayout.tsx)
+   - Changed from `bg-secondary border border-border` to `bg-secondary/80 border border-border/80`
+   - Added `focus:border-primary/40` for better focus indication
+
+5. **Confidence bar glow animation** (globals.css + FindingDetailView.tsx)
+   - Added `.confidence-bar` class with `background-size: 200%` and `confidence-shimmer` animation
+   - Confidence bar now has `boxShadow: 0 0 12px ${confColor}40`
+   - Gives the bar a living, pulsing glow effect
+
+6. **Toggle switch glow when active** (globals.css + RulesView.tsx)
+   - Added `.toggle-glow[data-state="checked"]` with `box-shadow: 0 0 8px primary/50%
+   - Applied to all rule toggles in RulesView
+
+7. **Repo health ring thicker stroke + glow** (RepositoriesView.tsx)
+   - SVG viewBox from `0 0 32 32` to `0 0 36 36`, cx/cy from 16 to 18
+   - StrokeWidth from `3` to `3.5`
+   - Added `filter: drop-shadow(0 0 4px ${color}40)` to SVG
+
+8. **Compliance chart X-axis clipping fix** (ComplianceView.tsx)
+   - Added `pr-3` to chart container div
+   - Prevents rightmost week labels from being cut off
+
+9. **Evidence timeline duplicate class fix** (EvidenceView.tsx)
+   - Removed duplicate `transition-colors` class
+   - Changed to `hover:border-border/70 transition-all duration-200`
+
+10. **Settings input field depth** (SettingsView.tsx)
+    - Changed org name input from `border-border` to `border-border/80 focus:border-primary/40`
+
+11. **Reports empty state enhancement** (ReportsView.tsx)
+    - Added rounded icon container (`h-16 w-16 rounded-2xl bg-primary/10`)
+    - Added "Generate Your First Report" CTA button directly in empty state
+
+12. **New CSS utilities** (globals.css)
+    - `.btn-press` — button press effect (`transform: scale(0.97)` on `:active`)
+    - `.card-elevated` — subtle card shadow for depth
+    - `.toggle-glow` — active toggle glow
+    - `.confidence-bar` — animated confidence shimmer
+    - `.nav-item-smooth` — sidebar hover transition
+
+#### New Features (4)
+
+1. **Persistent Finding Notes** (schema + API + FindingDetailView)
+   - New `FindingNote` Prisma model: id, findingId, author, content, createdAt
+   - Cascade delete relation to Finding model
+   - New API: GET/POST `/api/findings/[id]/notes`
+   - Notes now persist to database with author name and real timestamps
+   - Note count shown as Badge in card header
+
+2. **Enhanced Command Palette** (command-palette.tsx)
+   - Debounced API search (300ms) when typing queries
+   - Searches findings (`/api/findings?search=`), repos (`/api/repositories`), PRs (`/api/pull-requests`)
+   - New result groups: "Findings" (severity badges), "Repositories" (language), "Pull Requests" (status)
+   - Click finding → navigates to finding-detail; click repo/PR → navigates to respective view
+   - Loading spinner during API fetches
+   - All existing navigation/action commands preserved
+
+3. **Finding Bulk Actions** (FindingsView.tsx)
+   - Floating action bar with glass effect (`bg-card/95 backdrop-blur-sm`)
+   - "Resolve Selected", "Dismiss", "Accept Risk" buttons
+   - "Deselect All" button
+   - Uses `Promise.allSettled` for partial success reporting (e.g., "Resolved 3 findings (1 failed)")
+   - Select All checkbox in filter bar area
+
+4. **Live Activity Indicator** (OverviewView.tsx)
+   - Green pulsing dot with "Live" label in Recent Activity card header
+   - Uses `animate-ping` for the pulse effect
+
+#### Finding Detail Improvements
+- Code block contrast: evidence `<pre>` changed from `bg-secondary` to `bg-[#0d1117] border-white/5`
+- Notes card gets `card-elevated` class for subtle shadow
+- Notes count badge in header
+
+#### Compliance View Improvements
+- Score label ("Fair", "Excellent", etc.) now color-coded to match score:
+  - ≥90: emerald-400, ≥80: green-400, ≥60: yellow-400, <60: red-400
+- Added `font-semibold` to score label
+- Chart container padding fix (pr-3)
+
+### QA Verification (Round 7)
+- Lint: 0 errors, 0 warnings
+- Dev log: 10+ successful compilations, zero errors
+- Browser QA: Landing → Login → Overview (Live indicator) → Findings (bulk actions, checkboxes) → Command Palette (API search for "CORS") → Compliance (color-coded label) → Rules (toggle glow) → Evidence (fixed transitions) → Reports (enhanced empty state) → Settings (input depth) — ALL PASS
+- VLM visual QA: Views rated 7-7.5/10
+- Zero console errors across all views
+- Bulk action bar verified: checkbox selection triggers floating bar with Resolve/Dismiss/Accept Risk buttons
+- Command palette verified: typing "CORS" returns real finding and PR results from API
+
+### Unresolved Issues / Risks
+- SQLite not production-grade (acceptable for demo)
+- No real GitHub integration (webhook endpoint exists but needs credentials)
+- AI analysis falls back to rule-engine if z-ai-web-dev-sdk unavailable
+- No unit tests
+- VLM suggests enterprise features: granular filtering, expand-in-place evidence cards, rule efficacy metrics
+
+### Priority Recommendations for Next Phase
+1. WebSocket real-time updates for findings/evidence
+2. PDF report generation (currently JSON-only download)
+3. Real file upload for PR diff analysis
+4. User invitation/management flow
+5. Audit report scheduling (cron-based auto-generation)
+6. Organization switching capability
+7. Mobile responsive testing on sub-640px viewports
+8. Evidence ledger: add search/filter bar, expand-in-place cards
+9. Rules: add rule efficacy metrics (times triggered, findings generated)
+10. Syntax highlighting in code diff viewer
+
+---
 
 ### Current Project Status Assessment
 - Application is fully stable: all 11+ views compile and render without errors
@@ -1013,3 +1150,79 @@ Lint: 0 errors, 0 warnings
 
 ### Verification
 - `bun run lint`: 0 errors, 0 warnings
+
+---
+
+## Database Persistence for Finding Notes (Task 3a)
+
+**Date**: 2025-08-18 (Task 3a)
+
+### Summary
+Added full database persistence for finding notes, replacing the previous client-side-only `string[]` state with a proper `FindingNote` Prisma model and REST API.
+
+### Changes Completed
+
+1. **Prisma Schema** (`prisma/schema.prisma`)
+   - Added `FindingNote` model with fields: `id` (cuid), `findingId`, `author`, `content`, `createdAt`
+   - Cascade delete: `onDelete: Cascade` on the `finding` relation
+   - Added `@@index([findingId])` for query performance
+   - Added `notes FindingNote[]` relation to the existing `Finding` model
+   - Ran `bun run db:push` — schema synced successfully
+
+2. **API Endpoint** (`src/app/api/findings/[id]/notes/route.ts`)
+   - `GET`: Fetches all notes for a finding, ordered by `createdAt desc`
+   - `POST`: Creates a new note (validates `content` and `author` are non-empty), returns the full updated notes list
+   - Both handlers use `params: Promise<{ id: string }>` matching Next.js 16 async params pattern
+
+3. **FindingDetailView** (`src/components/dashboard/FindingDetailView.tsx`)
+   - Changed `notes` state type from `string[]` to `{ id: string; author: string; content: string; createdAt: string }[]`
+   - Added `fetchNotes(findingId)` async helper to GET `/api/findings/{id}/notes`
+   - Called `fetchNotes(fId)` inside the existing `useEffect` after finding data loads
+   - Note rendering now shows: author avatar initial (from `note.author`), author name, `toLocaleString()` timestamp, and note content
+   - Both Enter key and Send button POST to the API with `{ content, author: currentUser?.name || 'Anonymous' }`
+   - On success, the full notes list is refreshed from the API response
+   - On failure, the input is restored and a toast error is shown
+   - No styling changes were made
+
+### Verification
+- `bun run lint`: 0 errors, 0 warnings
+- Dev log: compiled successfully, no errors
+- All existing UI/layout preserved — only data flow changed
+## Task 4a: Enhanced Command Palette API Search, Floating Bulk Actions, Live Activity Indicator
+
+**Date**: 2025-08-18 (Task 4a)
+
+### Changes Completed
+
+#### 1. Command Palette API Search (command-palette.tsx)
+- Added parallel API search with 300ms debounce when user types a query
+- Fetches from 3 endpoints: `/api/findings?limit=5&search={q}`, `/api/repositories`, `/api/pull-requests?limit=5`
+- Repos and PRs filtered client-side by query (name/title/branch matching)
+- New result groups displayed: "Findings" (with severity-colored badges), "Repositories" (with language sublabel), "Pull Requests" (with status badges)
+- Clicking a finding navigates to finding-detail view via `selectFinding(id)` + `setView('finding-detail')`
+- Clicking a repo navigates to repositories view
+- Clicking a PR navigates to PR analysis view via `selectPR(id)`
+- All existing navigation/action commands preserved
+- Subtle `Loader2` spinner shown in search input during API fetch
+- Dark themed styling preserved (bg-zinc-950, border-zinc-800)
+- Unified flat item list supports both command and search result types
+
+#### 2. Floating Bulk Action Bar (FindingsView.tsx)
+- Removed old inline bulk action bar from top of page
+- Added fixed-position floating bar at bottom center: `fixed bottom-4 left-1/2 -translate-x-1/2 z-50`
+- Glass effect: `bg-card/95 backdrop-blur-sm border border-border shadow-xl`
+- Shows "X selected" count, "Resolve Selected", "Dismiss", "Accept Risk" buttons, and "Deselect All" button
+- Changed from `Promise.all` to `Promise.allSettled` for bulk resolve
+- Toast shows success count and failure count separately on partial failures
+- Select All checkbox retained in filter area
+- Extracted `fetchFindings` callback for DRY reload after bulk actions
+
+#### 3. Live Activity Indicator (OverviewView.tsx)
+- Added green pulsing dot with "Live" label in Recent Activity card header
+- Positioned top-right alongside existing "View ledger →" link
+- Uses `bg-emerald-500 animate-pulse` for the dot, `text-emerald-500` for label
+- Minimal, non-intrusive visual indicator
+
+### Quality
+- Lint: 0 errors, 0 warnings
+- Dev server: Compiling successfully, all routes returning 200

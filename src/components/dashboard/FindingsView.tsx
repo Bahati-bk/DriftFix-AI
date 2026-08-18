@@ -32,11 +32,11 @@ export function FindingsView() {
   const [focusedIndex, setFocusedIndex] = useState(-1);
 
   const filterPresets = [
-    { label: '🔥 Critical', filter: { severity: 'CRITICAL', status: 'OPEN' }, icon: AlertTriangle },
-    { label: '⚠️ High Risk', filter: { severity: 'HIGH', status: 'OPEN' }, icon: AlertTriangle },
-    { label: '📋 Open', filter: { status: 'OPEN' }, icon: CircleDot },
-    { label: '✅ Resolved', filter: { status: 'RESOLVED' }, icon: CheckCircle2 },
-    { label: '📊 All', filter: {}, icon: LayoutGrid },
+    { label: 'Critical', filter: { severity: 'CRITICAL', status: 'OPEN' }, icon: AlertTriangle },
+    { label: 'High Risk', filter: { severity: 'HIGH', status: 'OPEN' }, icon: AlertTriangle },
+    { label: 'Open', filter: { status: 'OPEN' }, icon: CircleDot },
+    { label: 'Resolved', filter: { status: 'RESOLVED' }, icon: CheckCircle2 },
+    { label: 'All', filter: {}, icon: LayoutGrid },
   ];
 
   const applyPreset = (preset: typeof filterPresets[number]) => {
@@ -47,20 +47,25 @@ export function FindingsView() {
     setPage(1);
   };
 
+  const fetchFindings = useCallback(async (p: number, s: string, st: string, c: string, q: string) => {
+    const params = new URLSearchParams({ page: String(p), limit: '20' });
+    if (s !== 'ALL') params.set('severity', s);
+    if (st !== 'ALL') params.set('status', st);
+    if (c !== 'ALL') params.set('category', c);
+    if (q) params.set('search', q);
+    const data = await (await fetch(`/api/findings?${params}`)).json();
+    setFindings(data.findings || []);
+    setTotalPages(data.pagination?.totalPages || 1);
+    setTotalCount(data.pagination?.total || 0);
+    return data;
+  }, []);
+
   const runAnalysis = async () => {
     setRunningAnalysis(true);
     try {
       const res = await fetch('/api/demo/analyze', { method: 'POST' });
       if (res.ok) {
-        const params = new URLSearchParams({ page: '1', limit: '20' });
-        if (severity !== 'ALL') params.set('severity', severity);
-        if (status !== 'ALL') params.set('status', status);
-        if (category !== 'ALL') params.set('category', category);
-        if (search) params.set('search', search);
-        const data = await (await fetch(`/api/findings?${params}`)).json();
-        setFindings(data.findings || []);
-        setTotalPages(data.pagination?.totalPages || 1);
-        setTotalCount(data.pagination?.total || 0);
+        await fetchFindings(1, severity, status, category, search);
         setPage(1);
       }
     } catch {
@@ -128,27 +133,30 @@ export function FindingsView() {
   const bulkAction = async (action: string) => {
     if (selectedIds.size === 0) return;
     setBulkLoading(action);
-    let successCount = 0;
     try {
-      await Promise.all(
-        Array.from(selectedIds).map(async (id) => {
-          const endpoint = action === 'resolve' ? 'resolve' : action === 'dismiss' ? 'dismiss' : 'accept-risk';
-          const res = await fetch(`/api/findings/${id}/${endpoint}`, { method: 'POST' });
-          if (res.ok) successCount++;
-        })
+      const endpoint = action === 'resolve' ? 'resolve' : action === 'dismiss' ? 'dismiss' : 'accept-risk';
+      const actionLabel = action === 'resolve' ? 'Resolved' : action === 'dismiss' ? 'Dismissed' : 'Accepted risk for';
+
+      const results = await Promise.allSettled(
+        Array.from(selectedIds).map((id) =>
+          fetch(`/api/findings/${id}/${endpoint}`, { method: 'POST' }).then((res) => {
+            if (!res.ok) throw new Error(`Failed for ${id}`);
+            return id;
+          })
+        )
       );
-      toast.success(`${action === 'resolve' ? 'Resolved' : action === 'dismiss' ? 'Dismissed' : 'Accepted risk for'} ${successCount} finding${successCount !== 1 ? 's' : ''}`);
+
+      const successCount = results.filter((r) => r.status === 'fulfilled').length;
+      const failCount = results.filter((r) => r.status === 'rejected').length;
+
+      if (failCount > 0) {
+        toast.warning(`${actionLabel} ${successCount} finding${successCount !== 1 ? 's' : ''} (${failCount} failed)`);
+      } else {
+        toast.success(`${actionLabel} ${successCount} finding${successCount !== 1 ? 's' : ''}`);
+      }
+
       setSelectedIds(new Set());
-      // Reload
-      const params = new URLSearchParams({ page: String(page), limit: '20' });
-      if (severity !== 'ALL') params.set('severity', severity);
-      if (status !== 'ALL') params.set('status', status);
-      if (category !== 'ALL') params.set('category', category);
-      if (search) params.set('search', search);
-      const data = await (await fetch(`/api/findings?${params}`)).json();
-      setFindings(data.findings || []);
-      setTotalPages(data.pagination?.totalPages || 1);
-      setTotalCount(data.pagination?.total || 0);
+      await fetchFindings(page, severity, status, category, search);
     } catch {
       toast.error('Bulk action failed');
     }
@@ -160,17 +168,7 @@ export function FindingsView() {
     (async () => {
       setLoading(true);
       try {
-        const params = new URLSearchParams({ page: String(page), limit: '20' });
-        if (severity !== 'ALL') params.set('severity', severity);
-        if (status !== 'ALL') params.set('status', status);
-        if (category !== 'ALL') params.set('category', category);
-        if (search) params.set('search', search);
-        const res = await fetch(`/api/findings?${params}`);
-        if (cancelled) return;
-        const data = await res.json();
-        setFindings(data.findings || []);
-        setTotalPages(data.pagination?.totalPages || 1);
-        setTotalCount(data.pagination?.total || 0);
+        await fetchFindings(page, severity, status, category, search);
       } catch {
         /* empty */
       }
@@ -179,7 +177,7 @@ export function FindingsView() {
     return () => {
       cancelled = true;
     };
-  }, [severity, status, category, search, page]);
+  }, [severity, status, category, search, page, fetchFindings]);
 
   const allSelected = findings.length > 0 && selectedIds.size === findings.length;
 
@@ -218,44 +216,6 @@ export function FindingsView() {
           </Button>
         </div>
       </div>
-
-      {/* Bulk Actions Bar */}
-      {selectedIds.size > 0 && (
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/10 border border-primary/20 animate-slide-in">
-          <span className="text-sm font-medium">{selectedIds.size} selected</span>
-          <div className="h-4 w-px bg-border" />
-          <Button
-            variant="outline" size="sm" className="gap-1.5 text-xs h-8"
-            disabled={bulkLoading === 'resolve'}
-            onClick={() => bulkAction('resolve')}
-          >
-            {bulkLoading === 'resolve' ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3 text-emerald-500" />}
-            Resolve
-          </Button>
-          <Button
-            variant="outline" size="sm" className="gap-1.5 text-xs h-8"
-            disabled={bulkLoading === 'dismiss'}
-            onClick={() => bulkAction('dismiss')}
-          >
-            {bulkLoading === 'dismiss' ? <Loader2 className="h-3 w-3 animate-spin" /> : <XCircle className="h-3 w-3 text-slate-400" />}
-            Dismiss
-          </Button>
-          <Button
-            variant="outline" size="sm" className="gap-1.5 text-xs h-8"
-            disabled={bulkLoading === 'accept-risk'}
-            onClick={() => bulkAction('accept-risk')}
-          >
-            {bulkLoading === 'accept-risk' ? <Loader2 className="h-3 w-3 animate-spin" /> : <Ban className="h-3 w-3 text-yellow-500" />}
-            Accept Risk
-          </Button>
-          <Button
-            variant="ghost" size="sm" className="text-xs h-8 ml-auto"
-            onClick={() => setSelectedIds(new Set())}
-          >
-            Clear
-          </Button>
-        </div>
-      )}
 
       {/* Quick Filter Presets */}
       <div className="flex flex-wrap gap-2 mb-3">
@@ -457,6 +417,45 @@ export function FindingsView() {
           })}
           <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
             <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+
+      {/* Floating Bulk Action Bar */}
+      {selectedIds.size > 0 && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-3 rounded-xl bg-card/95 backdrop-blur-sm border border-border shadow-xl animate-slide-in">
+          <span className="text-sm font-medium whitespace-nowrap">{selectedIds.size} selected</span>
+          <div className="h-4 w-px bg-border" />
+          <Button
+            variant="outline" size="sm" className="gap-1.5 text-xs h-8"
+            disabled={bulkLoading === 'resolve'}
+            onClick={() => bulkAction('resolve')}
+          >
+            {bulkLoading === 'resolve' ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3 text-emerald-500" />}
+            Resolve Selected
+          </Button>
+          <Button
+            variant="outline" size="sm" className="gap-1.5 text-xs h-8"
+            disabled={bulkLoading === 'dismiss'}
+            onClick={() => bulkAction('dismiss')}
+          >
+            {bulkLoading === 'dismiss' ? <Loader2 className="h-3 w-3 animate-spin" /> : <XCircle className="h-3 w-3 text-slate-400" />}
+            Dismiss
+          </Button>
+          <Button
+            variant="outline" size="sm" className="gap-1.5 text-xs h-8"
+            disabled={bulkLoading === 'accept-risk'}
+            onClick={() => bulkAction('accept-risk')}
+          >
+            {bulkLoading === 'accept-risk' ? <Loader2 className="h-3 w-3 animate-spin" /> : <Ban className="h-3 w-3 text-yellow-500" />}
+            Accept Risk
+          </Button>
+          <div className="h-4 w-px bg-border" />
+          <Button
+            variant="ghost" size="sm" className="text-xs h-8 whitespace-nowrap"
+            onClick={() => setSelectedIds(new Set())}
+          >
+            Deselect All
           </Button>
         </div>
       )}

@@ -28,6 +28,7 @@ import {
   SearchX,
   Clock,
   Keyboard,
+  Loader2,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -38,6 +39,16 @@ interface CommandItem {
   shortcut?: string;
   category: 'navigation' | 'action' | 'quick-search';
   execute: () => void;
+}
+
+interface SearchResultItem {
+  id: string;
+  label: string;
+  sublabel?: string;
+  icon: LucideIcon;
+  group: 'findings' | 'repositories' | 'pull-requests';
+  execute: () => void;
+  badge?: { text: string; className: string };
 }
 
 const MAX_RECENT = 3;
@@ -109,7 +120,7 @@ function buildCommands(): CommandItem[] {
       }
     } },
     // Help
-    { id: 'help-shortcuts', label: 'Show Keyboard Shortcuts', icon: Keyboard, category: 'action', shortcut: '⌘/', execute: () => {
+    { id: 'help-shortcuts', label: 'Show Keyboard Shortcuts', icon: Keyboard, category: 'action', shortcut: '\u2318/', execute: () => {
       // Dispatch a synthetic keyboard event to open the shortcuts panel
       const ev = new KeyboardEvent('keydown', { key: '/', metaKey: true, ctrlKey: !navigator.userAgent.includes('Mac'), bubbles: true });
       document.dispatchEvent(ev);
@@ -118,6 +129,19 @@ function buildCommands(): CommandItem[] {
     { id: 'quick-search', label: 'Search findings...', icon: Search, category: 'quick-search', execute: () => {} },
   ];
 }
+
+const severityBadgeClass: Record<string, string> = {
+  CRITICAL: 'bg-red-500/20 text-red-400 border-red-500/30',
+  HIGH: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+  MEDIUM: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+  LOW: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+};
+
+const prStatusVariant: Record<string, 'default' | 'secondary' | 'outline'> = {
+  MERGED: 'default',
+  OPEN: 'secondary',
+  CLOSED: 'outline',
+};
 
 export function CommandPalette({
   open,
@@ -131,6 +155,9 @@ export function CommandPalette({
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const [apiResults, setApiResults] = useState<SearchResultItem[]>([]);
+  const [apiLoading, setApiLoading] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isControlled = open !== undefined;
   const isOpen = isControlled ? open : internalOpen;
@@ -154,8 +181,122 @@ export function CommandPalette({
   const actionCommands = filtered.filter((c) => c.category === 'action');
   const quickSearchCommands = filtered.filter((c) => c.category === 'quick-search');
 
-  // Build grouped list
-  const allGroups: { label: string; items: CommandItem[] }[] = useMemo(() => {
+  // API search with debounce
+  useEffect(() => {
+    if (!query.trim()) {
+      setApiResults([]);
+      setApiLoading(false);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      return;
+    }
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    setApiLoading(true);
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const q = query.trim();
+        const [findingsRes, reposRes, prsRes] = await Promise.all([
+          fetch(`/api/findings?limit=5&search=${encodeURIComponent(q)}`),
+          fetch('/api/repositories'),
+          fetch('/api/pull-requests?limit=5'),
+        ]);
+
+        const results: SearchResultItem[] = [];
+        const store = useAppStore.getState();
+
+        // Parse findings
+        if (findingsRes.ok) {
+          const data = await findingsRes.json();
+          for (const f of (data.findings || []).slice(0, 5)) {
+            results.push({
+              id: `finding-${f.id}`,
+              label: String(f.title),
+              sublabel: f.filePath ? `${f.filePath}${f.lineStart ? ':' + f.lineStart : ''}` : undefined,
+              icon: AlertTriangle,
+              group: 'findings',
+              badge: { text: String(f.severity), className: severityBadgeClass[String(f.severity)] || 'bg-zinc-700 text-zinc-300 border-zinc-600' },
+              execute: () => {
+                store.selectFinding(String(f.id));
+                store.setView('finding-detail');
+              },
+            });
+          }
+        }
+
+        // Parse repos - filter client-side
+        if (reposRes.ok) {
+          const data = await reposRes.json();
+          const qLower = q.toLowerCase();
+          const filteredRepos = (data.repositories || []).filter(
+            (r: Record<string, unknown>) =>
+              String(r.fullName || r.name || '').toLowerCase().includes(qLower) ||
+              String(r.language || '').toLowerCase().includes(qLower)
+          ).slice(0, 5);
+          for (const r of filteredRepos) {
+            results.push({
+              id: `repo-${r.id}`,
+              label: String(r.fullName || r.name),
+              sublabel: r.language ? String(r.language) : undefined,
+              icon: Database,
+              group: 'repositories',
+              execute: () => store.setView('repositories'),
+            });
+          }
+        }
+
+        // Parse PRs - filter client-side
+        if (prsRes.ok) {
+          const data = await prsRes.json();
+          const qLower = q.toLowerCase();
+          const filteredPRs = (data.pullRequests || []).filter(
+            (pr: Record<string, unknown>) =>
+              String(pr.title || '').toLowerCase().includes(qLower) ||
+              String(pr.sourceBranch || '').toLowerCase().includes(qLower)
+          ).slice(0, 5);
+          for (const pr of filteredPRs) {
+            const prStatus = String(pr.status || 'open').toUpperCase();
+            results.push({
+              id: `pr-${pr.id}`,
+              label: String(pr.title),
+              sublabel: `#${pr.number} · ${pr.sourceBranch} → ${pr.targetBranch}`,
+              icon: GitPullRequest,
+              group: 'pull-requests',
+              badge: { text: prStatus, className: prStatusVariant[prStatus] === 'default' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : prStatusVariant[prStatus] === 'secondary' ? 'bg-primary/15 text-primary border-primary/30' : 'bg-zinc-700 text-zinc-400 border-zinc-600' },
+              execute: () => {
+                store.selectPR(String(pr.id));
+              },
+            });
+          }
+        }
+
+        setApiResults(results);
+      } catch {
+        // Silent fail for search
+      } finally {
+        setApiLoading(false);
+      }
+    }, 300);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [query]);
+
+  // Group API results
+  const apiGroups = useMemo(() => {
+    const groups: { label: string; key: string; items: SearchResultItem[] }[] = [];
+    const findings = apiResults.filter((r) => r.group === 'findings');
+    const repos = apiResults.filter((r) => r.group === 'repositories');
+    const prs = apiResults.filter((r) => r.group === 'pull-requests');
+    if (findings.length > 0) groups.push({ label: 'Findings', key: 'findings', items: findings });
+    if (repos.length > 0) groups.push({ label: 'Repositories', key: 'repositories', items: repos });
+    if (prs.length > 0) groups.push({ label: 'Pull Requests', key: 'pull-requests', items: prs });
+    return groups;
+  }, [apiResults]);
+
+  // Build command groups
+  const commandGroups: { label: string; items: CommandItem[] }[] = useMemo(() => {
     const groups: { label: string; items: CommandItem[] }[] = [];
     if (recentCommands.length > 0) {
       groups.push({ label: 'Recent', items: recentCommands });
@@ -172,8 +313,32 @@ export function CommandPalette({
     return groups;
   }, [recentCommands, navigationCommands, actionCommands, quickSearchCommands]);
 
-  const flatItems = allGroups.flatMap((g) => g.items);
-  const hasResults = flatItems.length > 0;
+  // Combine all groups: API results first (when searching), then commands
+  const allGroups = useMemo(() => {
+    if (query.trim() && apiGroups.length > 0) {
+      // When searching, show API results first, then command matches
+      return [...apiGroups, ...commandGroups];
+    }
+    return commandGroups;
+  }, [query, apiGroups, commandGroups]);
+
+  // Build flat items list with a type discriminator
+  type FlatItem =
+    | { type: 'command'; item: CommandItem }
+    | { type: 'search'; item: SearchResultItem };
+
+  const flatItems: FlatItem[] = useMemo(() => {
+    return allGroups.flatMap((g) => {
+      // Check if this group is from API results
+      const isApiGroup = ['findings', 'repositories', 'pull-requests'].includes(g.key || '');
+      if (isApiGroup) {
+        return (g as { key: string; items: SearchResultItem[] }).items.map((item) => ({ type: 'search' as const, item }));
+      }
+      return (g as { items: CommandItem[] }).items.map((item) => ({ type: 'command' as const, item }));
+    });
+  }, [allGroups]);
+
+  const hasResults = flatItems.length > 0 || apiLoading;
 
   const executeCommand = useCallback((cmd: CommandItem) => {
     // Special handling for quick search: use current query
@@ -190,6 +355,17 @@ export function CommandPalette({
     setActiveIndex(0);
     setIsOpen(false);
   }, [setIsOpen, query]);
+
+  const executeFlatItem = useCallback((fi: FlatItem) => {
+    if (fi.type === 'command') {
+      executeCommand(fi.item);
+    } else {
+      fi.item.execute();
+      setQuery('');
+      setActiveIndex(0);
+      setIsOpen(false);
+    }
+  }, [executeCommand, setIsOpen]);
 
   // Global Ctrl+K / Cmd+K listener
   useEffect(() => {
@@ -208,6 +384,8 @@ export function CommandPalette({
     if (isOpen) {
       setQuery('');
       setActiveIndex(0);
+      setApiResults([]);
+      setApiLoading(false);
       requestAnimationFrame(() => {
         inputRef.current?.focus();
       });
@@ -224,7 +402,7 @@ export function CommandPalette({
       setActiveIndex((i) => (flatItems.length > 0 ? (i - 1 + flatItems.length) % flatItems.length : 0));
     } else if (e.key === 'Enter' && flatItems[activeIndex]) {
       e.preventDefault();
-      executeCommand(flatItems[activeIndex]);
+      executeFlatItem(flatItems[activeIndex]);
     }
   };
 
@@ -238,12 +416,43 @@ export function CommandPalette({
     }
   }, [activeIndex]);
 
-  // Reset active index when filter changes
+  // Reset active index when items change
   useEffect(() => {
     setActiveIndex(0);
-  }, [query]);
+  }, [query, apiResults]);
 
   let runningIndex = -1;
+
+  const renderSearchItem = (item: SearchResultItem, idx: number, isActive: boolean, groupLabel: string) => {
+    const Icon = item.icon;
+    return (
+      <button
+        key={item.id}
+        data-active={isActive}
+        onClick={() => executeFlatItem({ type: 'search', item })}
+        onMouseEnter={() => setActiveIndex(idx)}
+        className={`w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors text-left cursor-pointer ${
+          isActive
+            ? 'bg-primary/10 text-primary border-l-2 border-primary'
+            : 'text-zinc-300 hover:bg-zinc-800/60 border-l-2 border-transparent'
+        }`}
+      >
+        <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-primary' : 'text-zinc-500'}`} />
+        <span className="flex-1 truncate">{item.label}</span>
+        {item.sublabel && (
+          <span className="text-xs text-zinc-500 truncate max-w-[120px] hidden sm:inline">{item.sublabel}</span>
+        )}
+        {item.badge && (
+          <Badge
+            variant="outline"
+            className={`text-[10px] px-1.5 py-0 h-5 font-bold border ${item.badge.className}`}
+          >
+            {item.badge.text}
+          </Badge>
+        )}
+      </button>
+    );
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -269,6 +478,9 @@ export function CommandPalette({
             placeholder="Type a command or search..."
             className="flex-1 bg-transparent text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none"
           />
+          {apiLoading && (
+            <Loader2 className="h-3.5 w-3.5 shrink-0 text-zinc-500 animate-spin" />
+          )}
           <kbd className="hidden sm:inline-flex items-center gap-1 rounded border border-zinc-700 bg-zinc-800 px-1.5 py-0.5 text-[10px] font-mono text-zinc-400">
             ESC
           </kbd>
@@ -278,7 +490,11 @@ export function CommandPalette({
         <div ref={listRef} className="max-h-80 overflow-y-auto py-2">
           {hasResults ? (
             allGroups.map((group, groupIdx) => {
-              const items = group.items;
+              const isApiGroup = (group as Record<string, unknown>).key !== undefined;
+              const items = isApiGroup
+                ? (group as { items: SearchResultItem[] }).items
+                : (group as { items: CommandItem[] }).items;
+
               return (
                 <div key={group.label}>
                   {groupIdx > 0 && <Separator className="my-2 bg-zinc-800" />}
@@ -287,46 +503,53 @@ export function CommandPalette({
                       {group.label}
                     </span>
                   </div>
-                  {items.map((cmd) => {
-                    runningIndex++;
-                    const idx = runningIndex;
-                    const isActive = idx === activeIndex;
-                    const Icon = cmd.icon;
-                    return (
-                      <button
-                        key={cmd.id}
-                        data-active={isActive}
-                        onClick={() => executeCommand(cmd)}
-                        onMouseEnter={() => setActiveIndex(idx)}
-                        className={`w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors text-left cursor-pointer ${
-                          isActive
-                            ? 'bg-primary/10 text-primary border-l-2 border-primary'
-                            : 'text-zinc-300 hover:bg-zinc-800/60 border-l-2 border-transparent'
-                        }`}
-                      >
-                        <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-primary' : 'text-zinc-500'}`} />
-                        <span className="flex-1">{cmd.label}</span>
-                        {cmd.shortcut && (
-                          <Badge
-                            variant="secondary"
-                            className="text-[10px] px-1.5 py-0 h-5 font-mono bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-800"
+                  {isApiGroup
+                    ? (group as { items: SearchResultItem[] }).items.map((item) => {
+                        runningIndex++;
+                        const idx = runningIndex;
+                        const isActive = idx === activeIndex;
+                        return renderSearchItem(item, idx, isActive, group.label);
+                      })
+                    : (group as { items: CommandItem[] }).items.map((cmd) => {
+                        runningIndex++;
+                        const idx = runningIndex;
+                        const isActive = idx === activeIndex;
+                        const Icon = cmd.icon;
+                        return (
+                          <button
+                            key={cmd.id}
+                            data-active={isActive}
+                            onClick={() => executeFlatItem({ type: 'command', item: cmd })}
+                            onMouseEnter={() => setActiveIndex(idx)}
+                            className={`w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors text-left cursor-pointer ${
+                              isActive
+                                ? 'bg-primary/10 text-primary border-l-2 border-primary'
+                                : 'text-zinc-300 hover:bg-zinc-800/60 border-l-2 border-transparent'
+                            }`}
                           >
-                            {cmd.shortcut}
-                          </Badge>
-                        )}
-                        {group.label === 'Recent' && (
-                          <Clock className="h-3 w-3 text-zinc-600" />
-                        )}
-                      </button>
-                    );
-                  })}
+                            <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-primary' : 'text-zinc-500'}`} />
+                            <span className="flex-1">{cmd.label}</span>
+                            {cmd.shortcut && (
+                              <Badge
+                                variant="secondary"
+                                className="text-[10px] px-1.5 py-0 h-5 font-mono bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-800"
+                              >
+                                {cmd.shortcut}
+                              </Badge>
+                            )}
+                            {group.label === 'Recent' && (
+                              <Clock className="h-3 w-3 text-zinc-600" />
+                            )}
+                          </button>
+                        );
+                      })}
                 </div>
               );
             })
           ) : (
             <div className="flex flex-col items-center justify-center py-12 text-zinc-500">
               <SearchX className="h-8 w-8 mb-3" />
-              <p className="text-sm">No commands found</p>
+              <p className="text-sm">No results found</p>
               <p className="text-xs text-zinc-600 mt-1">Try a different search term</p>
             </div>
           )}

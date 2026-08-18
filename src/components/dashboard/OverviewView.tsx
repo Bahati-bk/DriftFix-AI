@@ -691,12 +691,18 @@ export function OverviewView() {
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Recent Activity
             </CardTitle>
-            <button
-              onClick={() => setView('evidence')}
-              className="text-xs text-primary hover:underline"
-            >
-              View ledger →
-            </button>
+            <div className="flex items-center gap-3">
+              <span className="flex items-center gap-1.5 text-xs text-emerald-500">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                Live
+              </span>
+              <button
+                onClick={() => setView('evidence')}
+                className="text-xs text-primary hover:underline"
+              >
+                View ledger →
+              </button>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="relative max-h-64 overflow-y-auto">

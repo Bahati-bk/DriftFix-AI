@@ -102,10 +102,10 @@ function SidebarNav({
                     <button
                       onClick={() => handleNav(item.view)}
                       data-tour={item.view === 'overview' ? 'step-2' : item.view === 'findings' ? 'step-3' : undefined}
-                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-all ${
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm nav-item-smooth ${
                         active
                           ? 'bg-primary/10 text-primary border-l-[3px] border-primary font-medium rounded-l-none'
-                          : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground border-l-[3px] border-transparent'
+                          : 'text-muted-foreground hover:bg-accent/80 hover:text-accent-foreground border-l-[3px] border-transparent'
                       } ${!sidebarOpen ? 'justify-center' : ''}`}
                     >
                       <div className="relative">
@@ -143,16 +143,16 @@ function SidebarNav({
       </div>
       <Separator className="bg-border/50" />
       <div className="p-3">
-        <div className={`flex items-center gap-3 ${!sidebarOpen ? 'justify-center' : ''}`}>
+        <div className={`flex items-center gap-3 min-h-[40px] ${!sidebarOpen ? 'justify-center' : ''}`}>
           <div className="h-8 w-8 rounded-full bg-primary/20 ring-1 ring-border flex items-center justify-center text-xs font-bold text-primary shrink-0">
             {currentUser?.name?.charAt(0) || 'U'}
           </div>
           {sidebarOpen && (
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium truncate">{currentUser?.name}</span>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-sm font-medium truncate block">{currentUser?.name}</span>
                 {currentUser?.role && (
-                  <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 font-normal">
+                  <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 font-normal shrink-0">
                     {currentUser.role}
                   </Badge>
                 )}
@@ -312,7 +312,7 @@ export function DashboardLayout() {
                 onChange={(e) => setHeaderSearch(e.target.value)}
                 onKeyDown={handleSearch}
                 placeholder="Search findings, repos, PRs..."
-                className="input-glow w-full h-9 pl-9 pr-16 rounded-md bg-secondary border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                className="input-glow w-full h-9 pl-9 pr-16 rounded-md bg-secondary/80 border border-border/80 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary/40"
               />
               <kbd className="absolute right-2 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-0.5 rounded border border-border bg-background px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground pointer-events-none">
                 <span className="text-xs">⌘</span>K

@@ -124,6 +124,7 @@ model Finding {
 
   analysisRun       AnalysisRun        @relation(fields: [analysisRunId], references: [id])
   complianceMappings ComplianceMapping[]
+  notes             FindingNote[]
 }
 
 model ComplianceMapping {
@@ -223,6 +224,18 @@ model AuditAction {
   createdAt DateTime @default(now())
 
   user User? @relation(fields: [userId], references: [id])
+}
+
+model FindingNote {
+  id        String   @id @default(cuid())
+  findingId String
+  author    String
+  content   String
+  createdAt DateTime @default(now())
+
+  finding Finding @relation(fields: [findingId], references: [id], onDelete: Cascade)
+
+  @@index([findingId])
 }
 
 model ComplianceScoreHistory {
