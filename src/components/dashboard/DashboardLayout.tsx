@@ -11,13 +11,21 @@ import { toast } from 'sonner';
 import {
   LayoutDashboard, GitPullRequest, AlertTriangle, ShieldCheck,
   Settings, FileText, Scale, Database,
-  LogOut, Search, Zap, Menu, X, History, PanelLeftClose, PanelLeft, Activity
+  LogOut, Search, Zap, Menu, X, History, PanelLeftClose, PanelLeft, Activity,
+  Building2, Check
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { CommandPalette } from '@/components/ui/command-palette';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { NotificationCenter } from '@/components/ui/notification-center';
 import { OnboardingTour } from '@/components/ui/onboarding-tour';
 import { KeyboardShortcutsPanel } from '@/components/ui/keyboard-shortcuts';
+import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
 import { OverviewView } from './OverviewView';
 import { RepositoriesView } from './RepositoriesView';
 import { PullRequestsView } from './PullRequestsView';
@@ -140,7 +148,7 @@ function SidebarNav({
       <div className="p-3">
         <button
           onClick={() => { runDemoAnalysis(); onNav?.(); }}
-          className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-primary hover:bg-primary/10 transition-colors btn-press ${!sidebarOpen ? 'justify-center' : ''}`}
+          className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-primary hover:bg-primary/10 transition-colors btn-press ripple-btn ${!sidebarOpen ? 'justify-center' : ''}`}
         >
           <Zap className="h-4 w-4 shrink-0" />
           {sidebarOpen && <span data-tour="step-1">Run Demo Analysis</span>}
@@ -213,6 +221,21 @@ export function DashboardLayout() {
   const [findingsCount, setFindingsCount] = useState(0);
   const [criticalCount, setCriticalCount] = useState(0);
   const [headerSearch, setHeaderSearch] = useState('');
+
+  const organizations = [
+    { name: 'Acme Corp', initial: 'AC', plan: 'Enterprise' },
+    { name: 'Security First Inc', initial: 'SF', plan: 'Business' },
+    { name: 'DataGuard Labs', initial: 'DG', plan: 'Starter' },
+  ];
+  const [currentOrg, setCurrentOrg] = useState('Acme Corp');
+
+  const handleOrgSwitch = (orgName: string) => {
+    setCurrentOrg(orgName);
+    toast.success(`Switched to ${orgName}`);
+  };
+
+  // Connect to real-time notification mini-service (socket.io on port 3005)
+  useRealtimeNotifications();
 
   useEffect(() => {
     let cancelled = false;
@@ -318,7 +341,7 @@ export function DashboardLayout() {
                 onChange={(e) => setHeaderSearch(e.target.value)}
                 onKeyDown={handleSearch}
                 placeholder="Search findings, repos, PRs..."
-                className="input-glow w-full h-9 pl-9 pr-16 rounded-md bg-secondary/80 border border-border/80 text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary/40"
+                className="input-glow focus-ring-animate w-full h-9 pl-9 pr-16 rounded-md bg-secondary/80 border border-border/80 text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary/40"
               />
               <kbd className="absolute right-2 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-0.5 rounded border border-border bg-background px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground pointer-events-none">
                 <span className="text-xs">⌘</span>K
@@ -334,7 +357,34 @@ export function DashboardLayout() {
                   <Zap className="h-2.5 w-2.5 mr-0.5" />DEMO
                 </Badge>
               )}
-              <span className="text-xs text-muted-foreground">Acme Corp</span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors rounded-md px-1.5 py-1 hover:bg-accent/80 focus-ring-animate">
+                    <Building2 className="h-3.5 w-3.5 text-primary/80" />
+                    <span className="font-medium">{currentOrg}</span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52">
+                  {organizations.map((org) => (
+                    <DropdownMenuItem
+                      key={org.name}
+                      onClick={() => handleOrgSwitch(org.name)}
+                      className="flex items-center gap-2.5 cursor-pointer"
+                    >
+                      <div className={`h-6 w-6 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 ${org.name === currentOrg ? 'bg-primary/20 text-primary' : 'bg-secondary text-muted-foreground'}`}>
+                        {org.initial}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium truncate">{org.name}</div>
+                        <div className="text-[10px] text-muted-foreground truncate">{org.plan}</div>
+                      </div>
+                      {org.name === currentOrg && (
+                        <Check className="h-3.5 w-3.5 text-primary shrink-0" />
+                      )}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </header>

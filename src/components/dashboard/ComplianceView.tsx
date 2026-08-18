@@ -150,7 +150,7 @@ export function ComplianceView() {
 
   if (loading) {
     return (
-      <div className="p-4 lg:p-6 space-y-6">
+      <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6">
         <Skeleton className="h-8 w-48 skeleton" />
         <div className="grid lg:grid-cols-3 gap-6">
           <Skeleton className="h-72 rounded-xl skeleton" />
@@ -186,7 +186,7 @@ export function ComplianceView() {
   const gapToTarget = TARGET_SCORE - score;
 
   return (
-    <div className="p-4 lg:p-6 space-y-6">
+    <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6">
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Compliance</h1>
@@ -200,9 +200,9 @@ export function ComplianceView() {
         </Badge>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Score Gauge - More compact */}
-        <Card className="border-border/50 hover:border-primary/30 transition-colors rounded-xl">
+        <Card className="border-border/50 hover:border-primary/30 transition-colors rounded-xl gradient-border">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Compliance Score
@@ -409,7 +409,7 @@ export function ComplianceView() {
         </CardContent>
       </Card>
 
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <Card className="border-border/50 hover:border-primary/30 transition-colors rounded-xl">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
@@ -447,7 +447,7 @@ export function ComplianceView() {
                     </div>
                     <div className="h-2 w-full rounded-full bg-secondary overflow-hidden">
                       <div
-                        className="h-full rounded-full transition-all duration-700"
+                        className="h-full rounded-full animate-fill-bar transition-all duration-700"
                         style={{ width: `${pct}%`, backgroundColor: s.color }}
                       />
                     </div>
@@ -482,7 +482,7 @@ export function ComplianceView() {
                 </div>
                 <div className="h-2.5 w-full rounded-full bg-secondary overflow-hidden">
                   <div
-                    className="h-full rounded-full transition-all duration-700"
+                    className="h-full rounded-full animate-fill-bar transition-all duration-700"
                     style={{ width: `${score}%`, backgroundColor: scoreColor }}
                   />
                 </div>
@@ -503,7 +503,7 @@ export function ComplianceView() {
                 </div>
                 <div className="h-2.5 w-full rounded-full bg-secondary overflow-hidden">
                   <div
-                    className="h-full rounded-full transition-all duration-700"
+                    className="h-full rounded-full animate-fill-bar transition-all duration-700"
                     style={{ width: `${Math.max(score - 5, 0)}%`, backgroundColor: scoreColor }}
                   />
                 </div>
@@ -535,7 +535,7 @@ export function ComplianceView() {
         </button>
         {deepDiveExpanded && (
           <CardContent className="pt-4">
-            <div className="grid lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {/* SOC 2 Trust Services Criteria */}
               <Card className="border-border/50 card-hover p-5">
                 <div className="flex items-center gap-2 mb-4">

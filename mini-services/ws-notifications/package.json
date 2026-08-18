@@ -1,0 +1,6 @@
+{
+  "name": "ws-notifications",
+  "dependencies": {
+    "socket.io": "^4.8.3"
+  }
+}

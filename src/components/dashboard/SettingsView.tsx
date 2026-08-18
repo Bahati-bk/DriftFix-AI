@@ -180,13 +180,13 @@ export function SettingsView() {
                     value={orgName}
                     onChange={(e) => setOrgName(e.target.value)}
                     placeholder="Enter organization name"
-                    className="flex-1 bg-secondary/50 border border-border/80 input-glow focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
+                    className="flex-1 bg-secondary/50 border border-border/80 input-glow focus-ring-animate focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
                   />
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => toast.success('Organization name updated')}
-                    className="shrink-0 gap-1.5"
+                    className="shrink-0 gap-1.5 ripple-btn"
                   >
                     <Save className="size-3.5" />
                     Save
@@ -278,7 +278,7 @@ export function SettingsView() {
                     max={100}
                     value={minScore}
                     onChange={(e) => setMinScore(e.target.value)}
-                    className="w-24 input-glow"
+                    className="w-24 input-glow focus-ring-animate"
                   />
                   <span className="text-sm text-secondary-bright">out of 100</span>
                 </div>
@@ -313,7 +313,7 @@ export function SettingsView() {
 
               <Separator />
 
-              <Button onClick={handleSavePolicies} disabled={saving} className="gap-2">
+              <Button onClick={handleSavePolicies} disabled={saving} className="gap-2 ripple-btn">
                 {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
                 {saving ? 'Saving...' : 'Save Changes'}
               </Button>
@@ -343,7 +343,7 @@ export function SettingsView() {
             </CardContent>
           </Card>
 
-          <Card className="border-red-500/30 bg-red-500/5 rounded-xl">
+          <Card className="border-red-500/30 bg-red-500/5 rounded-xl gradient-border">
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-semibold flex items-center gap-2 text-red-400">
                 <AlertTriangle className="size-4" /> Danger Zone

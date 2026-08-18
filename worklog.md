@@ -1,5 +1,147 @@
 # DriftFix - Worklog
 
+## Round 9: Real-Time Notifications + PDF Reports + Org Switcher + Mobile Responsive + 7 CSS Animations
+
+**Date**: 2025-08-19 (Round 9 - cron-triggered webDevReview)
+
+### Current Project Status Assessment
+- Application is fully stable: all 12 views compile and render without errors
+- Lint: 0 errors, 0 warnings
+- Dev log: successful compilations, zero runtime JavaScript errors
+- Browser QA: All 12 views + new features tested via agent-browser, zero console JS errors
+- React key warning in SidebarNav fixed (Fragment key issue)
+- Reports history bug fixed (eventType mismatch: REPORT_GENERATED → AUDIT_REPORT_GENERATED)
+- WebSocket notification service running on port 3005 (gracefully degrades when proxy unavailable)
+- 3 major new features, 1 bug fix, mobile responsive improvements, 7 new CSS animation classes
+
+### Changes Completed
+
+#### Bug Fixes (2)
+
+1. **React key warning in SidebarNav** (DashboardLayout.tsx)
+   - Changed `<>` fragments to `<React.Fragment key={item.view}>` in navItems.map()
+   - Added `import React` to support explicit Fragment usage
+   - Eliminates React development warning about unique keys
+
+2. **Reports history not showing generated reports** (ReportsView.tsx)
+   - Fixed eventType filter: `REPORT_GENERATED` → `AUDIT_REPORT_GENERATED` (matching API)
+   - Fixed hash field reference: `r.currentHash` → `r.hash` (matching EvidenceRecord schema)
+   - Reports now correctly appear in history after generation
+
+#### New Features (3)
+
+1. **WebSocket Real-Time Notification Service** (mini-services/ws-notifications/)
+   - Socket.IO server on port 3005 with auto-restart via `bun --hot`
+   - Simulates 4 event types every 15-30 seconds: finding_detected, evidence_committed, compliance_score_updated, analysis_completed
+   - Each event has realistic demo data (severity, file paths, confidence scores, hash fragments)
+   - Broadcasts to all connected clients via `io.emit('notification', event)`
+   - `useRealtimeNotifications` hook in `/src/hooks/useRealtimeNotifications.ts`
+   - Auto-connects via `io('/?XTransformPort=3005')` gateway pattern
+   - Shows sonner toasts with emoji icons (🔍📝📊✅) for each event type
+   - Silent reconnection with 2s delay, graceful degradation when proxy unavailable
+   - Integrated into DashboardLayout so all dashboard sessions receive notifications
+
+2. **PDF/HTML Report Generation** (api/reports/pdf/ + ReportsView.tsx)
+   - New POST `/api/reports/pdf` endpoint
+   - Generates self-contained HTML report with dark cybersecurity theme
+   - Includes: DriftFix branding, SVG score gauge, severity breakdown with distribution bars, findings table, evidence ledger with SHA-256 hashes
+   - All styles inline (zero external dependencies, no npm packages needed)
+   - "Generate & Download Report" button in Generate Report card
+   - Per-report "Report" download button alongside existing "JSON" button in history
+   - Same button in empty state for first-time users
+
+3. **Organization Switcher** (DashboardLayout.tsx)
+   - Replaced static "Acme Corp" text with interactive DropdownMenu
+   - 3 demo organizations: Acme Corp (Enterprise), Security First Inc (Business), DataGuard Labs (Starter)
+   - Each org shows initials avatar, name, and plan tier badge
+   - Checkmark indicator on active organization
+   - Toast notification on switch: "Switched to [org name]"
+   - Building2 icon from lucide-react
+
+#### Mobile Responsive Improvements (6 views)
+
+1. **OverviewView**: Stats grid `grid-cols-2 sm:grid-cols-3 lg:grid-cols-5`, score/trend/panels stack vertically, reduced padding `p-3 sm:p-4 lg:p-6`
+2. **FindingsView**: Filter dropdowns full-width on mobile (`w-full sm:w-[120px]`), bulk action bar spans full width, card padding responsive
+3. **ComplianceView**: All multi-col grids stack to single column on mobile, deep-dive accordions single column, reduced padding
+4. **EvidenceView**: Card padding `p-3 sm:p-5`, reduced outer padding
+5. **ReportsView**: Stats `grid-cols-1 sm:grid-cols-3` with responsive borders/padding, generate section stacks vertically
+6. **AuditLogView**: Reduced padding for mobile
+
+#### Styling Polish — 7 New CSS Animation Classes (globals.css + 8 views)
+
+New utility classes:
+- `.ripple-btn` — Material-style ripple effect on button click
+- `.gradient-border` — Animated gradient border using CSS mask-composite
+- `.focus-ring-animate` — Enhanced focus-visible ring with primary color glow
+- `.animate-breathe` — Subtle 3s breathing/pulse animation for live indicators
+- `.animate-count-up` — Number counter entrance animation (slide up + fade)
+- `.animate-stagger` — Staggered list entrance animation (for card lists)
+- `.animate-fill-bar` — Progress bar fill animation from 0% width
+
+Applied across views:
+- **OverviewView**: count-up on stat numbers, fill-bar on severity trend bars, gradient-border on score card, stagger on activity feed
+- **FindingsView**: stagger on finding rows with delay, focus-ring on filter inputs
+- **ComplianceView**: fill-bar on progress bars, gradient-border on score card
+- **EvidenceView**: stagger on evidence cards, breathe on hash chain arrows, focus-ring on search
+- **SettingsView**: focus-ring on form inputs, ripple on save buttons, gradient-border on danger zone
+- **RepositoriesView**: stagger on repo cards, hover glow on health ring SVG
+- **AuditLogView**: stagger on timeline items, breathe on live indicators
+- **DashboardLayout**: focus-ring on search input, ripple on primary buttons
+
+### QA Verification (Round 9)
+- Lint: 0 errors, 0 warnings
+- Dev log: successful compilations, zero runtime JavaScript errors
+- Browser QA (agent-browser):
+  - Landing → Demo Login → Overview → Findings → Compliance → Rules → Evidence → Audit Log → Reports → Settings → Repos → PRs — ALL PASS
+  - Organization Switcher: dropdown opens, shows 3 orgs, switching triggers toast ✅
+  - PDF Report: "Generate & Download Report" triggers download, toast confirms ✅
+  - Report History: now correctly shows generated reports with JSON + Report buttons ✅
+  - Mobile viewport (375x812): responsive layout renders correctly ✅
+- WebSocket: service running on port 3005, graceful degradation in sandbox ✅
+
+### Files Created
+- `mini-services/ws-notifications/index.ts` — Socket.IO notification server
+- `mini-services/ws-notifications/package.json` — Mini-service package config
+- `src/hooks/useRealtimeNotifications.ts` — Real-time notification React hook
+- `src/app/api/reports/pdf/route.ts` — HTML report generation endpoint
+
+### Files Modified
+- `src/components/dashboard/DashboardLayout.tsx` — React key fix, Org Switcher, WS hook integration, styling
+- `src/components/dashboard/ReportsView.tsx` — PDF download buttons, eventType/hash bug fix, mobile responsive, styling
+- `src/components/dashboard/OverviewView.tsx` — Mobile responsive, animation classes
+- `src/components/dashboard/FindingsView.tsx` — Mobile responsive, animation classes
+- `src/components/dashboard/ComplianceView.tsx` — Mobile responsive, animation classes
+- `src/components/dashboard/EvidenceView.tsx` — Mobile responsive, animation classes
+- `src/components/dashboard/RepositoriesView.tsx` — Animation classes
+- `src/components/dashboard/AuditLogView.tsx` — Mobile responsive, animation classes
+- `src/components/dashboard/SettingsView.tsx` — Animation classes
+- `src/app/globals.css` — 7 new CSS animation utility classes
+
+### Dependencies Added
+- `socket.io@4.8.3` (mini-services/ws-notifications)
+- `socket.io-client@4.8.3` (main project)
+
+### Unresolved Issues / Risks
+- WebSocket proxy: Caddy gateway may not support WebSocket upgrade in all sandbox configs (graceful degradation works)
+- Report download serves .html file (not true PDF) — acceptable for demo, could add puppeteer-based PDF in production
+- SQLite not production-grade (acceptable for demo)
+- No real GitHub integration (webhook endpoint exists but needs credentials)
+- No unit tests
+
+### Priority Recommendations for Next Phase
+1. WebSocket proxy fix or alternative push notification approach (SSE fallback)
+2. Real file upload for PR diff analysis
+3. User invitation/management flow
+4. Audit report scheduling (cron-based auto-generation)
+5. Syntax highlighting in code diff viewer
+6. Rules efficacy metrics (times triggered, findings generated)
+7. Evidence ledger: add timestamp range filter
+8. Keyboard shortcuts for common actions (already partially implemented via command palette)
+9. Dark/light theme polish for new components (gradient-border, ripple-btn in light mode)
+10. Accessibility audit (ARIA labels, screen reader testing)
+
+---
+
 ## Round 8: Contrast Overhaul + 5 New Features (VLM 7.5→8.0 across all views)
 
 **Date**: 2025-08-19 (Round 8 - cron-triggered webDevReview)
@@ -1371,3 +1513,134 @@ Stage Summary:
 - Filterable by type (Findings, Evidence, Analysis, PRs)
 - Pagination support
 - Lint: 0 errors
+
+---
+
+## PDF Report Generation (Task 3)
+
+**Date**: 2025-08-19
+
+### Changes
+
+#### New File: `src/app/api/reports/pdf/route.ts`
+- POST endpoint accepting `{ framework, organizationId }` (defaults to SOC2)
+- Gathers same data as `/api/reports`: findings, repositories, analyses, evidence records
+- Generates a self-contained, beautifully styled HTML compliance report with:
+  - Dark cybersecurity theme (dark background `#0a0f1a`, emerald/teal accents `#2dd4bf`, monospace for hashes)
+  - DriftFix branded header with framework badge and generation timestamp
+  - Executive Summary with SVG circular score gauge, total/open/resolved findings, repo count
+  - Severity breakdown table with color-coded rows and distribution bars (CRITICAL/HIGH/MEDIUM/LOW)
+  - Findings detail table with severity badges, status indicators, file paths, recommendations, control mappings
+  - Recent analyses table (when data exists)
+  - Evidence ledger section with SHA-256 integrity hash in monospace
+  - Footer with truncated hash and disclaimer
+  - All styles inline — zero external CSS dependencies
+- Served with `Content-Type: text/html` and `Content-Disposition: attachment` for download
+- No new npm packages required
+
+#### Modified: `src/components/dashboard/ReportsView.tsx`
+- Added `FileDown` icon import from lucide-react
+- Added `downloadingPdf` state for per-card loading indicators
+- Added `handleDownloadPdf(fw, id)` — calls `/api/reports/pdf`, downloads as `.html` via blob URL
+- Added `handleGenerateAndDownloadPdf()` — generates report and immediately downloads it, then refreshes data
+- Generate Report card: added second button "Generate & Download Report" with FileDown icon
+- Empty state: added matching "Generate & Download Report" button alongside existing one
+- Report history cards: renamed existing button to "JSON", added new "Report" button with FileDown icon
+
+### Files Created/Modified
+- **Created**: `src/app/api/reports/pdf/route.ts`
+- **Modified**: `src/components/dashboard/ReportsView.tsx`
+- **Modified**: `worklog.md`
+
+### TypeScript
+- Zero new compilation errors in target files (verified via `tsc --noEmit`)
+
+---
+
+## Round 9: Organization Switcher + Mobile Responsive + Styling Polish
+
+**Date**: 2025-08-19 (Task 4-6-7-8)
+
+### Part 1: Organization Switcher in Header
+
+**DashboardLayout.tsx**:
+- Replaced static "Acme Corp" text with interactive DropdownMenu org switcher
+- Added 3 demo organizations: Acme Corp (Enterprise), Security First Inc (Business), DataGuard Labs (Starter)
+- Each org shows an initial badge and plan type
+- Current org highlighted with primary color and checkmark icon
+- Building2 icon from lucide-react
+- Toast notification on switch: "Switched to [org name]"
+- Added `focus-ring-animate` to header search input
+- Added `ripple-btn` to Run Demo Analysis sidebar button
+
+### Part 2: Mobile Responsive Improvements
+
+**OverviewView.tsx**:
+- Stats grid: `grid-cols-2 sm:grid-cols-3 lg:grid-cols-5` (was `grid-cols-2 lg:grid-cols-5`)
+- Score + Trend: `grid-cols-1 lg:grid-cols-3` (stacks on mobile)
+- Findings + Severity: `grid-cols-1 lg:grid-cols-3` (stacks on mobile)
+- Severity + Activity + PRs: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4`
+- Reduced padding: `p-3 sm:p-4 lg:p-6`
+- Reduced card content padding on mobile: `p-3 sm:p-5`
+
+**FindingsView.tsx**:
+- Filter dropdowns: `w-full sm:w-[120px]` (full-width on mobile, wraps with flex-wrap)
+- Bulk action bar: full-width on mobile with `left-2 right-2 sm:left-1/2 sm:-translate-x-1/2`
+- Finding cards: `p-3 sm:p-5`
+- Reduced outer padding: `p-3 sm:p-4 lg:p-6`
+
+**ComplianceView.tsx**:
+- Score + Trend grid: `grid-cols-1 lg:grid-cols-3` (stacks on mobile)
+- Severity + Coverage grid: `grid-cols-1 lg:grid-cols-2`
+- Deep dive accordions: `grid-cols-1 lg:grid-cols-2`
+- Reduced padding: `p-3 sm:p-4 lg:p-6`
+
+**EvidenceView.tsx**:
+- Search bar: full-width (already was)
+- Filter chips: already wrap with flex-wrap
+- Evidence cards: `p-3 sm:p-5`
+- Reduced padding: `p-3 sm:p-4 lg:p-6`
+
+**ReportsView.tsx**:
+- Stats: `grid-cols-1 sm:grid-cols-3` (stacks on mobile) with responsive padding/borders
+- Generate section: `items-stretch sm:items-end`
+
+### Part 3: Extensive Styling Polish
+
+**globals.css — 7 new utility classes added**:
+- `.ripple-btn` — radial gradient ripple on button press
+- `.gradient-border` — CSS mask-based gradient border effect
+- `.focus-ring-animate` — animated primary-color focus ring
+- `.animate-breathe` — 3s ease-in-out breathing scale/opacity animation
+- `.animate-count-up` — 0.6s translateY+opacity counter animation
+- `.animate-stagger` — 0.4s translateY fade-in for list items
+- `.animate-fill-bar` — 0.8s width animation for progress bars
+
+**Cross-view animation classes applied**:
+
+1. **DashboardLayout.tsx**: `focus-ring-animate` on search, `ripple-btn` on Run Analysis
+2. **OverviewView.tsx**: `animate-count-up` on stat numbers, `animate-fill-bar` on severity bars, `gradient-border` on score card, `animate-breathe` on Live indicator, staggered activity feed, `ripple-btn` on action buttons
+3. **FindingsView.tsx**: `animate-stagger` on finding rows with delay, `focus-ring-animate` on filter input, `border-l-2` severity badge accent
+4. **ComplianceView.tsx**: `animate-fill-bar` on all progress bars (severity, SOC2, GDPR), `gradient-border` on score card
+5. **EvidenceView.tsx**: `animate-stagger` on evidence cards, `animate-breathe` on hash chain arrows, `focus-ring-animate` on search
+6. **SettingsView.tsx**: `focus-ring-animate` on all form inputs, `ripple-btn` on save buttons, `gradient-border` on danger zone card
+7. **RepositoriesView.tsx**: `animate-stagger` on repo cards with delay, enhanced hover glow on health ring SVG
+8. **AuditLogView.tsx**: `animate-stagger` on timeline items, `animate-breathe` on type dots
+
+### Files Modified
+- `src/app/globals.css` (7 new animation/utility classes)
+- `src/components/dashboard/DashboardLayout.tsx` (org switcher, imports, styling)
+- `src/components/dashboard/OverviewView.tsx` (responsive, animations)
+- `src/components/dashboard/FindingsView.tsx` (responsive, animations)
+- `src/components/dashboard/ComplianceView.tsx` (responsive, animations)
+- `src/components/dashboard/EvidenceView.tsx` (responsive, animations)
+- `src/components/dashboard/ReportsView.tsx` (responsive, ripple)
+- `src/components/dashboard/SettingsView.tsx` (form styling, danger zone)
+- `src/components/dashboard/RepositoriesView.tsx` (stagger, health ring glow)
+- `src/components/dashboard/AuditLogView.tsx` (stagger, breathe)
+- `worklog.md`
+
+### Verification
+- `npx next build` — successful, all routes compile
+- Zero new TypeScript errors in modified files
+- All pre-existing errors (scripts, PRAnalysisView, etc.) remain unchanged

@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { FileText, Download, Shield, Loader2, Hash, Copy, Check, AlertTriangle, FileBarChart } from 'lucide-react';
+import { FileText, Download, Shield, Loader2, Hash, Copy, Check, AlertTriangle, FileBarChart, FileDown } from 'lucide-react';
 
 const frameworkDescriptions: Record<string, string> = {
   SOC2: 'SOC 2 Type II — Trust Services Criteria covering security, availability, and confidentiality.',
@@ -39,6 +39,7 @@ export function ReportsView() {
   const [complianceScore, setComplianceScore] = useState(0);
   const [openFindings, setOpenFindings] = useState(0);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [downloadingPdf, setDownloadingPdf] = useState<string | null>(null);
 
   const loadReports = useCallback(() => {
     return fetch('/api/evidence?limit=50')
@@ -46,7 +47,7 @@ export function ReportsView() {
       .then((data) => {
         const recs = data.records || data.evidenceRecords || [];
         const reportRecs = recs.filter(
-          (r: Record<string, unknown>) => r.eventType === 'REPORT_GENERATED',
+          (r: Record<string, unknown>) => r.eventType === 'AUDIT_REPORT_GENERATED',
         );
         setReports(
           reportRecs.map((r: Record<string, unknown>) => ({
@@ -54,7 +55,7 @@ export function ReportsView() {
             framework: String((r.payload as Record<string, unknown>)?.framework || 'SOC2'),
             status: 'completed',
             score: Number((r.payload as Record<string, unknown>)?.score ?? 0),
-            integrityHash: String(r.currentHash || ''),
+            integrityHash: String(r.hash || ''),
             createdAt: String(r.createdAt),
           })),
         );
@@ -122,6 +123,62 @@ export function ReportsView() {
     }
   };
 
+  const handleDownloadPdf = async (fw: string, id: string) => {
+    setDownloadingPdf(id);
+    try {
+      const res = await fetch('/api/reports/pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ framework: fw }),
+      });
+      if (!res.ok) throw new Error('Failed to generate report');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${fw.toLowerCase()}-report-${new Date().toISOString().split('T')[0]}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success('Report downloaded');
+    } catch {
+      toast.error('Failed to download report');
+    } finally {
+      setDownloadingPdf(null);
+    }
+  };
+
+  const handleGenerateAndDownloadPdf = async () => {
+    setGenerating(true);
+    try {
+      const res = await fetch('/api/reports/pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ framework }),
+      });
+      if (!res.ok) throw new Error('Failed to generate report');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${framework.toLowerCase()}-report-${new Date().toISOString().split('T')[0]}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success(`${framework} report generated & downloaded!`);
+      await loadReports();
+      const compRes = await fetch('/api/compliance');
+      const comp = await compRes.json();
+      setComplianceScore(Number(comp?.score || 0));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to generate report');
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   const copyHash = (id: string, hash: string) => {
     navigator.clipboard.writeText(hash).then(() => {
       setCopiedId(id);
@@ -164,17 +221,17 @@ export function ReportsView() {
 
       <Card className="border-border/50 rounded-xl">
         <CardContent className="p-6">
-          <div className="grid grid-cols-3 text-center">
-            <div className="border-r-2 border-primary/20 pr-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 text-center">
+            <div className="border-r-0 sm:border-r-2 border-primary/20 pr-0 sm:pr-6 py-3 sm:py-0">
               <div className={`text-3xl font-bold ${scoreColor(complianceScore)}`}>{complianceScore}</div>
               <div className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">Current Score</div>
             </div>
-            <div className="border-r-2 border-amber-400/20 px-6">
+            <div className="border-r-0 sm:border-r-2 border-amber-400/20 px-0 sm:px-6 py-3 sm:py-0">
               <div className="text-2xl font-semibold text-muted-foreground">{openFindings}</div>
               <div className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">Open Findings</div>
             </div>
-            <div className="pl-6">
-              <div className={`text-lg font-semibold mt-1 ${lastReportDate === 'Never' ? 'text-secondary-bright' : ''}`}>{lastReportDate}</div>
+            <div className="pl-0 sm:pl-6 py-3 sm:py-0">
+              <div className={`text-lg font-semibold mt-0 sm:mt-1 ${lastReportDate === 'Never' ? 'text-secondary-bright' : ''}`}>{lastReportDate}</div>
               <div className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">Last Report</div>
             </div>
           </div>
@@ -186,7 +243,7 @@ export function ReportsView() {
           <CardTitle className="text-sm font-medium">Generate Report</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-4">
             <div className="space-y-2 flex-1">
               <label className="text-sm text-muted-foreground">Framework</label>
               <Select value={framework} onValueChange={setFramework}>
@@ -224,10 +281,16 @@ export function ReportsView() {
                 <p className="text-xs text-muted-foreground">{frameworkDescriptions[framework]}</p>
               )}
             </div>
-            <Button onClick={handleGenerate} disabled={generating} className="gap-2 btn-press">
-              {generating ? <Loader2 className="size-4 animate-spin" /> : <FileText className="size-4" />}
-              {generating ? 'Generating...' : 'Generate Report'}
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={handleGenerate} disabled={generating} className="gap-2 btn-press ripple-btn">
+                {generating ? <Loader2 className="size-4 animate-spin" /> : <FileText className="size-4" />}
+                {generating ? 'Generating...' : 'Generate Report'}
+              </Button>
+              <Button variant="outline" onClick={handleGenerateAndDownloadPdf} disabled={generating} className="gap-2 btn-press ripple-btn">
+                {generating ? <Loader2 className="size-4 animate-spin" /> : <FileDown className="size-4" />}
+                Generate & Download Report
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -246,10 +309,16 @@ export function ReportsView() {
               <p className="text-sm text-muted-foreground max-w-sm mx-auto mb-6">
                 Select a compliance framework and click "Generate Report" to create your first audit report.
               </p>
-              <Button variant="outline" className="gap-2 btn-press" onClick={handleGenerate} disabled={generating}>
-                {generating ? <Loader2 className="size-4 animate-spin" /> : <FileText className="size-4" />}
-                Generate Your First Report
-              </Button>
+              <div className="flex gap-2 justify-center">
+                <Button variant="outline" className="gap-2 btn-press" onClick={handleGenerate} disabled={generating}>
+                  {generating ? <Loader2 className="size-4 animate-spin" /> : <FileText className="size-4" />}
+                  Generate Your First Report
+                </Button>
+                <Button variant="outline" className="gap-2 btn-press" onClick={handleGenerateAndDownloadPdf} disabled={generating}>
+                  {generating ? <Loader2 className="size-4 animate-spin" /> : <FileDown className="size-4" />}
+                  Generate & Download Report
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="space-y-3 max-h-96 overflow-y-auto">
@@ -298,7 +367,17 @@ export function ReportsView() {
                             onClick={() => handleDownload(r)}
                           >
                             <Download className="size-3" />
-                            Download
+                            JSON
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-1.5 text-xs h-8"
+                            onClick={() => handleDownloadPdf(r.framework, r.id)}
+                            disabled={downloadingPdf === r.id}
+                          >
+                            {downloadingPdf === r.id ? <Loader2 className="size-3 animate-spin" /> : <FileDown className="size-3" />}
+                            Report
                           </Button>
                         </div>
                       </div>

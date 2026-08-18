@@ -197,7 +197,7 @@ export function FindingsView() {
   };
 
   return (
-    <div className="p-4 lg:p-6 space-y-5">
+    <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-5">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Findings</h1>
@@ -250,11 +250,11 @@ export function FindingsView() {
                 placeholder="Filter findings..."
                 value={search}
                 onChange={(e) => { setSearch(e.target.value); setSearchQuery(e.target.value); setPage(1); }}
-                className="pl-8 h-8 text-sm"
+                className="pl-8 h-8 text-sm focus-ring-animate"
               />
             </div>
             <Select value={severity} onValueChange={(v) => { setSeverity(v); setActivePreset(null); setPage(1); }}>
-              <SelectTrigger className="w-[120px] h-8 text-sm"><SelectValue placeholder="Severity" /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-[120px] h-8 text-sm"><SelectValue placeholder="Severity" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">All Severity</SelectItem>
                 <SelectItem value="CRITICAL">Critical</SelectItem>
@@ -264,7 +264,7 @@ export function FindingsView() {
               </SelectContent>
             </Select>
             <Select value={status} onValueChange={(v) => { setStatus(v); setActivePreset(null); setPage(1); }}>
-              <SelectTrigger className="w-[120px] h-8 text-sm"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-[120px] h-8 text-sm"><SelectValue placeholder="Status" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">All Status</SelectItem>
                 <SelectItem value="OPEN">Open</SelectItem>
@@ -275,7 +275,7 @@ export function FindingsView() {
               </SelectContent>
             </Select>
             <Select value={category} onValueChange={(v) => { setCategory(v); setActivePreset(null); setPage(1); }}>
-              <SelectTrigger className="w-[150px] h-8 text-sm"><SelectValue placeholder="Category" /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-[150px] h-8 text-sm"><SelectValue placeholder="Category" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">All Categories</SelectItem>
                 <SelectItem value="PII_LOGGING">PII Logging</SelectItem>
@@ -324,14 +324,15 @@ export function FindingsView() {
               return (
                 <Card
                   key={String(f.id)}
-                  className={`group border-border/50 card-hover cursor-pointer transition-all duration-200 rounded-xl hover:bg-accent/50 hover:-translate-y-px hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 ${isSelected ? 'ring-1 ring-primary/50 bg-primary/5' : ''} ${focusedIndex === index ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}`}
+                  className={`group border-border/50 card-hover cursor-pointer transition-all duration-200 rounded-xl hover:bg-accent/50 hover:-translate-y-px hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 animate-stagger ${isSelected ? 'ring-1 ring-primary/50 bg-primary/5' : ''} ${focusedIndex === index ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}`}
                   onClick={() => selectFinding(String(f.id))}
+                  style={{ animationDelay: `${Math.min(index, 15) * 40}ms` }}
                 >
-                  <CardContent className="p-5 flex items-center gap-3">
+                  <CardContent className="p-3 sm:p-5 flex items-center gap-3">
                     <div onClick={(e) => { e.stopPropagation(); toggleSelect(String(f.id)); }} className="shrink-0">
                       <Checkbox checked={isSelected} className="h-4 w-4" />
                     </div>
-                    <Badge className={`severity-${String(f.severity).toLowerCase()} text-[10px] px-1.5 py-0 font-bold shrink-0`}>
+                    <Badge className={`severity-${String(f.severity).toLowerCase()} text-[10px] px-1.5 py-0 font-bold shrink-0 border-l-2`}>
                       {String(f.severity)}
                     </Badge>
                     <div className="flex-1 min-w-0">
@@ -423,7 +424,7 @@ export function FindingsView() {
 
       {/* Floating Bulk Action Bar */}
       {selectedIds.size > 0 && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-3 rounded-xl bg-card/95 backdrop-blur-sm border border-border shadow-xl animate-slide-in">
+        <div className="fixed bottom-4 left-2 right-2 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto z-50 flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 rounded-xl bg-card/95 backdrop-blur-sm border border-border shadow-xl animate-slide-in overflow-x-auto">
           <span className="text-sm font-medium whitespace-nowrap">{selectedIds.size} selected</span>
           <div className="h-4 w-px bg-border" />
           <Button

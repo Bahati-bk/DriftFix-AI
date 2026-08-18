@@ -220,7 +220,7 @@ function SeverityTrend() {
               <div key={item.severity} className="flex items-center gap-3">
                 <span className={`text-xs font-medium w-16 ${textColors[item.severity] || 'text-muted-foreground'}`}>{item.severity}</span>
                 <div className="flex-1 h-2 rounded-full bg-secondary overflow-hidden">
-                  <div className={`h-full rounded-full ${colors[item.severity] || 'bg-muted-foreground'}`} style={{ width: `${(item.count / maxCount) * 100}%`, transition: 'width 0.6s ease-out' }} />
+                  <div className={`h-full rounded-full animate-fill-bar ${colors[item.severity] || 'bg-muted-foreground'}`} style={{ width: `${(item.count / maxCount) * 100}%`, transition: 'width 0.6s ease-out' }} />
                 </div>
                 <span className="text-xs font-mono w-6 text-right text-secondary-bright">{item.count}</span>
               </div>
@@ -365,7 +365,7 @@ export function OverviewView() {
   ];
 
   return (
-    <div className="p-4 lg:p-6 space-y-6">
+    <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Dashboard Overview</h1>
         <p className="text-secondary-bright text-[15px] leading-relaxed mt-1">
@@ -374,19 +374,19 @@ export function OverviewView() {
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         {stats.map((s) => (
           <Card
             key={s.label}
             className={`card-glass border-border/50 border-r-2 ${s.accent} shadow-sm hover:shadow-md hover:shadow-primary/5 hover:border-primary/30 transition-colors`}
           >
-            <CardContent className="p-5 flex flex-col justify-center">
-              <div className="flex items-center gap-2 mb-3">
+            <CardContent className="p-3 sm:p-5 flex flex-col justify-center">
+              <div className="flex items-center gap-2 mb-2 sm:mb-3">
                 <div className={`rounded-full ${s.iconBg} p-1.5`}>
                   <s.icon className={`h-3.5 w-3.5 ${s.color}`} />
                 </div>
               </div>
-              <div className="text-2xl font-bold tabular-nums">{s.value}</div>
+              <div className="text-xl sm:text-2xl font-bold tabular-nums animate-count-up">{s.value}</div>
               <div className="text-[11px] text-muted-foreground mt-1 leading-tight">{s.label}</div>
               <div className="mt-auto pt-2">
                 <SparkLine data={sparkData[s.label] || []} color={sparkColorMap[s.label] || '#64748b'} className="w-full h-6" />
@@ -397,9 +397,9 @@ export function OverviewView() {
       </div>
 
       {/* Hero Score + Trend Chart */}
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Score gauge */}
-        <Card className="border-border/50 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-colors relative overflow-hidden">
+        <Card className="border-border/50 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-colors relative overflow-hidden gradient-border">
           {/* Animated gradient border glow */}
           <div className="absolute -inset-px rounded-xl bg-gradient-to-br from-primary/20 via-purple-500/10 to-cyan-500/20 blur-xl opacity-60 animate-pulse pointer-events-none" />
           <CardHeader className="pb-2">
@@ -561,7 +561,7 @@ export function OverviewView() {
       </div>
 
       {/* Recent Findings + Severity Breakdown */}
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         <Card className="border-border/50 hover:border-primary/30 transition-colors lg:col-span-2">
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <CardTitle className="text-sm font-medium text-secondary-bright">
@@ -710,7 +710,7 @@ export function OverviewView() {
             <Button
               onClick={handleRunAnalysis}
               disabled={actionLoading === 'analyze'}
-              className="gap-2 rounded-lg"
+              className="gap-2 rounded-lg ripple-btn"
             >
               <Play className="h-4 w-4" />
               {actionLoading === 'analyze' ? 'Analyzing...' : 'Run Analysis'}
@@ -719,7 +719,7 @@ export function OverviewView() {
               variant="outline"
               onClick={handleGenerateReport}
               disabled={actionLoading === 'report'}
-              className="gap-2 rounded-lg"
+              className="gap-2 rounded-lg ripple-btn"
             >
               <FileBarChart className="h-4 w-4" />
               {actionLoading === 'report' ? 'Generating...' : 'Generate Report'}
@@ -737,7 +737,7 @@ export function OverviewView() {
       </Card>
 
       {/* Severity Trend + Activity Feed + Recent PRs */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <SeverityTrend />
         {/* Activity feed */}
         <Card className="border-border/50 hover:border-primary/30 transition-colors lg:col-span-2">
@@ -747,7 +747,7 @@ export function OverviewView() {
             </CardTitle>
             <div className="flex items-center gap-3">
               <span className="flex items-center gap-1.5 text-xs text-emerald-500">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-breathe" />
                 Live
               </span>
               <button
@@ -764,7 +764,7 @@ export function OverviewView() {
               <div className="absolute left-[7px] top-2 bottom-2 w-px bg-border" />
               <div className="space-y-0.5">
                 {data.evidence.map((evt, i) => (
-                  <div key={evt.id || i} className="flex items-start gap-4 py-3 relative">
+                  <div key={evt.id || i} className="flex items-start gap-4 py-3 relative" style={{ animation: 'staggerIn 0.4s ease-out both', animationDelay: `${i * 80}ms` }}>
                     <div
                       className={`h-3.5 w-3.5 rounded-full shrink-0 mt-0.5 ring-4 ring-background z-10 ${evtDotColors[evt.eventType || ''] || 'bg-secondary'}`}
                     />

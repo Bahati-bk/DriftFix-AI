@@ -437,3 +437,77 @@ pre, code {
   background: oklch(1 0 0 / 0.05);
   border-color: oklch(1 0 0 / 0.15);
 }
+
+/* Ripple effect on buttons */
+.ripple-btn { position: relative; overflow: hidden; }
+.ripple-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, oklch(1 0 0 / 0.15) 10%, transparent 10.01%);
+  transform: scale(10);
+  opacity: 0;
+  transition: transform 0.5s, opacity 1s;
+}
+.ripple-btn:active::after {
+  transform: scale(0);
+  opacity: 1;
+  transition: 0s;
+}
+
+/* Gradient border on cards */
+.gradient-border {
+  position: relative;
+}
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, oklch(0.75 0.14 250 / 0.4), oklch(0.7 0.15 310 / 0.1));
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  pointer-events: none;
+}
+
+/* Focus ring animation */
+.focus-ring-animate {
+  transition: box-shadow 0.2s ease;
+}
+.focus-ring-animate:focus-visible {
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px oklch(0.75 0.14 250 / 0.5);
+}
+
+/* Subtle breathing animation for live indicators */
+@keyframes breathe {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.1); }
+}
+.animate-breathe {
+  animation: breathe 3s ease-in-out infinite;
+}
+
+/* Number counter animation */
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-count-up {
+  animation: countUp 0.6s ease-out;
+}
+
+/* Card stagger animation for lists */
+@keyframes staggerIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-stagger { animation: staggerIn 0.4s ease-out both; }
+
+/* Progress bar fill animation */
+@keyframes fillBar {
+  from { width: 0%; }
+}
+.animate-fill-bar { animation: fillBar 0.8s ease-out; }

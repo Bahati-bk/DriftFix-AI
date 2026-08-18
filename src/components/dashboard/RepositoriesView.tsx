@@ -42,7 +42,7 @@ function HealthBadge({ score, label, color }: { score: number; label: string; co
   const offset = circ - (score / 100) * circ;
   return (
     <div className="absolute top-3 right-3 group/badge" title={`Compliance Health: ${score}/100`}>
-      <svg width="36" height="36" viewBox="0 0 36 36" className="-rotate-90" style={{ filter: `drop-shadow(0 0 4px ${color}40)` }}>
+      <svg width="36" height="36" viewBox="0 0 36 36" className="-rotate-90 group-hover/badge:drop-shadow-[0_0_8px_var(--ring)]" style={{ filter: `drop-shadow(0 0 4px ${color}40)`, transition: 'filter 0.3s ease' }}>
         <circle cx="18" cy="18" r={r} fill="none" stroke="currentColor" strokeWidth="3.5" className="text-secondary" />
         <circle
           cx="18" cy="18" r={r}
@@ -173,7 +173,8 @@ export function RepositoriesView() {
             return (
               <Card
                 key={repo.id}
-                className="border-border/50 card-hover rounded-xl group relative overflow-hidden"
+                className="border-border/50 card-hover rounded-xl group relative overflow-hidden animate-stagger"
+                style={{ animationDelay: `${repos.indexOf(repo) * 60}ms` }}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
                 <HealthBadge {...getRepoHealth(repo, prCount)} />

@@ -188,7 +188,7 @@ export function EvidenceView() {
   };
 
   return (
-    <div className="p-4 lg:p-6 space-y-6">
+    <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
@@ -260,7 +260,7 @@ export function EvidenceView() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by event type, actor, or payload content..."
-              className="input-glow w-full h-10 pl-10 pr-4 rounded-lg bg-secondary/80 border border-border/80 text-sm placeholder:text-muted-foreground/70 outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 transition-all"
+              className="input-glow focus-ring-animate w-full h-10 pl-10 pr-4 rounded-lg bg-secondary/80 border border-border/80 text-sm placeholder:text-muted-foreground/70 outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 transition-all"
             />
           </div>
 
@@ -363,14 +363,15 @@ export function EvidenceView() {
                   {/* Content card */}
                   <div className={`flex-1 min-w-0 ${isLast ? '' : 'pb-3'}`}>
                     <Card
-                      className={`border-border/50 rounded-xl transition-all duration-200 cursor-pointer select-none ${
+                      className={`border-border/50 rounded-xl transition-all duration-200 cursor-pointer select-none animate-stagger ${
                         isExpanded
                           ? 'border-primary/40 hover:border-primary/50 bg-accent/30'
                           : 'hover:border-border/70 hover:bg-accent/50'
                       }`}
                       onClick={() => toggleExpanded(recordId)}
+                      style={{ animationDelay: `${i * 50}ms` }}
                     >
-                      <CardContent className="p-5">
+                      <CardContent className="p-3 sm:p-5">
                         {/* Top row: badge, actor, time, chevron */}
                         <div className="flex items-center gap-2 flex-wrap">
                           <Badge
@@ -431,12 +432,12 @@ export function EvidenceView() {
                                           ? `${prevHash.substring(0, 12)}...${prevHash.substring(prevHash.length - 8)}`
                                           : prevHash}
                                       </code>
-                                      <span className="text-muted-foreground">→</span>
+                                      <span className="text-muted-foreground animate-breathe">→</span>
                                     </>
                                   ) : (
                                     <>
                                       <span className="text-muted-foreground text-[11px] italic">genesis</span>
-                                      <span className="text-muted-foreground">→</span>
+                                      <span className="text-muted-foreground animate-breathe">→</span>
                                     </>
                                   )}
                                   <code className="hash-text text-[11px]">

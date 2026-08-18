@@ -91,7 +91,7 @@ export function AuditLogView() {
   }, [page, typeFilter]);
 
   return (
-    <div className="p-4 lg:p-6 space-y-6">
+    <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -156,10 +156,10 @@ export function AuditLogView() {
             {activities.map((entry, i) => {
               const isLast = i === activities.length - 1;
               return (
-                <div key={entry.id} className="relative flex gap-4">
+                <div key={entry.id} className="relative flex gap-4 animate-stagger" style={{ animationDelay: `${i * 50}ms` }}>
                   <div className="relative z-10 flex flex-col items-center shrink-0 pt-4">
                     <div
-                      className={`h-[22px] w-[22px] rounded-full border-2 border-background flex items-center justify-center shadow-sm status-dot-glow ${typeDotColors[entry.type]}`}
+                      className={`h-[22px] w-[22px] rounded-full border-2 border-background flex items-center justify-center shadow-sm status-dot-glow animate-breathe ${typeDotColors[entry.type]}`}
                     >
                       <div className="h-3.5 w-3.5 rounded-full bg-background" />
                     </div>
