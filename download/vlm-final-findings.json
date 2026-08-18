@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "**8/10**\n\n**Strengths:**\n1. **Clear Visual Hierarchy:** Excellent use of color-coded severity badges (Yellow/Red) and status pills (Blue \"Resolved\") for instant scanning.\n2. **Effective Dark Mode:** High contrast text on deep backgrounds reduces eye strain and looks professional for security tooling.\n\n**Issues:**\n1. **Notification Clutter:** The large green toast notification (\"Welcome to DriftFix Demo\") obscures the primary action button (\"New Scan\").\n2. **Low Information Density:** The list items are very tall with excessive whitespace, forcing unnecessary scrolling for a simple list of 12 items.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1787074068,
+  "id": "20260819012747bab3286dfc0147e0",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260819012747bab3286dfc0147e0",
+  "usage": {
+    "completion_tokens": 130,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 915,
+    "prompt_tokens_details": {
+      "cached_tokens": 2
+    },
+    "total_tokens": 1045
+  }
+}

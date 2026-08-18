@@ -123,10 +123,10 @@ export function RulesView() {
 
   return (
     <div className="p-4 lg:p-6 space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="section-header flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold">Compliance Rules</h1>
-          <p className="section-subtitle mt-1">
+          <p className="text-secondary-bright text-sm mt-1">
             {enabledCount} of {rules.length} rules enabled
           </p>
         </div>
@@ -142,7 +142,7 @@ export function RulesView() {
           placeholder="Search rules by name..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="pl-9"
+          className="pl-9 input-glow placeholder:text-muted-foreground/70"
         />
       </div>
 
@@ -199,7 +199,7 @@ export function RulesView() {
                                 {sev}
                               </Badge>
                             </div>
-                            <p className="text-sm text-muted-foreground mb-1.5">
+                            <p className="text-sm text-secondary-bright mb-1.5">
                               {String(rule.description)}
                             </p>
                             <div className="flex items-center gap-1.5 flex-wrap">
@@ -231,7 +231,7 @@ export function RulesView() {
         </div>
       )}
 
-      <p className="text-[11px] text-muted-foreground text-center pb-4">
+      <p className="text-[11px] text-secondary-bright text-center pb-4">
         Rules run as the first layer of analysis. AI contextual review validates and enriches rule engine results.
       </p>
     </div>

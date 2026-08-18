@@ -201,7 +201,7 @@ export function FindingsView() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Findings</h1>
-          <p className="section-subtitle mt-1">
+          <p className="text-secondary-bright text-sm mt-1">
             Compliance and security findings across all repositories
           </p>
         </div>
@@ -242,7 +242,7 @@ export function FindingsView() {
 
       {/* Filters */}
       <Card className="border-border/50 rounded-xl">
-        <CardContent className="p-3">
+        <CardContent className="p-4">
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative flex-1 min-w-[180px]">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
@@ -301,11 +301,11 @@ export function FindingsView() {
               onCheckedChange={toggleSelectAll}
               className="h-4 w-4"
             />
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-secondary-bright">
               Showing {findings.length} of {totalCount} findings
             </span>
           </div>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-xs text-secondary-bright">
             Page {page} of {totalPages}
           </span>
         </div>
@@ -351,7 +351,7 @@ export function FindingsView() {
                         <div className={`h-full rounded-full ${confBarColor}`} style={{ width: `${confVal}%`, transition: 'width 0.5s ease-out' }} />
                       </div>
                       <span className={`text-xs font-medium tabular-nums w-8 text-right ${confColor}`}>{confVal}%</span>
-                      <span className={`text-xs font-medium hidden lg:inline ${confColor}`}>conf</span>
+                      <span className={`text-xs font-medium hidden lg:inline ${confColor} opacity-80`}>conf</span>
                     </div>
                     <Badge
                       variant={f.status === 'OPEN' ? 'destructive' : f.status === 'RESOLVED' ? 'default' : 'secondary'}
@@ -376,7 +376,7 @@ export function FindingsView() {
             <CardContent className="p-12 text-center">
               <ShieldOff className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="font-semibold mb-2">No findings match your filters</h3>
-              <p className="text-sm text-muted-foreground mb-4">Run an analysis to discover compliance issues</p>
+              <p className="text-sm text-secondary-bright mb-4">Run an analysis to discover compliance issues</p>
               <Button onClick={runAnalysis} disabled={runningAnalysis} className="gap-2">
                 <Zap className="h-4 w-4" />
                 {runningAnalysis ? 'Running...' : 'Run Analysis'}

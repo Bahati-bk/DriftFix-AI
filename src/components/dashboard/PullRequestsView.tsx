@@ -15,7 +15,7 @@ const statusConfig: Record<string, { bg: string; text: string; border: string }>
 };
 
 const statusBorderAccent: Record<string, string> = {
-  open: 'border-l-2 border-l-emerald-500/60',
+  open: 'border-l-2 border-l-emerald-500/70',
   merged: 'border-l-2 border-l-blue-500/60',
   closed: 'border-l-2 border-l-slate-500/40',
 };
@@ -59,7 +59,7 @@ export function PullRequestsView() {
     <div className="p-4 lg:p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Pull Requests</h1>
-        <p className="section-subtitle mt-1">
+        <p className="text-secondary-bright text-sm mt-1">
           {prs.length} total {"\u2022 "} {openCount} open {"\u2022 "} {mergedCount} merged {"\u2022 "} {closedCount} closed
         </p>
       </div>

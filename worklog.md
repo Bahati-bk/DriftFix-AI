@@ -1,5 +1,113 @@
 # DriftFix - Worklog
 
+## Round 8: Contrast Overhaul + 5 New Features (VLM 7.5→8.0 across all views)
+
+**Date**: 2025-08-19 (Round 8 - cron-triggered webDevReview)
+
+### Current Project Status Assessment
+- Application is fully stable: all 12 views (including new Audit Log) compile and render without errors
+- Lint: 0 errors, 0 warnings
+- Dev log: consistent successful compilations, zero errors, all API routes returning 200
+- Browser QA: All 12 views + new features tested, zero console errors
+- VLM visual QA: All views now rated 8.0/10 (up from 7-7.5 at start of round)
+- New Audit Log API endpoint operational
+- 5 new features added, 10+ views with styling improvements
+
+### Changes Completed
+
+#### Global CSS Theme Overhaul (globals.css)
+
+1. **Dark muted-foreground bump**: `oklch(0.72)` → `oklch(0.78)` — all secondary text across the app is now 15-20% brighter
+2. **Placeholder contrast rules**: Added `::placeholder` with explicit oklch colors and `opacity: 1` for both light/dark
+3. **7 new utility classes**:
+   - `.section-header` — standardized 1.5rem bottom margin for view headers
+   - `.text-secondary-bright` — brighter secondary text at oklch(0.82) for descriptions/subtitles
+   - `.hash-text` — brighter monospace text for hash strings
+   - `.chart-axis-label` — improved fill color for recharts axis labels
+   - `.badge-glow` — red glow box-shadow for alert badges
+   - `.btn-ghost-visible` — subtle bg/border for ghost CTA buttons
+   - `.nav-item-smooth:hover` improved from 2px to 3px translateX
+
+#### Cross-View Styling Fixes (10 files)
+
+1. **DashboardLayout.tsx**: Badge glow on findings count, active sidebar inner glow shadow, nav group separator before Reports, btn-press on Run Demo Analysis, text-foreground on sidebar
+2. **LandingPage.tsx**: Hero spacing increased (mb-6→mb-8, mb-10→mb-12), `btn-ghost-visible` on 'See How It Works' CTA, ALL section descriptions changed to `text-secondary-bright` (problem, how-it-works, features, frameworks, stats, trusted-by, CTA, footer)
+3. **OverviewView.tsx**: All CardTitle subtitles → `text-secondary-bright`, XAxis/YAxis tick fill improved, 'View all' buttons → `text-secondary-bright` + `btn-press`
+4. **FindingsView.tsx**: Subtitle → `text-secondary-bright`, filter bar padding p-3→p-4, confidence 'conf' label opacity-80, count/page text → `text-secondary-bright`, empty state → `text-secondary-bright`
+5. **ComplianceView.tsx**: Subtitle → `text-secondary-bright`, description texts → `text-secondary-bright`, footer disclaimer → `text-secondary-bright`
+6. **EvidenceView.tsx**: Subtitle → `text-secondary-bright`, hash strings → `hash-text`, card padding p-4→p-5
+7. **PullRequestsView.tsx**: Subtitle → `text-secondary-bright`, PR open border opacity 60%→70%
+8. **RulesView.tsx**: Subtitle → `text-secondary-bright`, rule descriptions → `text-secondary-bright`, search bar `input-glow`, header `section-header`
+9. **ReportsView.tsx**: Subtitle → `text-secondary-bright`, 'Never' text → `text-secondary-bright`, header `section-header`, card padding p-4→p-5, hashes → `hash-text`
+10. **SettingsView.tsx**: Subtitle → `text-secondary-bright`, all helper/secondary text → `text-secondary-bright`, input `input-glow`, header `section-header`
+
+#### New Features (5)
+
+1. **Evidence Search & Filter + Expand-in-Place** (EvidenceView.tsx)
+   - Search input with `input-glow` filtering by event type, actor, and payload content
+   - Event type filter chips: All, FINDING_CREATED, EVIDENCE_COMMITTED, POLICY_CHECK
+   - Expand-in-place cards: entire card clickable, smooth max-height transition, rotating chevron
+   - Expanded state shows: hash chain panel (previousHash → hash), formatted JSON payload
+   - 'Showing X records' count when filtering
+
+2. **Compliance Framework Deep-Dive Panel** (ComplianceView.tsx)
+   - SOC 2 Trust Services Criteria: 6 controls (CC6.1, CC6.6, CC7.1, CC7.2, P1.2, A1.2)
+   - GDPR Articles: 5 controls (Art.5(1)(c), Art.25, Art.32, Art.33, Art.35)
+   - Accordion-based UI with shadcn Accordion component
+   - Each control shows: ID badge, name, category tag, description, requirements checklist with CheckCircle2 icons
+   - Two-column responsive grid layout (lg:grid-cols-2)
+
+3. **Audit Activity Log** (NEW view + API)
+   - New API: GET `/api/audit-log` combining EvidenceRecord, Finding, AnalysisRun, PullRequest data
+   - Unified activity format with type, action, description, actor, timestamp, metadata
+   - Support for `?type=FINDING,EVIDENCE,ANALYSIS,PR&limit=50&page=1` filtering
+   - New `AuditLogView.tsx` with timeline-style list, color-coded type dots (red/emerald/purple/blue)
+   - Type filter chips, relative time display, pagination, loading skeleton, empty state
+   - Added 'Audit Log' nav item to sidebar (Activity icon), 'audit-log' to AppView type
+
+4. **Severity Trend Chart on Overview** (OverviewView.tsx)
+   - New `SeverityTrend` component fetching open findings and rendering horizontal bar chart
+   - Color-coded bars: CRITICAL=red, HIGH=orange, MEDIUM=yellow, LOW=emerald
+   - Animated width transitions, placed in responsive grid alongside activity feed
+
+5. **PR Diff File Tree Viewer** (PRAnalysisView.tsx)
+   - Recursive `FileTreeNode` component with expandable/collapsible folders
+   - 8 demo files across 5 folders with additions/deletions/findings counts
+   - Status badges: green 'A' for added, red 'D' for deleted
+   - Summary bar: 'X files changed, +Y, -Z, W findings'
+   - Findings badges on files with issues
+
+### QA Verification (Round 8)
+- Lint: 0 errors, 0 warnings
+- Dev log: consistent successful compilations, zero errors
+- Browser QA: Landing → Login → Overview → Findings → Compliance → Evidence → Audit Log → Repos → PRs → Rules → Reports → Settings — ALL PASS
+- VLM visual QA (pre-round): All views rated 7-7.5/10
+- VLM visual QA (post-round): All views rated **8.0/10** (consistent across Overview, Findings, Compliance, Evidence, Audit Log, Landing)
+- Zero console errors across all views
+- All new features verified: Evidence search/filter/expand, Compliance deep-dive accordion, Audit Log timeline, Severity trend bars, File tree viewer
+
+### Unresolved Issues / Risks
+- SQLite not production-grade (acceptable for demo)
+- No real GitHub integration (webhook endpoint exists but needs credentials)
+- No unit tests
+- VLM notes chart X-axis labels could be slightly more readable
+- 'See How It Works' button on landing could use even more visibility
+- Audit Log currently uses in-memory data merging (acceptable for demo)
+
+### Priority Recommendations for Next Phase
+1. WebSocket real-time updates for findings/evidence
+2. PDF report generation (currently JSON-only download)
+3. Real file upload for PR diff analysis
+4. User invitation/management flow
+5. Audit report scheduling (cron-based auto-generation)
+6. Organization switching capability
+7. Mobile responsive testing on sub-640px viewports
+8. Evidence ledger: add timestamp range filter
+9. Rules: add rule efficacy metrics (times triggered, findings generated)
+10. Syntax highlighting in code diff viewer
+
+---
+
 ## Styling Polish + 4 New Features (Round 7)
 
 **Date**: 2025-08-19 (Round 7 - cron-triggered webDevReview)
@@ -1226,3 +1334,40 @@ Added full database persistence for finding notes, replacing the previous client
 ### Quality
 - Lint: 0 errors, 0 warnings
 - Dev server: Compiling successfully, all routes returning 200
+
+---
+Task ID: 1
+Agent: CSS Theme Fixer
+Task: Update globals.css with improved contrast and new utility classes
+Work Log:
+- Bumped dark --muted-foreground from oklch(0.72 0.01 260) to oklch(0.78 0.008 260)
+- Added ::placeholder contrast rules for light (oklch(0.55)) and dark (oklch(0.65)) modes
+- Added .section-header utility for standardized header-to-content spacing (1.5rem margin-bottom)
+- Added .text-secondary-bright utility for secondary text brighter than muted-foreground (oklch(0.82))
+- Added .hash-text utility for monospace hash strings with theme-aware contrast
+- Added .chart-axis-label utility with theme-aware fill color and reduced font size
+- Added .badge-glow utility for sidebar badge box-shadow glow effect
+- Improved .nav-item-smooth hover translateX from 2px to 3px
+- Added .btn-ghost-visible utility for secondary CTA buttons needing more visibility
+- Verified with lint: 0 errors
+Stage Summary:
+- All CSS changes applied successfully
+- 7 new utility classes added (.section-header, .text-secondary-bright, .hash-text, .chart-axis-label, .badge-glow, .btn-ghost-visible, ::placeholder)
+- Dark theme contrast significantly improved for secondary text, placeholders, hash strings, and chart labels
+
+---
+Task ID: 7
+Agent: Audit Log Feature Builder
+Task: Create Audit Activity Log API and View
+
+Work Log:
+- Created /api/audit-log route combining Evidence, Finding, AnalysisRun, PR data
+- Created AuditLogView component with timeline UI, type filters, pagination
+- Added 'audit-log' to AppView type in store
+- Added nav item and view route in DashboardLayout
+
+Stage Summary:
+- New audit log feature with unified timeline from 4 data sources
+- Filterable by type (Findings, Evidence, Analysis, PRs)
+- Pagination support
+- Lint: 0 errors

@@ -129,9 +129,9 @@ export function SettingsView() {
 
   return (
     <div className="p-4 lg:p-6 space-y-6">
-      <div>
+      <div className="section-header">
         <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="section-subtitle mt-1">Manage your account and organization</p>
+        <p className="text-secondary-bright text-sm mt-1">Manage your account and organization</p>
       </div>
 
       {loading ? (
@@ -156,7 +156,7 @@ export function SettingsView() {
                 </div>
                 <div>
                   <p className="font-medium">{currentUser?.name || 'Unknown User'}</p>
-                  <p className="text-sm text-muted-foreground">{currentUser?.email || ''}</p>
+                  <p className="text-sm text-secondary-bright">{currentUser?.email || ''}</p>
                   <Badge variant="outline" className="mt-1 text-[10px]">
                     {currentUser?.role || 'MEMBER'}
                   </Badge>
@@ -194,7 +194,7 @@ export function SettingsView() {
                 </div>
               </div>
               <div className="flex items-center gap-3 pt-1">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2 text-sm text-secondary-bright">
                   <Users className="size-4" />
                   <span>{memberCount} {memberCount === 1 ? 'member' : 'members'}</span>
                 </div>
@@ -223,7 +223,7 @@ export function SettingsView() {
                   <Github className="size-5" />
                   <div>
                     <p className="text-sm font-medium">GitHub</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-secondary-bright">
                       {githubConnected ? 'Connected and receiving webhooks' : 'Not connected'}
                     </p>
                   </div>
@@ -252,7 +252,7 @@ export function SettingsView() {
                     <Link2 className="size-3" /> Webhook URL
                   </Label>
                   <div className="p-3 rounded-lg border border-border bg-secondary/20">
-                    <code className="text-xs text-muted-foreground font-mono break-all">
+                    <code className="text-xs text-secondary-bright font-mono break-all">
                       {maskWebhook(webhookUrl)}
                     </code>
                   </div>
@@ -278,9 +278,9 @@ export function SettingsView() {
                     max={100}
                     value={minScore}
                     onChange={(e) => setMinScore(e.target.value)}
-                    className="w-24"
+                    className="w-24 input-glow"
                   />
-                  <span className="text-sm text-muted-foreground">out of 100</span>
+                  <span className="text-sm text-secondary-bright">out of 100</span>
                 </div>
               </div>
 
@@ -291,21 +291,21 @@ export function SettingsView() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm">Block on Critical Findings</p>
-                    <p className="text-xs text-muted-foreground">Prevent merge when critical issues are found</p>
+                    <p className="text-xs text-secondary-bright">Prevent merge when critical issues are found</p>
                   </div>
                   <Switch checked={blockCritical} onCheckedChange={setBlockCritical} />
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm">Block on High Findings</p>
-                    <p className="text-xs text-muted-foreground">Prevent merge when high severity issues are found</p>
+                    <p className="text-xs text-secondary-bright">Prevent merge when high severity issues are found</p>
                   </div>
                   <Switch checked={blockHigh} onCheckedChange={setBlockHigh} />
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm">Block on Medium Findings</p>
-                    <p className="text-xs text-muted-foreground">Prevent merge when medium severity issues are found</p>
+                    <p className="text-xs text-secondary-bright">Prevent merge when medium severity issues are found</p>
                   </div>
                   <Switch checked={blockMedium} onCheckedChange={setBlockMedium} />
                 </div>
@@ -330,7 +330,7 @@ export function SettingsView() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium">Demo Mode</p>
-                  <p className="text-xs text-muted-foreground">When enabled, uses sample data and demo endpoints</p>
+                  <p className="text-xs text-secondary-bright">When enabled, uses sample data and demo endpoints</p>
                 </div>
                 <Switch
                   checked={demoMode}
@@ -353,7 +353,7 @@ export function SettingsView() {
               <div className="flex items-center justify-between flex-wrap gap-3">
                 <div>
                   <p className="text-sm font-medium">Delete Account</p>
-                  <p className="text-xs text-muted-foreground">Permanently delete your account and all associated data</p>
+                  <p className="text-xs text-secondary-bright">Permanently delete your account and all associated data</p>
                 </div>
                 <Button
                   variant="outline"
@@ -368,7 +368,7 @@ export function SettingsView() {
               <div className="flex items-center justify-between flex-wrap gap-3">
                 <div>
                   <p className="text-sm font-medium">Reset All Data</p>
-                  <p className="text-xs text-muted-foreground">Remove all findings, reports, and reset to initial state</p>
+                  <p className="text-xs text-secondary-bright">Remove all findings, reports, and reset to initial state</p>
                 </div>
                 <Button
                   variant="outline"

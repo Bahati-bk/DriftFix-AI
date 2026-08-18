@@ -155,10 +155,10 @@ export function ReportsView() {
 
   return (
     <div className="p-4 lg:p-6 space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="section-header flex items-center justify-between flex-wrap gap-3">
         <div>
           <h2 className="text-2xl font-bold">Reports</h2>
-          <p className="section-subtitle">Generate and manage compliance audit reports</p>
+          <p className="text-secondary-bright text-sm">Generate and manage compliance audit reports</p>
         </div>
       </div>
 
@@ -174,7 +174,7 @@ export function ReportsView() {
               <div className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">Open Findings</div>
             </div>
             <div className="pl-6">
-              <div className="text-lg font-semibold mt-1">{lastReportDate}</div>
+              <div className={`text-lg font-semibold mt-1 ${lastReportDate === 'Never' ? 'text-secondary-bright' : ''}`}>{lastReportDate}</div>
               <div className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">Last Report</div>
             </div>
           </div>
@@ -259,7 +259,7 @@ export function ReportsView() {
                   : 'N/A';
                 return (
                   <Card key={r.id} className="border-border hover:border-primary/30 transition-colors rounded-xl">
-                    <CardContent className="p-4">
+                    <CardContent className="p-5">
                       <div className="flex items-start gap-4">
                         <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                           <FileText className="size-5 text-primary" />
@@ -276,7 +276,7 @@ export function ReportsView() {
                           {r.integrityHash && (
                             <div className="flex items-center gap-2 text-[11px]">
                               <Hash className="size-3 text-muted-foreground shrink-0" />
-                              <code className="text-muted-foreground font-mono truncate">{truncatedHash}</code>
+                              <code className="hash-text truncate">{truncatedHash}</code>
                               <button
                                 onClick={(e) => { e.stopPropagation(); copyHash(r.id, r.integrityHash); }}
                                 className="shrink-0 hover:text-foreground transition-colors text-muted-foreground"

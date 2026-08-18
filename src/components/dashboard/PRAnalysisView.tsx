@@ -12,6 +12,7 @@ import {
   ArrowLeft, GitPullRequest, FileCode, CheckCircle2,
   AlertTriangle, Loader2, Eye, Brain, Shield, Clock,
   ArrowRight, User, FolderGit2, Timer, Hash,
+  FileCode2, ChevronRight,
 } from 'lucide-react';
 
 interface Finding {
@@ -55,6 +56,73 @@ const statusDot: Record<string, string> = {
   failed: 'bg-red-500',
 };
 
+const demoChangedFiles = [
+  { path: 'src/', type: 'folder' as const, children: [
+    { path: 'src/routes/', type: 'folder' as const, children: [
+      { path: 'src/routes/auth.ts', type: 'file' as const, additions: 12, deletions: 8, status: 'modified' as const, findings: 2 },
+      { path: 'src/routes/api.ts', type: 'file' as const, additions: 5, deletions: 2, status: 'modified' as const, findings: 0 },
+    ]},
+    { path: 'src/middleware/', type: 'folder' as const, children: [
+      { path: 'src/middleware/cors.ts', type: 'file' as const, additions: 3, deletions: 1, status: 'modified' as const, findings: 1 },
+    ]},
+    { path: 'src/utils/', type: 'folder' as const, children: [
+      { path: 'src/utils/crypto.py', type: 'file' as const, additions: 15, deletions: 0, status: 'added' as const, findings: 1 },
+      { path: 'src/utils/logger.ts', type: 'file' as const, additions: 0, deletions: 5, status: 'deleted' as const, findings: 0 },
+    ]},
+    { path: 'src/services/', type: 'folder' as const, children: [
+      { path: 'src/services/user.service.ts', type: 'file' as const, additions: 8, deletions: 3, status: 'modified' as const, findings: 1 },
+    ]},
+  ]},
+  { path: 'package.json', type: 'file' as const, additions: 2, deletions: 1, status: 'modified' as const, findings: 1 },
+  { path: '.env.example', type: 'file' as const, additions: 4, deletions: 0, status: 'added' as const, findings: 0 },
+];
+
+function FileTreeNode({ node, depth = 0 }: { node: typeof demoChangedFiles[number]; depth?: number }) {
+  const [expanded, setExpanded] = useState(depth < 1);
+  const isFolder = node.type === 'folder';
+
+  return (
+    <div>
+      <div
+        className={`flex items-center gap-2 py-1.5 px-2 rounded-md hover:bg-accent/50 cursor-pointer transition-colors ${isFolder ? '' : 'group'}`}
+        style={{ paddingLeft: `${depth * 16 + 8}px` }}
+        onClick={() => isFolder && setExpanded(!expanded)}
+      >
+        {isFolder ? (
+          <ChevronRight className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`} />
+        ) : (
+          <FileCode2 className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
+        )}
+        <span className={`text-sm truncate ${isFolder ? 'font-medium' : 'font-mono text-xs'}`}>{
+          isFolder ? node.path.split('/').filter(Boolean).pop() + '/' : node.path.split('/').pop()
+        }</span>
+        {!isFolder && node.findings > 0 && (
+          <Badge className="severity-high text-[9px] px-1 py-0 ml-auto shrink-0">{node.findings}</Badge>
+        )}
+        {!isFolder && (
+          <span className="ml-auto text-xs text-secondary-bright tabular-nums shrink-0">
+            <span className="text-emerald-500">+{node.additions}</span>{' '}
+            <span className="text-red-500">-{node.deletions}</span>
+          </span>
+        )}
+        {!isFolder && node.status === 'added' && (
+          <Badge variant="outline" className="text-[9px] px-1 py-0 text-emerald-500 border-emerald-500/30 ml-1 shrink-0">A</Badge>
+        )}
+        {!isFolder && node.status === 'deleted' && (
+          <Badge variant="outline" className="text-[9px] px-1 py-0 text-red-500 border-red-500/30 ml-1 shrink-0">D</Badge>
+        )}
+      </div>
+      {isFolder && expanded && 'children' in node && node.children && (
+        <div>
+          {node.children.map(child => (
+            <FileTreeNode key={child.path} node={child} depth={depth + 1} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function PRAnalysisView() {
   const { selectedPRId, selectPR, selectFinding } = useAppStore();
   const [data, setData] = useState<PRData | null>(null);
@@ -87,6 +155,23 @@ export function PRAnalysisView() {
   const findings = data?.analysisRun?.findings || [];
   const analysis = data?.analysisRun;
   const pr = data?.pullRequest;
+
+  const treeStats = useMemo(() => {
+    let files = 0, additions = 0, deletions = 0, findingsCount = 0;
+    const walk = (nodes: typeof demoChangedFiles) => {
+      for (const n of nodes) {
+        if (n.type === 'file') {
+          files++;
+          additions += n.additions;
+          deletions += n.deletions;
+          findingsCount += n.findings;
+        }
+        if ('children' in n && n.children) walk(n.children);
+      }
+    };
+    walk(demoChangedFiles);
+    return { files, additions, deletions, findings: findingsCount };
+  }, []);
 
   const groupedFiles = useMemo(() => {
     const groups: Record<string, { filePath: string; findings: typeof findings; changeType: string }> = {};
@@ -296,49 +381,77 @@ export function PRAnalysisView() {
         </CardContent>
       </Card>
 
-      {/* File Changes Summary */}
-      <Card className="border-border/50 rounded-xl">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <FileCode className="size-4" />
-            File Changes Summary
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {groupedFiles.length > 0 ? (
-            <div className="space-y-1.5">
-              {groupedFiles.map((gf) => (
-                <div
-                  key={gf.filePath}
-                  className="flex items-center justify-between gap-3 py-1.5 px-2 rounded-lg hover:bg-secondary/50 transition-colors"
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <FileCode className="size-3.5 text-muted-foreground shrink-0" />
-                    <span className="text-xs font-mono text-foreground/80 truncate">
-                      {gf.filePath}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Badge
-                      variant="outline"
-                      className={`text-[10px] font-medium border ${changeTypeColors[gf.changeType]}`}
-                    >
-                      {gf.changeType}
-                    </Badge>
-                    <Badge variant="secondary" className="text-[10px] font-normal">
-                      {gf.findings.length} finding{gf.findings.length !== 1 ? 's' : ''}
-                    </Badge>
-                  </div>
-                </div>
+      {/* File Tree Viewer + File Changes Summary - two column layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* File Tree Viewer */}
+        <Card className="card-hover border-border/50 rounded-xl">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <FileCode2 className="size-4" />
+              Changed Files
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center gap-3 text-xs text-secondary-bright">
+              <span>{treeStats.files} files changed</span>
+              <span className="text-emerald-500 font-medium">+{treeStats.additions}</span>
+              <span className="text-red-500 font-medium">-{treeStats.deletions}</span>
+              {treeStats.findings > 0 && (
+                <Badge className="severity-high text-[9px] px-1.5 py-0">{treeStats.findings} findings</Badge>
+              )}
+            </div>
+            <div className="divide-y divide-border/50">
+              {demoChangedFiles.map(node => (
+                <FileTreeNode key={node.path} node={node} />
               ))}
             </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              {analysis?.filesAnalyzed ?? 0} file{(analysis?.filesAnalyzed ?? 0) !== 1 ? 's' : ''} analyzed
-            </p>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        {/* File Changes Summary */}
+        <Card className="border-border/50 rounded-xl">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <FileCode className="size-4" />
+              File Changes Summary
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {groupedFiles.length > 0 ? (
+              <div className="space-y-1.5">
+                {groupedFiles.map((gf) => (
+                  <div
+                    key={gf.filePath}
+                    className="flex items-center justify-between gap-3 py-1.5 px-2 rounded-lg hover:bg-secondary/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <FileCode className="size-3.5 text-muted-foreground shrink-0" />
+                      <span className="text-xs font-mono text-foreground/80 truncate">
+                        {gf.filePath}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Badge
+                        variant="outline"
+                        className={`text-[10px] font-medium border ${changeTypeColors[gf.changeType]}`}
+                      >
+                        {gf.changeType}
+                      </Badge>
+                      <Badge variant="secondary" className="text-[10px] font-normal">
+                        {gf.findings.length} finding{gf.findings.length !== 1 ? 's' : ''}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                {analysis?.filesAnalyzed ?? 0} file{(analysis?.filesAnalyzed ?? 0) !== 1 ? 's' : ''} analyzed
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* AI Summary */}
       {analysis?.summary && (

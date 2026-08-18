@@ -1,0 +1,598 @@
+     1→'use client';
+     2→
+     3→import { useEffect, useState, useCallback } from 'react';
+     4→import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+     5→import { Skeleton } from '@/components/ui/skeleton';
+     6→import { AnimatedScore } from '@/components/ui/animated-score';
+     7→import { Badge } from '@/components/ui/badge';
+     8→import { Button } from '@/components/ui/button';
+     9→import {
+    10→  AreaChart,
+    11→  Area,
+    12→  BarChart,
+    13→  Bar,
+    14→  XAxis,
+    15→  YAxis,
+    16→  CartesianGrid,
+    17→  ResponsiveContainer,
+    18→  ReferenceLine,
+    19→  Tooltip as RTooltip,
+    20→  Cell,
+    21→} from 'recharts';
+    22→import { TrendingUp, TrendingDown, Minus, ArrowRight, Target, ChevronDown, ChevronUp } from 'lucide-react';
+    23→import { useAppStore } from '@/stores/app';
+    24→
+    25→const sevColors: Record<string, string> = {
+    26→  CRITICAL: '#ef4444',
+    27→  HIGH: '#f97316',
+    28→  MEDIUM: '#eab308',
+    29→  LOW: '#64748b',
+    30→};
+    31→
+    32→const sevLabels: Record<string, string> = {
+    33→  CRITICAL: 'Critical',
+    34→  HIGH: 'High',
+    35→  MEDIUM: 'Medium',
+    36→  LOW: 'Low',
+    37→};
+    38→
+    39→const TARGET_SCORE = 80;
+    40→
+    41→const statusDotColor = (status: string) => {
+    42→  switch (status) {
+    43→    case 'Compliant': return 'bg-emerald-500';
+    44→    case 'Partial': return 'bg-yellow-500';
+    45→    case 'Gap': return 'bg-red-500';
+    46→    default: return 'bg-muted-foreground/40';
+    47→  }
+    48→};
+    49→
+    50→const statusBadgeStyle = (status: string) => {
+    51→  switch (status) {
+    52→    case 'Compliant': return 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
+    53→    case 'Partial': return 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30';
+    54→    case 'Gap': return 'bg-red-500/15 text-red-400 border-red-500/30';
+    55→    default: return 'bg-secondary text-muted-foreground border-border/50';
+    56→  }
+    57→};
+    58→
+    59→const sampleControls = [
+    60→  { id: 'CC6.1', name: 'Logical Access Security', framework: 'SOC2', status: 'Compliant', findingCount: 0 },
+    61→  { id: 'CC6.2', name: 'User Authentication', framework: 'SOC2', status: 'Compliant', findingCount: 1 },
+    62→  { id: 'CC6.3', name: 'Role-Based Access', framework: 'SOC2', status: 'Partial', findingCount: 2 },
+    63→  { id: 'CC7.1', name: 'System Monitoring', framework: 'SOC2', status: 'Compliant', findingCount: 0 },
+    64→  { id: 'CC7.2', name: 'Incident Response', framework: 'SOC2', status: 'Gap', findingCount: 3 },
+    65→  { id: 'CC8.1', name: 'Change Management', framework: 'SOC2', status: 'Partial', findingCount: 1 },
+    66→  { id: 'Art.5', name: 'Principles of Processing', framework: 'GDPR', status: 'Compliant', findingCount: 0 },
+    67→  { id: 'Art.6', name: 'Lawful Basis', framework: 'GDPR', status: 'Partial', findingCount: 1 },
+    68→  { id: 'Art.17', name: 'Right to Erasure', framework: 'GDPR', status: 'Gap', findingCount: 2 },
+    69→  { id: 'Art.25', name: 'Data Protection by Design', framework: 'GDPR', status: 'Partial', findingCount: 1 },
+    70→  { id: 'Art.32', name: 'Security of Processing', framework: 'GDPR', status: 'Compliant', findingCount: 0 },
+    71→  { id: 'Art.33', name: 'Breach Notification', framework: 'GDPR', status: 'Gap', findingCount: 2 },
+    72→];
+    73→
+    74→export function ComplianceView() {
+    75→  const setView = useAppStore((s) => s.setView);
+    76→  const setSearchQuery = useAppStore((s) => s.setSearchQuery);
+    77→  const [compliance, setCompliance] = useState<Record<string, unknown> | null>(null);
+    78→  const [trends, setTrends] = useState<Record<string, unknown>[]>([]);
+    79→  const [sevBreakdown, setSevBreakdown] = useState<{ name: string; value: number; color: string; label: string }[]>([]);
+    80→  const [loading, setLoading] = useState(true);
+    81→  const [deepDiveExpanded, setDeepDiveExpanded] = useState(false);
+    82→  const [controls, setControls] = useState<Array<{ id: string; name: string; framework: string; status: string; findingCount: number }>>([]);
+    83→
+    84→  const navigateToFindings = useCallback((severity?: string) => {
+    85→    if (severity) {
+    86→      setSearchQuery('');
+    87→      useAppStore.getState().setView('findings');
+    88→    } else {
+    89→      setView('findings');
+    90→    }
+    91→  }, [setView, setSearchQuery]);
+    92→
+    93→  useEffect(() => {
+    94→    (async () => {
+    95→      try {
+    96→        const [compRes, trendRes] = await Promise.all([
+    97→          fetch('/api/compliance'),
+    98→          fetch('/api/compliance?type=trends'),
+    99→        ]);
+   100→        const comp = await compRes.json();
+   101→        const trend = await trendRes.json();
+   102→        setCompliance(comp);
+   103→        setTrends(trend.history || []);
+   104→        const breakdown = (
+   105→          Object.entries(comp.severityBreakdown || {}).map(
+   106→            ([name, value]: [string, number]) => ({
+   107→              name,
+   108→              value: Number(value),
+   109→              color: sevColors[name] || '#64748b',
+   110→              label: sevLabels[name] || name,
+   111→            }),
+   112→          ) as { name: string; value: number; color: string; label: string }[]
+   113→        ).filter((d) => d.value > 0);
+   114→        setSevBreakdown(breakdown);
+   115→      } catch {
+   116→        /* empty */
+   117→      }
+   118→      // Fetch controls data for deep dive
+   119→      try {
+   120→        const ctrlRes = await fetch('/api/compliance?type=controls');
+   121→        const ctrlData = await ctrlRes.json();
+   122→        if (Array.isArray(ctrlData) && ctrlData.length > 0) {
+   123→          setControls(ctrlData);
+   124→        }
+   125→      } catch {
+   126→        // API may not exist, generate sample controls from compliance data
+   127→      }
+   128→
+   129→      setLoading(false);
+   130→    })();
+   131→  }, []);
+   132→
+   133→  if (loading) {
+   134→    return (
+   135→      <div className="p-4 lg:p-6 space-y-6">
+   136→        <Skeleton className="h-8 w-48 skeleton" />
+   137→        <div className="grid lg:grid-cols-3 gap-6">
+   138→          <Skeleton className="h-72 rounded-xl skeleton" />
+   139→          <Skeleton className="h-72 rounded-xl lg:col-span-2 skeleton" />
+   140→        </div>
+   141→        <div className="grid lg:grid-cols-2 gap-6">
+   142→          <Skeleton className="h-64 rounded-xl skeleton" />
+   143→          <Skeleton className="h-64 rounded-xl skeleton" />
+   144→        </div>
+   145→      </div>
+   146→    );
+   147→  }
+   148→
+   149→  const score = Number(compliance?.score || 0);
+   150→  const scoreColor = score >= 80 ? '#22c55e' : score >= 60 ? '#eab308' : '#ef4444';
+   151→  const radius = 70;
+   152→  const circ = 2 * Math.PI * radius;
+   153→  const off = circ - (score / 100) * circ;
+   154→
+   155→  const totalFindings = sevBreakdown.reduce((sum, s) => sum + s.value, 0);
+   156→
+   157→  const trendScores = trends.map((t) => Number(t.score || 0));
+   158→  const trendChange =
+   159→    trendScores.length >= 2
+   160→      ? trendScores[trendScores.length - 1] - trendScores[0]
+   161→      : 0;
+   162→
+   163→  const TrendIcon = trendChange > 0 ? TrendingUp : trendChange < 0 ? TrendingDown : Minus;
+   164→  const trendColor = trendChange > 0 ? 'text-emerald-400' : trendChange < 0 ? 'text-red-400' : 'text-muted-foreground';
+   165→
+   166→  const scoreLabel = score >= 90 ? 'Excellent' : score >= 80 ? 'Good' : score >= 60 ? 'Fair' : 'Needs Work';
+   167→  const scoreLabelColor = score >= 90 ? 'text-emerald-400' : score >= 80 ? 'text-green-400' : score >= 60 ? 'text-yellow-400' : 'text-red-400';
+   168→  const gapToTarget = TARGET_SCORE - score;
+   169→
+   170→  return (
+   171→    <div className="p-4 lg:p-6 space-y-6">
+   172→      <div className="flex items-center justify-between gap-4">
+   173→        <div>
+   174→          <h1 className="text-2xl font-bold">Compliance</h1>
+   175→          <p className="text-secondary-bright text-sm mt-1">
+   176→            Organization-wide compliance posture and trends
+   177→          </p>
+   178→        </div>
+   179→        <Badge variant="outline" className="text-xs shrink-0 border-primary/30 text-primary hidden sm:flex gap-1.5">
+   180→          <Target className="h-3 w-3" />
+   181→          Target: {TARGET_SCORE}
+   182→        </Badge>
+   183→      </div>
+   184→
+   185→      <div className="grid lg:grid-cols-3 gap-6">
+   186→        {/* Score Gauge - More compact */}
+   187→        <Card className="border-border/50 hover:border-primary/30 transition-colors rounded-xl">
+   188→          <CardHeader className="pb-2">
+   189→            <CardTitle className="text-sm font-medium text-muted-foreground">
+   190→              Compliance Score
+   191→            </CardTitle>
+   192→          </CardHeader>
+   193→          <CardContent className="flex flex-col items-center pb-6">
+   194→            <div className="relative w-40 h-40">
+   195→              <svg className="w-full h-full -rotate-90" viewBox={`0 0 ${radius * 2 + 20} ${radius * 2 + 20}`}>
+   196→                <defs>
+   197→                  <filter id="glow">
+   198→                    <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+   199→                    <feMerge>
+   200→                      <feMergeNode in="coloredBlur" />
+   201→                      <feMergeNode in="SourceGraphic" />
+   202→                    </feMerge>
+   203→                  </filter>
+   204→                </defs>
+   205→                <circle
+   206→                  cx={radius + 10}
+   207→                  cy={radius + 10}
+   208→                  r={radius}
+   209→                  fill="none"
+   210→                  stroke="currentColor"
+   211→                  strokeWidth="10"
+   212→                  className="text-secondary"
+   213→                />
+   214→                <circle
+   215→                  cx={radius + 10}
+   216→                  cy={radius + 10}
+   217→                  r={radius}
+   218→                  fill="none"
+   219→                  stroke={scoreColor}
+   220→                  strokeWidth="10"
+   221→                  strokeLinecap="round"
+   222→                  strokeDasharray={circ}
+   223→                  strokeDashoffset={off}
+   224→                  filter="url(#glow)"
+   225→                  style={{ transition: 'stroke-dashoffset 1s ease-out' }}
+   226→                />
+   227→                {/* Target marker */}
+   228→                {TARGET_SCORE < 100 && (
+   229→                  <circle
+   230→                    cx={radius + 10}
+   231→                    cy={radius + 10}
+   232→                    r={radius}
+   233→                    fill="none"
+   234→                    stroke="#22c55e"
+   235→                    strokeWidth="1.5"
+   236→                    strokeDasharray={`${(circ * TARGET_SCORE) / 100} ${circ}`}
+   237→                    strokeDashoffset={0}
+   238→                    strokeOpacity={0.5}
+   239→                  />
+   240→                )}
+   241→              </svg>
+   242→              <div className="absolute inset-0 flex flex-col items-center justify-center">
+   243→                <div className="text-4xl font-extrabold tracking-tight" style={{ color: scoreColor, fontWeight: 800 }}>
+   244→                  <AnimatedScore value={score} duration={1200} />
+   245→                </div>
+   246→                <div className={`text-[10px] mt-0.5 tracking-wider uppercase font-bold ${scoreLabelColor}`}>{scoreLabel}</div>
+   247→              </div>
+   248→            </div>
+   249→
+   250→            {/* Trend + Gap */}
+   251→            <div className="flex items-center gap-4 mt-4">
+   252→              {trends.length >= 2 ? (
+   253→                <div className="flex items-center gap-1.5">
+   254→                  <TrendIcon className={`h-3.5 w-3.5 ${trendColor}`} />
+   255→                  <span className={`text-sm font-semibold ${trendColor}`}>
+   256→                    {trendChange > 0 ? `+${trendChange}` : trendChange}
+   257→                  </span>
+   258→                  <span className="text-[10px] text-muted-foreground">trend</span>
+   259→                </div>
+   260→              ) : null}
+   261→              {gapToTarget > 0 && (
+   262→                <div className="text-[10px] text-muted-foreground animate-pulse">
+   263→                  <span className="font-medium text-foreground">{gapToTarget}pts</span> to target
+   264→                </div>
+   265→              )}
+   266→            </div>
+   267→
+   268→            {/* Severity counts - clickable */}
+   269→            <div className="grid grid-cols-4 gap-4 w-full text-center mt-5 pt-4 border-t border-border/50">
+   270→              {[
+   271→                { label: 'Critical', count: Number(compliance?.criticalCount || 0), color: 'text-red-400', sev: 'CRITICAL' },
+   272→                { label: 'High', count: Number(compliance?.highCount || 0), color: 'text-orange-400', sev: 'HIGH' },
+   273→                { label: 'Medium', count: Number(compliance?.mediumCount || 0), color: 'text-yellow-400', sev: 'MEDIUM' },
+   274→                { label: 'Low', count: totalFindings - Number(compliance?.criticalCount || 0) - Number(compliance?.highCount || 0) - Number(compliance?.mediumCount || 0), color: 'text-slate-400', sev: 'LOW' },
+   275→              ].map((s) => (
+   276→                <button
+   277→                  key={s.label}
+   278→                  onClick={() => navigateToFindings(s.sev)}
+   279→                  className="group flex flex-col items-center gap-1 hover:opacity-80 transition-opacity rounded-lg hover:ring-2 hover:ring-primary/30"
+   280→                >
+   281→                  <div className={`text-lg font-bold ${s.color}`}>{Math.max(0, s.count)}</div>
+   282→                  <div className="text-[9px] text-muted-foreground uppercase tracking-wider group-hover:text-foreground transition-colors">
+   283→                    {s.label}
+   284→                  </div>
+   285→                </button>
+   286→              ))}
+   287→            </div>
+   288→          </CardContent>
+   289→        </Card>
+   290→
+   291→        {/* Trend Chart */}
+   292→        <Card className="border-border/50 hover:border-primary/30 transition-colors rounded-xl lg:col-span-2">
+   293→          <CardHeader className="pb-2">
+   294→            <div className="flex items-center justify-between">
+   295→              <CardTitle className="text-sm font-medium text-muted-foreground">
+   296→                Compliance Score Trend
+   297→              </CardTitle>
+   298→              <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+   299→                <div className="flex items-center gap-1.5">
+   300→                  <div className="w-3 h-0.5 bg-emerald-500 rounded" style={{ borderStyle: 'dashed' }} />
+   301→                  <span>Target ({TARGET_SCORE})</span>
+   302→                </div>
+   303→                <div className="flex items-center gap-1.5">
+   304→                  <div className="w-3 h-0.5 bg-violet-400 rounded" />\n                  <span>Actual</span>
+   305→                </div>
+   306→              </div>
+   307→            </div>
+   308→          </CardHeader>
+   309→          <CardContent>
+   310→            <div className="h-56 pr-3">
+   311→              <ResponsiveContainer width="100%" height="100%">
+   312→                <AreaChart data={trends as { weekLabel: string; score: number }[]}>
+   313→                  <defs>
+   314→                    <linearGradient id="tGrad" x1="0" y1="0" x2="0" y2="1">
+   315→                      <stop offset="5%" stopColor="#a78bfa" stopOpacity={0.4} />
+   316→                      <stop offset="95%" stopColor="#a78bfa" stopOpacity={0} />
+   317→                    </linearGradient>
+   318→                  </defs>
+   319→                  <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+   320→                  <XAxis dataKey="weekLabel" tick={{ className: 'chart-axis-label' }} axisLine={false} tickLine={false} angle={-30} textAnchor="end" height={40} />
+   321→                  <YAxis domain={[0, 100]} tick={{ className: 'chart-axis-label' }} axisLine={false} tickLine={false} />
+   322→                  <RTooltip contentStyle={{ background: '#1a1a2e', border: '1px solid #333', borderRadius: 8, fontSize: 12 }} />
+   323→                  <ReferenceLine
+   324→                    y={TARGET_SCORE}
+   325→                    stroke="#22c55e"
+   326→                    strokeDasharray="6 4"
+   327→                    strokeWidth={1.5}
+   328→                    strokeOpacity={0.6}
+   329→                    label={{
+   330→                      value: 'Target',
+   331→                      position: 'right',
+   332→                      fill: '#22c55e',
+   333→                      fontSize: 10,
+   334→                    }}
+   335→                  />
+   336→                  <Area type="monotone" dataKey="score" stroke="#a78bfa" fill="url(#tGrad)" strokeWidth={2.5} />
+   337→                </AreaChart>
+   338→              </ResponsiveContainer>
+   339→            </div>
+   340→          </CardContent>
+   341→        </Card>
+   342→      </div>
+   343→
+   344→      {/* Score History Bar Chart */}
+   345→      <Card className="border-border/50 rounded-xl">
+   346→        <CardHeader className="pb-2">
+   347→          <CardTitle className="text-sm font-medium text-muted-foreground">
+   348→            Score History
+   349→          </CardTitle>
+   350→        </CardHeader>
+   351→        <CardContent>
+   352→          <div className="h-40">
+   353→            <ResponsiveContainer width="100%" height="100%">
+   354→              <BarChart data={trends as { weekLabel: string; score: number }[]}>
+   355→                <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.28 0.01 260)" />
+   356→                <XAxis
+   357→                  dataKey="weekLabel"
+   358→                  tick={{ className: 'chart-axis-label' }}
+   359→                  axisLine={false}
+   360→                  tickLine={false}
+   361→                  angle={-30}
+   362→                  textAnchor="end"
+   363→                  height={40}
+   364→                />
+   365→                <YAxis domain={[0, 100]} tick={{ className: 'chart-axis-label' }} axisLine={false} tickLine={false} />
+   366→                <RTooltip contentStyle={{ background: '#1a1a2e', border: '1px solid #333', borderRadius: 8, fontSize: 12 }} />
+   367→                <ReferenceLine
+   368→                  y={TARGET_SCORE}
+   369→                  stroke="#22c55e"
+   370→                  strokeDasharray="6 4"
+   371→                  strokeWidth={1.5}
+   372→                  strokeOpacity={0.6}
+   373→                  label={{
+   374→                    value: 'Target',
+   375→                    position: 'right',
+   376→                    fill: '#22c55e',
+   377→                    fontSize: 10,
+   378→                  }}
+   379→                />
+   380→                <Bar dataKey="score" radius={[4, 4, 0, 0]}>
+   381→                  {(trends as { weekLabel: string; score: number }[]).map((entry, index) => (
+   382→                    <Cell
+   383→                      key={`bar-${index}`}
+   384→                      fill={entry.score >= 80 ? '#22c55e' : entry.score >= 60 ? '#eab308' : '#ef4444'}
+   385→                    />
+   386→                  ))}
+   387→                </Bar>
+   388→              </BarChart>
+   389→            </ResponsiveContainer>
+   390→          </div>
+   391→        </CardContent>
+   392→      </Card>
+   393→
+   394→      <div className="grid lg:grid-cols-2 gap-6">
+   395→        <Card className="border-border/50 hover:border-primary/30 transition-colors rounded-xl">
+   396→          <CardHeader className="pb-2">
+   397→            <div className="flex items-center justify-between">
+   398→              <CardTitle className="text-sm font-medium text-muted-foreground">
+   399→                Findings by Severity
+   400→              </CardTitle>
+   401→              <Button
+   402→                variant="ghost" size="sm"
+   403→                className="text-xs gap-1 h-7 text-primary"
+   404→                onClick={() => navigateToFindings()}
+   405→              >
+   406→                View all <ArrowRight className="h-3 w-3" />
+   407→              </Button>
+   408→            </div>
+   409→          </CardHeader>
+   410→          <CardContent>
+   411→            <div className="space-y-3.5 pt-1">
+   412→              {sevBreakdown.map((s) => {
+   413→                const pct = totalFindings > 0 ? (s.value / totalFindings) * 100 : 0;
+   414→                return (
+   415→                  <button
+   416→                    key={s.name}
+   417→                    className="w-full text-left group"
+   418→                    onClick={() => navigateToFindings(s.name)}
+   419→                  >
+   420→                    <div className="flex items-center justify-between text-sm mb-1.5">
+   421→                      <div className="flex items-center gap-2">
+   422→                        <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: s.color }} />
+   423→                        <span className="text-muted-foreground group-hover:text-foreground transition-colors">{s.label}</span>
+   424→                      </div>
+   425→                      <div className="flex items-center gap-2">
+   426→                        <span className="font-semibold tabular-nums">{s.value}</span>
+   427→                        <span className="text-[10px] text-muted-foreground w-10 text-right tabular-nums">{pct.toFixed(0)}%</span>
+   428→                      </div>
+   429→                    </div>
+   430→                    <div className="h-2 w-full rounded-full bg-secondary overflow-hidden">
+   431→                      <div
+   432→                        className="h-full rounded-full transition-all duration-700"
+   433→                        style={{ width: `${pct}%`, backgroundColor: s.color }}
+   434→                      />
+   435→                    </div>
+   436→                  </button>
+   437→                );
+   438→              })}
+   439→              {sevBreakdown.length === 0 && (
+   440→                <div className="text-center py-8">
+   441→                  <div className="text-3xl mb-2">✅</div>
+   442→                  <p className="text-sm text-muted-foreground">No open findings — looking good!</p>
+   443→                </div>
+   444→              )}
+   445→            </div>
+   446→          </CardContent>
+   447→        </Card>
+   448→
+   449→        <Card className="border-border/50 hover:border-primary/30 transition-colors rounded-xl">
+   450→          <CardHeader className="pb-2">
+   451→            <CardTitle className="text-sm font-medium text-muted-foreground">
+   452→              Framework Coverage
+   453→            </CardTitle>
+   454→          </CardHeader>
+   455→          <CardContent>
+   456→            <div className="space-y-5 pt-2">
+   457→              <div className="space-y-2.5">
+   458→                <div className="flex items-center justify-between">
+   459→                  <div className="flex items-center gap-2">
+   460→                    <Badge variant="outline" className="text-[10px] font-semibold px-2 py-0 border-emerald-500/30 text-emerald-400">SOC 2</Badge>
+   461→                    <span className="text-xs text-secondary-bright">Trust Service Criteria</span>
+   462→                  </div>
+   463→                  <span className="font-bold text-sm tabular-nums" style={{ color: scoreColor }}>{score}%</span>
+   464→                </div>
+   465→                <div className="h-2.5 w-full rounded-full bg-secondary overflow-hidden">
+   466→                  <div
+   467→                    className="h-full rounded-full transition-all duration-700"
+   468→                    style={{ width: `${score}%`, backgroundColor: scoreColor }}
+   469→                  />
+   470→                </div>
+   471→                <div className="flex gap-1.5 flex-wrap">
+   472→                  {['Security', 'Availability', 'Processing Integrity', 'Confidentiality', 'Privacy'].map((c) => (
+   473→                    <span key={c} className="tag-pill">{c}</span>
+   474→                  ))}
+   475→                </div>
+   476→              </div>
+   477→
+   478→              <div className="border-t border-border/50 pt-4 space-y-2.5">
+   479→                <div className="flex items-center justify-between">
+   480→                  <div className="flex items-center gap-2">
+   481→                    <Badge variant="outline" className="text-[10px] font-semibold px-2 py-0 border-blue-500/30 text-blue-400">GDPR</Badge>
+   482→                    <span className="text-xs text-secondary-bright">Data Protection</span>
+   483→                  </div>
+   484→                  <span className="font-bold text-sm tabular-nums" style={{ color: scoreColor }}>{Math.max(score - 5, 0)}%</span>
+   485→                </div>
+   486→                <div className="h-2.5 w-full rounded-full bg-secondary overflow-hidden">
+   487→                  <div
+   488→                    className="h-full rounded-full transition-all duration-700"
+   489→                    style={{ width: `${Math.max(score - 5, 0)}%`, backgroundColor: scoreColor }}
+   490→                  />
+   491→                </div>
+   492→                <div className="flex gap-1.5 flex-wrap">
+   493→                  {['Data Protection', 'Consent', 'Right to Erasure', 'Portability', 'DPO'].map((c) => (
+   494→                    <span key={c} className="tag-pill">{c}</span>
+   495→                  ))}
+   496→                </div>
+   497→              </div>
+   498→            </div>
+   499→          </CardContent>
+   500→        </Card>
+   501→      </div>
+   502→
+   503→      {/* Framework Deep Dive */}
+   504→      <Card className="border-border/50 rounded-xl">
+   505→        <button
+   506→          className="w-full flex items-center justify-between p-4 pb-0 text-left"
+   507→          onClick={() => setDeepDiveExpanded((v) => !v)}
+   508→        >
+   509→          <CardTitle className="text-sm font-medium text-muted-foreground">
+   510→            Framework Deep Dive
+   511→          </CardTitle>
+   512→          {deepDiveExpanded ? (
+   513→            <ChevronUp className="size-4 text-muted-foreground transition-transform duration-200" />
+   514→          ) : (
+   515→            <ChevronDown className="size-4 text-muted-foreground transition-transform duration-200" />
+   516→          )}
+   517→        </button>
+   518→        {deepDiveExpanded && (
+   519→          <CardContent className="pt-4">
+   520→            <div className="grid grid-cols-2 gap-6">
+   521→              {/* SOC2 Controls */}
+   522→              <div>
+   523→                <div className="flex items-center gap-2 mb-3">
+   524→                  <Badge variant="outline" className="text-[10px] font-semibold px-2 py-0 border-emerald-500/30 text-emerald-400">SOC 2</Badge>
+   525→                  <span className="text-xs text-secondary-bright">Trust Service Controls</span>
+   526→                </div>
+   527→                <div className="space-y-2">
+   528→                  {(controls.length > 0
+   529→                    ? controls.filter((c) => c.framework === 'SOC2')
+   530→                    : sampleControls.filter((c) => c.framework === 'SOC2')
+   531→                  ).map((ctrl) => (
+   532→                    <div
+   533→                      key={ctrl.id}
+   534→                      className="flex items-center justify-between gap-2 py-1.5 px-2 rounded-lg hover:bg-secondary/50 transition-colors"
+   535→                    >
+   536→                      <div className="flex items-center gap-2 min-w-0">
+   537→                        <div className={`h-2 w-2 rounded-full shrink-0 ${statusDotColor(ctrl.status)}`} />
+   538→                        <span className="text-xs font-mono text-foreground/70 shrink-0">{ctrl.id}</span>
+   539→                        <span className="text-xs text-muted-foreground truncate">{ctrl.name}</span>
+   540→                      </div>
+   541→                      <div className="flex items-center gap-2 shrink-0">
+   542→                        <Badge
+   543→                          variant="outline"
+   544→                          className={`text-[10px] font-medium border ${statusBadgeStyle(ctrl.status)}`}
+   545→                        >
+   546→                          {ctrl.status}
+   547→                        </Badge>
+   548→                        <span className="text-[10px] text-muted-foreground tabular-nums">{ctrl.findingCount}</span>
+   549→                      </div>
+   550→                    </div>
+   551→                  ))}
+   552→                </div>
+   553→              </div>
+   554→              {/* GDPR Controls */}
+   555→              <div>
+   556→                <div className="flex items-center gap-2 mb-3">
+   557→                  <Badge variant="outline" className="text-[10px] font-semibold px-2 py-0 border-blue-500/30 text-blue-400">GDPR</Badge>
+   558→                  <span className="text-xs text-secondary-bright">Data Protection Controls</span>
+   559→                </div>
+   560→                <div className="space-y-2">
+   561→                  {(controls.length > 0
+   562→                    ? controls.filter((c) => c.framework === 'GDPR')
+   563→                    : sampleControls.filter((c) => c.framework === 'GDPR')
+   564→                  ).map((ctrl) => (
+   565→                    <div
+   566→                      key={ctrl.id}
+   567→                      className="flex items-center justify-between gap-2 py-1.5 px-2 rounded-lg hover:bg-secondary/50 transition-colors"
+   568→                    >
+   569→                      <div className="flex items-center gap-2 min-w-0">
+   570→                        <div className={`h-2 w-2 rounded-full shrink-0 ${statusDotColor(ctrl.status)}`} />
+   571→                        <span className="text-xs font-mono text-foreground/70 shrink-0">{ctrl.id}</span>
+   572→                        <span className="text-xs text-muted-foreground truncate">{ctrl.name}</span>
+   573→                      </div>
+   574→                      <div className="flex items-center gap-2 shrink-0">
+   575→                        <Badge
+   576→                          variant="outline"
+   577→                          className={`text-[10px] font-medium border ${statusBadgeStyle(ctrl.status)}`}
+   578→                        >
+   579→                          {ctrl.status}
+   580→                        </Badge>
+   581→                        <span className="text-[10px] text-muted-foreground tabular-nums">{ctrl.findingCount}</span>
+   582→                      </div>
+   583→                    </div>
+   584→                  ))}
+   585→                </div>
+   586→              </div>
+   587→            </div>
+   588→          </CardContent>
+   589→        )}
+   590→      </Card>
+   591→
+   592→      <p className="text-[11px] text-secondary-bright text-center pb-4">
+   593→        DriftFix provides engineering compliance guidance. This is not legal advice or a certification.
+   594→      </p>
+   595→    </div>
+   596→  );
+   597→}
+   598→

@@ -159,12 +159,12 @@ export function LandingPage() {
             <Shield className="h-4 w-4 text-primary" />
             AI-Powered Compliance Engineering
           </div>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-tight mb-6">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-tight mb-8">
             Catch compliance drift
             <br />
             <span className="gradient-text">before it ships.</span>
           </h1>
-          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
+          <p className="text-lg sm:text-xl text-secondary-bright max-w-2xl mx-auto mb-12 leading-relaxed">
             DriftFix watches code changes as they happen and turns compliance into a continuous engineering workflow.
             Developers fix risks before production. Auditors get evidence.
           </p>
@@ -174,7 +174,7 @@ export function LandingPage() {
               Start Demo
               <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
-            <Button size="lg" variant="outline" className="text-base px-8" onClick={() => {
+            <Button size="lg" variant="outline" className="text-base px-8 btn-ghost-visible" onClick={() => {
               document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
             }}>
               See How It Works
@@ -222,7 +222,7 @@ export function LandingPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <motion.div {...fadeInUp} className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">Compliance shouldn&apos;t begin three months after deployment.</h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            <p className="text-secondary-bright text-lg max-w-2xl mx-auto">
               Traditional compliance tools focus on periodic audits. DriftFix moves compliance into the development workflow.
             </p>
           </motion.div>
@@ -274,7 +274,7 @@ export function LandingPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <motion.div {...fadeInUp} className="text-center mb-14">
             <h2 className="text-3xl font-bold mb-4">How DriftFix Works</h2>
-            <p className="text-muted-foreground text-lg">From pull request to compliance evidence in seconds.</p>
+            <p className="text-secondary-bright text-lg">From pull request to compliance evidence in seconds.</p>
           </motion.div>
           <div className="relative">
             <div className="hidden md:block absolute top-6 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
@@ -289,7 +289,7 @@ export function LandingPage() {
                   <div className="h-12 w-12 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center relative z-10">
                     <step.icon className="h-5 w-5 text-primary" />
                   </div>
-                  <span className="text-xs text-muted-foreground leading-tight">{step.label}</span>
+                  <span className="text-xs text-secondary-bright leading-tight">{step.label}</span>
                 </motion.div>
               ))}
             </div>
@@ -302,7 +302,7 @@ export function LandingPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <motion.div {...fadeInUp} className="text-center mb-14">
             <h2 className="text-3xl font-bold mb-4">Built for Modern Compliance Engineering</h2>
-            <p className="text-muted-foreground text-lg">Not merely an LLM wrapper — a hybrid compliance engine.</p>
+            <p className="text-secondary-bright text-lg">Not merely an LLM wrapper — a hybrid compliance engine.</p>
           </motion.div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {features.map((f, i) => (
@@ -327,7 +327,7 @@ export function LandingPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <motion.div {...fadeInUp} className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">Compliance Frameworks</h2>
-            <p className="text-muted-foreground text-lg">Mapped to the controls that matter.</p>
+            <p className="text-secondary-bright text-lg">Mapped to the controls that matter.</p>
           </motion.div>
           <div className="grid sm:grid-cols-2 gap-6">
             <motion.div {...stagger} transition={{ delay: 0.1 }}>
@@ -373,7 +373,7 @@ export function LandingPage() {
             {stats.map((s) => (
               <div key={s.label} className="flex flex-col items-center gap-1">
                 <span className="text-3xl sm:text-4xl font-bold tracking-tight">{s.value}</span>
-                <span className="text-sm text-muted-foreground">{s.label}</span>
+                <span className="text-sm text-secondary-bright">{s.label}</span>
               </div>
             ))}
           </div>
@@ -383,7 +383,7 @@ export function LandingPage() {
       {/* Trusted By */}
       <section className="py-14">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center">
-          <p className="text-sm text-muted-foreground mb-8">Trusted by engineering teams at</p>
+          <p className="text-sm text-secondary-bright mb-8">Trusted by engineering teams at</p>
           <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
             {trustedBy.map((name) => (
               <span
@@ -401,7 +401,7 @@ export function LandingPage() {
       <section className="border-t border-border/50 py-20">
         <motion.div {...fadeInUp} className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-3xl font-bold mb-4">Ready to catch drift before it ships?</h2>
-          <p className="text-muted-foreground text-lg mb-8">Try the demo or connect your GitHub repository to get started.</p>
+          <p className="text-secondary-bright text-lg mb-8">Try the demo or connect your GitHub repository to get started.</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="text-base px-8" onClick={handleDemo}>
               <Zap className="h-5 w-5 mr-2" />Start Demo
@@ -410,7 +410,7 @@ export function LandingPage() {
               <BarChart3 className="h-5 w-5 mr-2" />Sign Up Free
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground mt-6">
+          <p className="text-xs text-secondary-bright mt-6">
             DriftFix provides engineering compliance guidance and evidence automation. It is not legal advice or a certification.
           </p>
         </motion.div>
@@ -419,13 +419,13 @@ export function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-border/50 py-8 mt-auto">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 text-sm text-secondary-bright">
             <img src="/logo.svg" alt="" className="h-5 w-5" />
             <span>DriftFix AI</span>
             <span className="text-border">|</span>
             <span>Catch compliance drift before it ships.</span>
           </div>
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <div className="flex items-center gap-4 text-xs text-secondary-bright">
             <span>Security & Trust</span>
             <span className="text-border">|</span>
             <span>Documentation</span>

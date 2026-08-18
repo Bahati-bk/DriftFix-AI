@@ -1,21 +1,25 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   ShieldCheck, CheckCircle2, XCircle, User, Clock, ChevronDown,
-  ChevronRight, ChevronLeft, Copy, Check, ScrollText, FileSearch, ExternalLink,
+  ChevronRight, ChevronLeft, Copy, Check, ScrollText, FileSearch, Search,
 } from 'lucide-react';
+
+const EVENT_TYPE_FILTERS = ['All', 'FINDING_CREATED', 'EVIDENCE_COMMITTED', 'POLICY_CHECK'];
 
 const evtColors: Record<string, string> = {
   FINDING_DETECTED: 'bg-red-500/20 text-red-400',
   FINDING_RESOLVED: 'bg-emerald-500/20 text-emerald-400',
   FINDING_DISMISSED: 'bg-slate-500/20 text-slate-300',
   FINDING_ACKNOWLEDGED: 'bg-yellow-500/20 text-yellow-400',
+  FINDING_CREATED: 'bg-red-500/20 text-red-400',
+  EVIDENCE_COMMITTED: 'bg-emerald-500/20 text-emerald-400',
+  POLICY_CHECK: 'bg-purple-500/20 text-purple-400',
   PR_ANALYZED: 'bg-primary/20 text-primary',
   REPOSITORY_CONNECTED: 'bg-cyan-500/20 text-cyan-400',
   SCORE_UPDATED: 'bg-purple-500/20 text-purple-400',
@@ -33,6 +37,9 @@ const dotColors: Record<string, string> = {
   FINDING_RESOLVED: 'bg-emerald-500',
   FINDING_DISMISSED: 'bg-slate-500',
   FINDING_ACKNOWLEDGED: 'bg-yellow-500',
+  FINDING_CREATED: 'bg-red-500',
+  EVIDENCE_COMMITTED: 'bg-emerald-500',
+  POLICY_CHECK: 'bg-purple-500',
   PR_ANALYZED: 'bg-primary',
   REPOSITORY_CONNECTED: 'bg-cyan-500',
   SCORE_UPDATED: 'bg-purple-500',
@@ -64,7 +71,8 @@ function relativeTime(dateStr: string): string {
 function CopyHashButton({ hash }: { hash: string }) {
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = async () => {
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     try {
       await navigator.clipboard.writeText(hash);
       setCopied(true);
@@ -86,35 +94,6 @@ function CopyHashButton({ hash }: { hash: string }) {
   );
 }
 
-function PayloadSection({ payload }: { payload: Record<string, unknown> }) {
-  const entries = Object.entries(payload).filter(
-    ([, v]) => v !== null && v !== undefined && v !== '' && String(v) !== '{}'
-  );
-  if (entries.length === 0) return null;
-
-  return (
-    <Collapsible className="mt-2">
-      <CollapsibleTrigger className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline transition-colors py-1 px-2 rounded hover:bg-accent">
-        <ChevronRight className="h-3 w-3 transition-transform [[data-state=open]>&]:rotate-90" />
-        <span>View details</span>
-        <ExternalLink className="h-3 w-3" />
-      </CollapsibleTrigger>
-      <CollapsibleContent>
-        <div className="mt-2 rounded-md bg-secondary/50 border border-border/50 p-3 space-y-1.5">
-          {entries.map(([k, v]) => (
-            <div key={k} className="flex items-start gap-2 text-xs">
-              <span className="font-medium text-muted-foreground shrink-0">{k}:</span>
-              <span className="text-foreground/80 break-all">
-                {typeof v === 'object' ? JSON.stringify(v, null, 2) : String(v)}
-              </span>
-            </div>
-          ))}
-        </div>
-      </CollapsibleContent>
-    </Collapsible>
-  );
-}
-
 export function EvidenceView() {
   const [records, setRecords] = useState<Record<string, string>[]>([]);
   const [integrity, setIntegrity] = useState<{
@@ -126,6 +105,46 @@ export function EvidenceView() {
   const [verifying, setVerifying] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [eventTypeFilter, setEventTypeFilter] = useState('All');
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  const toggleExpanded = useCallback((id: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }, []);
+
+  const filteredRecords = useMemo(() => {
+    return records.filter((rec) => {
+      const evtType = String(rec.eventType || '');
+      const actor = String(rec.actor || '');
+      const payload = String(rec.payload || '');
+
+      if (eventTypeFilter !== 'All' && evtType !== eventTypeFilter) {
+        return false;
+      }
+
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        return (
+          evtType.toLowerCase().includes(q) ||
+          actor.toLowerCase().includes(q) ||
+          payload.toLowerCase().includes(q)
+        );
+      }
+
+      return true;
+    });
+  }, [records, searchQuery, eventTypeFilter]);
+
+  const isFiltering = searchQuery.trim() !== '' || eventTypeFilter !== 'All';
 
   useEffect(() => {
     let cancelled = false;
@@ -177,7 +196,7 @@ export function EvidenceView() {
             <ScrollText className="h-6 w-6 text-primary" />
             Evidence Ledger
           </h1>
-          <p className="section-subtitle mt-1">
+          <p className="text-secondary-bright text-sm mt-1">
             Tamper-evident audit trail of all compliance events
           </p>
         </div>
@@ -230,6 +249,48 @@ export function EvidenceView() {
         </div>
       )}
 
+      {/* Search & Filter Bar */}
+      {!loading && records.length > 0 && (
+        <div className="space-y-3">
+          {/* Search Input */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by event type, actor, or payload content..."
+              className="input-glow w-full h-10 pl-10 pr-4 rounded-lg bg-secondary/80 border border-border/80 text-sm placeholder:text-muted-foreground/70 outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 transition-all"
+            />
+          </div>
+
+          {/* Event Type Filter Chips */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {EVENT_TYPE_FILTERS.map((type) => {
+              const isActive = eventTypeFilter === type;
+              return (
+                <button
+                  key={type}
+                  onClick={() => setEventTypeFilter(type)}
+                  className={`tag-pill text-xs px-3 py-1.5 rounded-full border transition-all duration-150 cursor-pointer ${
+                    isActive
+                      ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                      : 'bg-secondary/60 text-muted-foreground border-border/60 hover:bg-accent hover:text-foreground'
+                  }`}
+                >
+                  {type === 'All' ? 'All Events' : type.replace(/_/g, ' ')}
+                </button>
+              );
+            })}
+            {isFiltering && (
+              <span className="text-secondary-bright text-xs ml-1">
+                Showing {filteredRecords.length} record{filteredRecords.length !== 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Timeline */}
       {loading ? (
         <div className="space-y-4 py-4">
@@ -243,7 +304,7 @@ export function EvidenceView() {
             </div>
           ))}
         </div>
-      ) : records.length === 0 ? (
+      ) : filteredRecords.length === 0 && records.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="h-16 w-16 rounded-full bg-secondary flex items-center justify-center mb-4">
             <FileSearch className="h-8 w-8 text-muted-foreground" />
@@ -253,13 +314,23 @@ export function EvidenceView() {
             Evidence records are created automatically when analyses run or actions are taken
           </p>
         </div>
+      ) : filteredRecords.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="h-12 w-12 rounded-full bg-secondary flex items-center justify-center mb-3">
+            <Search className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <h3 className="font-semibold text-base mb-1">No matching records</h3>
+          <p className="text-sm text-muted-foreground max-w-sm">
+            Try adjusting your search query or event type filter
+          </p>
+        </div>
       ) : (
         <div className="relative">
           {/* Timeline vertical line — centered on 22px dots at 11px offset */}
           <div className="absolute left-[11px] top-0 bottom-0 w-0.5 bg-border/40" />
 
           <div className="space-y-3">
-            {records.map((rec, i) => {
+            {filteredRecords.map((rec, i) => {
               let payload: Record<string, unknown> = {};
               try {
                 payload = rec.payload ? JSON.parse(rec.payload as string) : {};
@@ -268,11 +339,16 @@ export function EvidenceView() {
               }
               const evtType = String(rec.eventType || '');
               const fullHash = String(rec.hash || '');
-              const isLast = i === records.length - 1;
-              const seqNum = records.length - i + (page - 1) * 15;
+              const prevHash = String(rec.previousHash || '');
+              const recordId = String(rec.id || `${i}`);
+              const isExpanded = expandedIds.has(recordId);
+              const isLast = i === filteredRecords.length - 1;
+              const payloadJson = rec.payload
+                ? JSON.stringify(payload, null, 2)
+                : '';
 
               return (
-                <div key={i} className="relative flex gap-4 group">
+                <div key={recordId} className="relative flex gap-4 group">
                   {/* Timeline dot */}
                   <div className="relative z-10 flex flex-col items-center shrink-0 pt-4">
                     <div
@@ -286,10 +362,17 @@ export function EvidenceView() {
 
                   {/* Content card */}
                   <div className={`flex-1 min-w-0 ${isLast ? '' : 'pb-3'}`}>
-                    <Card className="border-border/50 rounded-xl hover:border-border/70 transition-all duration-200 hover:bg-accent/50">
-                      <CardContent className="p-4">
-                        {/* Top row: badge, actor, time */}
-                        <div className="flex items-center gap-2 flex-wrap mb-2">
+                    <Card
+                      className={`border-border/50 rounded-xl transition-all duration-200 cursor-pointer select-none ${
+                        isExpanded
+                          ? 'border-primary/40 hover:border-primary/50 bg-accent/30'
+                          : 'hover:border-border/70 hover:bg-accent/50'
+                      }`}
+                      onClick={() => toggleExpanded(recordId)}
+                    >
+                      <CardContent className="p-5">
+                        {/* Top row: badge, actor, time, chevron */}
+                        <div className="flex items-center gap-2 flex-wrap">
                           <Badge
                             className={`text-[10px] font-medium border-0 ${
                               evtColors[evtType] || 'bg-secondary text-muted-foreground'
@@ -305,16 +388,20 @@ export function EvidenceView() {
                             <Clock className="h-3 w-3" />
                             {relativeTime(String(rec.createdAt))}
                           </span>
+                          <div className="ml-auto">
+                            <ChevronDown
+                              className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
+                                isExpanded ? 'rotate-180' : ''
+                              }`}
+                            />
+                          </div>
                         </div>
 
-                        {/* Payload collapsible */}
-                        <PayloadSection payload={payload} />
-
-                        {/* Bottom row: hash */}
+                        {/* Bottom row: hash (always visible) */}
                         {fullHash && (
                           <div className="flex items-baseline gap-2 mt-3 pt-2 border-t border-border/30">
                             <span className="text-[10px] text-muted-foreground shrink-0">Hash</span>
-                            <code className="text-[11px] font-mono text-muted-foreground/80 truncate flex-1 cursor-pointer hover:text-foreground transition-colors">
+                            <code className="hash-text truncate flex-1">
                               {fullHash.length > 24
                                 ? `${fullHash.substring(0, 16)}...${fullHash.substring(fullHash.length - 8)}`
                                 : fullHash}
@@ -322,6 +409,53 @@ export function EvidenceView() {
                             <CopyHashButton hash={fullHash} />
                           </div>
                         )}
+
+                        {/* Expanded content */}
+                        <div
+                          className={`overflow-hidden transition-[max-height] duration-300 ease-in-out ${
+                            isExpanded ? 'max-h-[512px]' : 'max-h-0'
+                          }`}
+                        >
+                          <div className="pt-3 space-y-3">
+                            {/* Hash chain info */}
+                            {(fullHash || prevHash) && (
+                              <div className="rounded-lg bg-secondary/50 border border-border/50 p-3">
+                                <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">
+                                  Hash Chain
+                                </div>
+                                <div className="flex items-center gap-2 text-xs font-mono flex-wrap">
+                                  {prevHash ? (
+                                    <>
+                                      <code className="hash-text text-[11px]">
+                                        {prevHash.length > 20
+                                          ? `${prevHash.substring(0, 12)}...${prevHash.substring(prevHash.length - 8)}`
+                                          : prevHash}
+                                      </code>
+                                      <span className="text-muted-foreground">→</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <span className="text-muted-foreground text-[11px] italic">genesis</span>
+                                      <span className="text-muted-foreground">→</span>
+                                    </>
+                                  )}
+                                  <code className="hash-text text-[11px]">
+                                    {fullHash.length > 20
+                                      ? `${fullHash.substring(0, 12)}...${fullHash.substring(fullHash.length - 8)}`
+                                      : fullHash}
+                                  </code>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Formatted JSON payload */}
+                            {payloadJson && (
+                              <pre className="bg-[#0d1117] border border-white/5 rounded-lg p-4 font-mono text-xs overflow-auto max-h-64 text-foreground/90 whitespace-pre-wrap break-all">
+                                {payloadJson}
+                              </pre>
+                            )}
+                          </div>
+                        </div>
                       </CardContent>
                     </Card>
                   </div>

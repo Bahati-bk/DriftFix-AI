@@ -19,7 +19,8 @@ import {
   Tooltip as RTooltip,
   Cell,
 } from 'recharts';
-import { TrendingUp, TrendingDown, Minus, ArrowRight, Target, ChevronDown, ChevronUp } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, ArrowRight, Target, ChevronDown, ChevronUp, CheckCircle2 } from 'lucide-react';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { useAppStore } from '@/stores/app';
 
 const sevColors: Record<string, string> = {
@@ -55,6 +56,23 @@ const statusBadgeStyle = (status: string) => {
     default: return 'bg-secondary text-muted-foreground border-border/50';
   }
 };
+
+const soc2Controls = [
+  { id: 'CC6.1', name: 'Logical & Physical Access Controls', category: 'CC6 - Logical and Physical Access', description: 'The entity implements logical and physical access controls over information assets to manage the risk of unauthorized access.', requirements: ['Multi-factor authentication for privileged access', 'Role-based access control (RBAC) implementation', 'Network segmentation between environments', 'Session timeout and idle lockout policies'] },
+  { id: 'CC6.6', name: 'Data Encryption', category: 'CC6 - Logical and Physical Access', description: 'The entity implements encryption and decryption to protect data at rest and in transit.', requirements: ['TLS 1.2+ for all data in transit', 'AES-256 encryption for data at rest', 'Key rotation policies every 90 days', 'Certificate management automation'] },
+  { id: 'CC7.1', name: 'System Monitoring', category: 'CC7 - System Operations', description: 'The entity monitors the system to detect anomalies indicating security threats.', requirements: ['Real-time security event logging', 'Anomaly detection on access patterns', 'Alert thresholds for suspicious activity', '24/7 monitoring coverage'] },
+  { id: 'CC7.2', name: 'Incident Response', category: 'CC7 - System Operations', description: 'The entity responds to identified incidents to mitigate impact.', requirements: ['Documented incident response plan', 'Automated incident detection and triage', 'Communication protocols for breach notification', 'Post-incident review process'] },
+  { id: 'P1.2', name: 'Privacy Notice', category: 'P1 - Privacy', description: 'The entity provides notice to data subjects about its privacy practices.', requirements: ['Published privacy policy', 'Clear data collection purposes stated', 'Data retention periods specified', 'User rights and contact information included'] },
+  { id: 'A1.2', name: 'System Availability', category: 'A1 - Availability', description: 'The entity maintains system availability to support business operations.', requirements: ['99.9% uptime SLA', 'Disaster recovery plan tested quarterly', 'Geo-redundant backups', 'Load balancing and auto-scaling'] },
+];
+
+const gdprControls = [
+  { id: 'Art.5(1)(c)', name: 'Data Minimisation', category: 'Principles', description: 'Personal data shall be adequate, relevant and limited to what is necessary for the purposes.', requirements: ['Data collection limited to stated purposes', 'Regular data inventory reviews', 'Automated PII detection in code', 'Data retention limits enforced'] },
+  { id: 'Art.25', name: 'Data Protection by Design', category: 'Technical Measures', description: 'The controller shall implement appropriate technical and organisational measures for data protection.', requirements: ['Privacy impact assessments for new features', 'Default privacy settings', 'Data protection in architecture reviews', 'Developer privacy training program'] },
+  { id: 'Art.32', name: 'Security of Processing', category: 'Technical Measures', description: 'The controller shall implement appropriate technical measures to ensure security of processing.', requirements: ['Encryption of personal data', 'Pseudonymisation where feasible', 'Regular security testing', 'Access control to personal data'] },
+  { id: 'Art.33', name: 'Breach Notification', category: 'Obligations', description: 'The controller shall notify the supervisory authority of a breach within 72 hours.', requirements: ['Breach detection procedures', '72-hour notification workflow', 'Template notifications prepared', 'Regulatory contact information maintained'] },
+  { id: 'Art.35', name: 'Impact Assessment', category: 'Obligations', description: 'A data protection impact assessment shall be made for processing likely to result in high risk.', requirements: ['DPIA checklist for high-risk processing', 'Regular review of existing DPIAs', 'Documentation of assessment outcomes', 'Consultation with DPO when required'] },
+];
 
 const sampleControls = [
   { id: 'CC6.1', name: 'Logical Access Security', framework: 'SOC2', status: 'Compliant', findingCount: 0 },
@@ -172,7 +190,7 @@ export function ComplianceView() {
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Compliance</h1>
-          <p className="text-muted-foreground/80 text-sm mt-1">
+          <p className="text-secondary-bright text-sm mt-1">
             Organization-wide compliance posture and trends
           </p>
         </div>
@@ -243,7 +261,7 @@ export function ComplianceView() {
                 <div className="text-4xl font-extrabold tracking-tight" style={{ color: scoreColor, fontWeight: 800 }}>
                   <AnimatedScore value={score} duration={1200} />
                 </div>
-                <div className={`text-[10px] mt-0.5 tracking-wider uppercase font-semibold ${scoreLabelColor}`}>{scoreLabel}</div>
+                <div className={`text-[10px] mt-0.5 tracking-wider uppercase font-bold ${scoreLabelColor}`}>{scoreLabel}</div>
               </div>
             </div>
 
@@ -317,8 +335,8 @@ export function ComplianceView() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                  <XAxis dataKey="weekLabel" tick={{ fontSize: 11, fill: 'oklch(0.72 0.01 260)' }} axisLine={false} tickLine={false} angle={-30} textAnchor="end" height={40} />
-                  <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: '#888' }} axisLine={false} tickLine={false} />
+                  <XAxis dataKey="weekLabel" tick={{ className: 'chart-axis-label' }} axisLine={false} tickLine={false} angle={-30} textAnchor="end" height={40} />
+                  <YAxis domain={[0, 100]} tick={{ className: 'chart-axis-label' }} axisLine={false} tickLine={false} />
                   <RTooltip contentStyle={{ background: '#1a1a2e', border: '1px solid #333', borderRadius: 8, fontSize: 12 }} />
                   <ReferenceLine
                     y={TARGET_SCORE}
@@ -355,14 +373,14 @@ export function ComplianceView() {
                 <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.28 0.01 260)" />
                 <XAxis
                   dataKey="weekLabel"
-                  tick={{ fontSize: 11, fill: 'oklch(0.72 0.01 260)' }}
+                  tick={{ className: 'chart-axis-label' }}
                   axisLine={false}
                   tickLine={false}
                   angle={-30}
                   textAnchor="end"
                   height={40}
                 />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: '#888' }} axisLine={false} tickLine={false} />
+                <YAxis domain={[0, 100]} tick={{ className: 'chart-axis-label' }} axisLine={false} tickLine={false} />
                 <RTooltip contentStyle={{ background: '#1a1a2e', border: '1px solid #333', borderRadius: 8, fontSize: 12 }} />
                 <ReferenceLine
                   y={TARGET_SCORE}
@@ -458,7 +476,7 @@ export function ComplianceView() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="text-[10px] font-semibold px-2 py-0 border-emerald-500/30 text-emerald-400">SOC 2</Badge>
-                    <span className="text-xs text-muted-foreground">Trust Service Criteria</span>
+                    <span className="text-xs text-secondary-bright">Trust Service Criteria</span>
                   </div>
                   <span className="font-bold text-sm tabular-nums" style={{ color: scoreColor }}>{score}%</span>
                 </div>
@@ -479,7 +497,7 @@ export function ComplianceView() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="text-[10px] font-semibold px-2 py-0 border-blue-500/30 text-blue-400">GDPR</Badge>
-                    <span className="text-xs text-muted-foreground">Data Protection</span>
+                    <span className="text-xs text-secondary-bright">Data Protection</span>
                   </div>
                   <span className="font-bold text-sm tabular-nums" style={{ color: scoreColor }}>{Math.max(score - 5, 0)}%</span>
                 </div>
@@ -500,7 +518,7 @@ export function ComplianceView() {
         </Card>
       </div>
 
-      {/* Framework Deep Dive */}
+      {/* Framework Deep Dive Panel */}
       <Card className="border-border/50 rounded-xl">
         <button
           className="w-full flex items-center justify-between p-4 pb-0 text-left"
@@ -517,79 +535,86 @@ export function ComplianceView() {
         </button>
         {deepDiveExpanded && (
           <CardContent className="pt-4">
-            <div className="grid grid-cols-2 gap-6">
-              {/* SOC2 Controls */}
-              <div>
-                <div className="flex items-center gap-2 mb-3">
+            <div className="grid lg:grid-cols-2 gap-6">
+              {/* SOC 2 Trust Services Criteria */}
+              <Card className="border-border/50 card-hover p-5">
+                <div className="flex items-center gap-2 mb-4">
                   <Badge variant="outline" className="text-[10px] font-semibold px-2 py-0 border-emerald-500/30 text-emerald-400">SOC 2</Badge>
-                  <span className="text-xs text-muted-foreground">Trust Service Controls</span>
+                  <span className="text-sm font-medium text-foreground">Trust Services Criteria</span>
                 </div>
-                <div className="space-y-2">
-                  {(controls.length > 0
-                    ? controls.filter((c) => c.framework === 'SOC2')
-                    : sampleControls.filter((c) => c.framework === 'SOC2')
-                  ).map((ctrl) => (
-                    <div
-                      key={ctrl.id}
-                      className="flex items-center justify-between gap-2 py-1.5 px-2 rounded-lg hover:bg-secondary/50 transition-colors"
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className={`h-2 w-2 rounded-full shrink-0 ${statusDotColor(ctrl.status)}`} />
-                        <span className="text-xs font-mono text-foreground/70 shrink-0">{ctrl.id}</span>
-                        <span className="text-xs text-muted-foreground truncate">{ctrl.name}</span>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Badge
-                          variant="outline"
-                          className={`text-[10px] font-medium border ${statusBadgeStyle(ctrl.status)}`}
-                        >
-                          {ctrl.status}
-                        </Badge>
-                        <span className="text-[10px] text-muted-foreground tabular-nums">{ctrl.findingCount}</span>
-                      </div>
-                    </div>
+                <Accordion type="multiple" className="w-full">
+                  {soc2Controls.map((ctrl) => (
+                    <AccordionItem key={ctrl.id} value={ctrl.id} className="border-border/40">
+                      <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Badge variant="outline" className="text-[10px] font-semibold px-1.5 py-0 border-emerald-500/30 text-emerald-400 shrink-0">
+                            {ctrl.id}
+                          </Badge>
+                          <span className="font-semibold text-xs">{ctrl.name}</span>
+                          <span className="text-[10px] text-muted-foreground">{ctrl.category}</span>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <p className="text-secondary-bright text-xs mb-3">{ctrl.description}</p>
+                        <ul className="space-y-1.5">
+                          {ctrl.requirements.map((req) => (
+                            <li key={req} className="flex items-start gap-2 text-xs">
+                              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                              <span className="text-muted-foreground">{req}</span>
+                            </li>
+                          ))}
+                        </ul>
+                        <button className="text-xs text-primary hover:underline mt-3 block">
+                          View mapped findings →
+                        </button>
+                      </AccordionContent>
+                    </AccordionItem>
                   ))}
-                </div>
-              </div>
-              {/* GDPR Controls */}
-              <div>
-                <div className="flex items-center gap-2 mb-3">
+                </Accordion>
+              </Card>
+
+              {/* GDPR Articles */}
+              <Card className="border-border/50 card-hover p-5">
+                <div className="flex items-center gap-2 mb-4">
                   <Badge variant="outline" className="text-[10px] font-semibold px-2 py-0 border-blue-500/30 text-blue-400">GDPR</Badge>
-                  <span className="text-xs text-muted-foreground">Data Protection Controls</span>
+                  <span className="text-sm font-medium text-foreground">Articles</span>
                 </div>
-                <div className="space-y-2">
-                  {(controls.length > 0
-                    ? controls.filter((c) => c.framework === 'GDPR')
-                    : sampleControls.filter((c) => c.framework === 'GDPR')
-                  ).map((ctrl) => (
-                    <div
-                      key={ctrl.id}
-                      className="flex items-center justify-between gap-2 py-1.5 px-2 rounded-lg hover:bg-secondary/50 transition-colors"
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className={`h-2 w-2 rounded-full shrink-0 ${statusDotColor(ctrl.status)}`} />
-                        <span className="text-xs font-mono text-foreground/70 shrink-0">{ctrl.id}</span>
-                        <span className="text-xs text-muted-foreground truncate">{ctrl.name}</span>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Badge
-                          variant="outline"
-                          className={`text-[10px] font-medium border ${statusBadgeStyle(ctrl.status)}`}
-                        >
-                          {ctrl.status}
-                        </Badge>
-                        <span className="text-[10px] text-muted-foreground tabular-nums">{ctrl.findingCount}</span>
-                      </div>
-                    </div>
+                <Accordion type="multiple" className="w-full">
+                  {gdprControls.map((ctrl) => (
+                    <AccordionItem key={ctrl.id} value={ctrl.id} className="border-border/40">
+                      <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Badge variant="outline" className="text-[10px] font-semibold px-1.5 py-0 border-blue-500/30 text-blue-400 shrink-0">
+                            {ctrl.id}
+                          </Badge>
+                          <span className="font-semibold text-xs">{ctrl.name}</span>
+                          <span className="text-[10px] text-muted-foreground">{ctrl.category}</span>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <p className="text-secondary-bright text-xs mb-3">{ctrl.description}</p>
+                        <ul className="space-y-1.5">
+                          {ctrl.requirements.map((req) => (
+                            <li key={req} className="flex items-start gap-2 text-xs">
+                              <CheckCircle2 className="h-3.5 w-3.5 text-blue-400 shrink-0 mt-0.5" />
+                              <span className="text-muted-foreground">{req}</span>
+                            </li>
+                          ))}
+                        </ul>
+                        <button className="text-xs text-primary hover:underline mt-3 block">
+                          View mapped findings →
+                        </button>
+                      </AccordionContent>
+                    </AccordionItem>
                   ))}
-                </div>
-              </div>
+                </Accordion>
+              </Card>
             </div>
           </CardContent>
         )}
       </Card>
 
-      <p className="text-[11px] text-muted-foreground text-center pb-4">
+      <p className="text-[11px] text-secondary-bright text-center pb-4">
         DriftFix provides engineering compliance guidance. This is not legal advice or a certification.
       </p>
     </div>

@@ -179,6 +179,59 @@ interface ViewData {
   };
 }
 
+function SeverityTrend() {
+  const [data, setData] = useState<{severity: string; count: number}[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/findings?status=OPEN&limit=100')
+      .then(r => r.json())
+      .then(d => {
+        const findings = d.findings || [];
+        const counts: Record<string, number> = {};
+        findings.forEach((f: Record<string, unknown>) => {
+          const s = String(f.severity);
+          counts[s] = (counts[s] || 0) + 1;
+        });
+        setData(Object.entries(counts).map(([severity, count]) => ({severity, count})));
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const maxCount = Math.max(...data.map(d => d.count), 1);
+  const severityOrder = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
+  const sorted = [...data].sort((a, b) => severityOrder.indexOf(a.severity) - severityOrder.indexOf(b.severity));
+  const colors: Record<string, string> = { CRITICAL: 'bg-red-500', HIGH: 'bg-orange-500', MEDIUM: 'bg-yellow-500', LOW: 'bg-emerald-500' };
+  const textColors: Record<string, string> = { CRITICAL: 'text-red-400', HIGH: 'text-orange-400', MEDIUM: 'text-yellow-400', LOW: 'text-emerald-400' };
+
+  return (
+    <Card className="border-border/50 rounded-xl">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm font-semibold">Open Finding Severity</CardTitle>
+          <Badge variant="outline" className="text-[10px]">Live</Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0">
+        {loading ? <div className="h-20 skeleton" /> : (
+          <div className="space-y-3">
+            {sorted.map(item => (
+              <div key={item.severity} className="flex items-center gap-3">
+                <span className={`text-xs font-medium w-16 ${textColors[item.severity] || 'text-muted-foreground'}`}>{item.severity}</span>
+                <div className="flex-1 h-2 rounded-full bg-secondary overflow-hidden">
+                  <div className={`h-full rounded-full ${colors[item.severity] || 'bg-muted-foreground'}`} style={{ width: `${(item.count / maxCount) * 100}%`, transition: 'width 0.6s ease-out' }} />
+                </div>
+                <span className="text-xs font-mono w-6 text-right text-secondary-bright">{item.count}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export function OverviewView() {
   const selectFinding = useAppStore((s) => s.selectFinding);
   const selectPR = useAppStore((s) => s.selectPR);
@@ -315,7 +368,7 @@ export function OverviewView() {
     <div className="p-4 lg:p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Dashboard Overview</h1>
-        <p className="text-muted-foreground text-[15px] leading-relaxed mt-1">
+        <p className="text-secondary-bright text-[15px] leading-relaxed mt-1">
           Real-time compliance posture for your organization
         </p>
       </div>
@@ -350,7 +403,7 @@ export function OverviewView() {
           {/* Animated gradient border glow */}
           <div className="absolute -inset-px rounded-xl bg-gradient-to-br from-primary/20 via-purple-500/10 to-cyan-500/20 blur-xl opacity-60 animate-pulse pointer-events-none" />
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-sm font-medium text-secondary-bright">
               Compliance Posture
             </CardTitle>
           </CardHeader>
@@ -427,7 +480,7 @@ export function OverviewView() {
         {/* Trend chart */}
         <Card className="border-border/50 hover:border-primary/30 transition-colors lg:col-span-2">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-sm font-medium text-secondary-bright">
               Compliance Trend
             </CardTitle>
           </CardHeader>
@@ -449,13 +502,13 @@ export function OverviewView() {
                   />
                   <XAxis
                     dataKey="weekLabel"
-                    tick={{ fontSize: 11, fill: 'oklch(0.65 0.01 260)' }}
+                    tick={{ fontSize: 11, fill: 'oklch(0.65 0.008 260)' }}
                     axisLine={false}
                     tickLine={false}
                   />
                   <YAxis
                     domain={[0, 100]}
-                    tick={{ fontSize: 11, fill: 'oklch(0.65 0.01 260)' }}
+                    tick={{ fontSize: 11, fill: 'oklch(0.65 0.008 260)' }}
                     axisLine={false}
                     tickLine={false}
                   />
@@ -511,12 +564,12 @@ export function OverviewView() {
       <div className="grid lg:grid-cols-3 gap-6">
         <Card className="border-border/50 hover:border-primary/30 transition-colors lg:col-span-2">
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-sm font-medium text-secondary-bright">
               Recent Findings
             </CardTitle>
             <button
               onClick={() => setView('findings')}
-              className="text-xs text-primary hover:underline"
+              className="text-xs text-secondary-bright hover:underline btn-press"
             >
               View all →
             </button>
@@ -589,7 +642,7 @@ export function OverviewView() {
         {/* Severity Breakdown - Donut Chart */}
         <Card className="border-border/50 hover:border-primary/30 transition-colors rounded-xl">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-sm font-medium text-secondary-bright">
               Severity Breakdown
             </CardTitle>
           </CardHeader>
@@ -648,7 +701,7 @@ export function OverviewView() {
       {/* Quick Actions */}
       <Card className="border-border/50 hover:border-primary/30 transition-colors">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardTitle className="text-sm font-medium text-secondary-bright">
             Quick Actions
           </CardTitle>
         </CardHeader>
@@ -683,12 +736,13 @@ export function OverviewView() {
         </CardContent>
       </Card>
 
-      {/* Activity Feed + Recent PRs */}
-      <div className="grid lg:grid-cols-3 gap-6">
+      {/* Severity Trend + Activity Feed + Recent PRs */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <SeverityTrend />
         {/* Activity feed */}
         <Card className="border-border/50 hover:border-primary/30 transition-colors lg:col-span-2">
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-sm font-medium text-secondary-bright">
               Recent Activity
             </CardTitle>
             <div className="flex items-center gap-3">
@@ -698,7 +752,7 @@ export function OverviewView() {
               </span>
               <button
                 onClick={() => setView('evidence')}
-                className="text-xs text-primary hover:underline"
+                className="text-xs text-secondary-bright hover:underline btn-press"
               >
                 View ledger →
               </button>
@@ -744,12 +798,12 @@ export function OverviewView() {
         {/* Recent Pull Requests */}
         <Card className="border-border/50 hover:border-primary/30 transition-colors">
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-sm font-medium text-secondary-bright">
               Recent Pull Requests
             </CardTitle>
             <button
               onClick={() => setView('pull-requests')}
-              className="text-xs text-primary hover:underline"
+              className="text-xs text-secondary-bright hover:underline btn-press"
             >
               View all →
             </button>

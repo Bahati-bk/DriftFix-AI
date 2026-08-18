@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import {
   LayoutDashboard, GitPullRequest, AlertTriangle, ShieldCheck,
   Settings, FileText, Scale, Database,
-  LogOut, Search, Zap, Menu, X, History, PanelLeftClose, PanelLeft
+  LogOut, Search, Zap, Menu, X, History, PanelLeftClose, PanelLeft, Activity
 } from 'lucide-react';
 import { CommandPalette } from '@/components/ui/command-palette';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
@@ -29,6 +29,7 @@ import { EvidenceView } from './EvidenceView';
 import { ReportsView } from './ReportsView';
 import { SettingsView } from './SettingsView';
 import { PRAnalysisView } from './PRAnalysisView';
+import { AuditLogView } from './AuditLogView';
 
 const navItems: { view: AppView; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { view: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -38,6 +39,7 @@ const navItems: { view: AppView; label: string; icon: React.ComponentType<{ clas
   { view: 'compliance', label: 'Compliance', icon: Scale },
   { view: 'rules', label: 'Rules', icon: ShieldCheck },
   { view: 'evidence', label: 'Evidence', icon: FileText },
+  { view: 'audit-log', label: 'Audit Log', icon: Activity },
   { view: 'reports', label: 'Reports', icon: History },
   { view: 'settings', label: 'Settings', icon: Settings },
 ];
@@ -96,7 +98,9 @@ function SidebarNav({
               (item.view === 'findings' && view === 'finding-detail');
             const isFindings = item.view === 'findings';
             return (
-              <TooltipProvider key={item.view} delayDuration={0}>
+              <>
+                {item.view === 'reports' && <div key="sep" className="my-2 h-px bg-border/40 mx-2" />}
+                <TooltipProvider key={item.view} delayDuration={0}>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
@@ -104,7 +108,7 @@ function SidebarNav({
                       data-tour={item.view === 'overview' ? 'step-2' : item.view === 'findings' ? 'step-3' : undefined}
                       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm nav-item-smooth ${
                         active
-                          ? 'bg-primary/10 text-primary border-l-[3px] border-primary font-medium rounded-l-none'
+                          ? 'bg-primary/10 text-primary border-l-[3px] border-primary font-medium rounded-l-none shadow-[inset_0_0_12px_oklch(0.75_0.14_250/0.06)]'
                           : 'text-muted-foreground hover:bg-accent/80 hover:text-accent-foreground border-l-[3px] border-transparent'
                       } ${!sidebarOpen ? 'justify-center' : ''}`}
                     >
@@ -118,7 +122,7 @@ function SidebarNav({
                         <span className="flex-1 text-left">{item.label}</span>
                       )}
                       {sidebarOpen && isFindings && findingsCount > 0 && (
-                        <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-red-500/20 text-red-400 text-[10px] font-bold">
+                        <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-red-500/20 text-red-400 text-[10px] font-bold badge-glow">
                           {findingsCount}
                         </span>
                       )}
@@ -127,6 +131,7 @@ function SidebarNav({
                   {!sidebarOpen && <TooltipContent side="right">{item.label}</TooltipContent>}
                 </Tooltip>
               </TooltipProvider>
+              </>
             );
           })}
         </nav>
@@ -135,7 +140,7 @@ function SidebarNav({
       <div className="p-3">
         <button
           onClick={() => { runDemoAnalysis(); onNav?.(); }}
-          className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-primary hover:bg-primary/10 transition-colors ${!sidebarOpen ? 'justify-center' : ''}`}
+          className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-primary hover:bg-primary/10 transition-colors btn-press ${!sidebarOpen ? 'justify-center' : ''}`}
         >
           <Zap className="h-4 w-4 shrink-0" />
           {sidebarOpen && <span data-tour="step-1">Run Demo Analysis</span>}
@@ -251,6 +256,7 @@ export function DashboardLayout() {
       case 'rules': return <RulesView />;
       case 'evidence': return <EvidenceView />;
       case 'reports': return <ReportsView />;
+      case 'audit-log': return <AuditLogView />;
       case 'settings': return <SettingsView />;
       case 'pr-analysis': return <PRAnalysisView />;
       default: return <OverviewView />;
@@ -260,7 +266,7 @@ export function DashboardLayout() {
   return (
     <div className="h-screen flex overflow-hidden bg-background">
       {/* Desktop Sidebar */}
-      <aside className={`hidden lg:flex flex-col border-r border-border/50 bg-card transition-all duration-200 ${sidebarOpen ? 'w-56' : 'w-16'}`}>
+      <aside className={`hidden lg:flex flex-col border-r border-border/50 bg-card text-foreground transition-all duration-200 ${sidebarOpen ? 'w-56' : 'w-16'}`}>
         <SidebarNav
           sidebarOpen={sidebarOpen}
           view={view}
@@ -278,7 +284,7 @@ export function DashboardLayout() {
       )}
 
       {/* Mobile Sidebar */}
-      <aside className={`lg:hidden fixed inset-y-0 left-0 z-50 w-64 border-r border-border/50 bg-card transition-transform ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`lg:hidden fixed inset-y-0 left-0 z-50 w-64 border-r border-border/50 bg-card text-foreground transition-transform ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <button
           onClick={() => setMobileMenuOpen(false)}
           className="absolute top-3 right-3 p-1 text-muted-foreground hover:text-foreground"
@@ -312,7 +318,7 @@ export function DashboardLayout() {
                 onChange={(e) => setHeaderSearch(e.target.value)}
                 onKeyDown={handleSearch}
                 placeholder="Search findings, repos, PRs..."
-                className="input-glow w-full h-9 pl-9 pr-16 rounded-md bg-secondary/80 border border-border/80 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary/40"
+                className="input-glow w-full h-9 pl-9 pr-16 rounded-md bg-secondary/80 border border-border/80 text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary/40"
               />
               <kbd className="absolute right-2 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-0.5 rounded border border-border bg-background px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground pointer-events-none">
                 <span className="text-xs">⌘</span>K

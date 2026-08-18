@@ -16,7 +16,8 @@ export type AppView =
   | 'settings'
   | 'pr-analysis'
   | 'finding-detail'
-  | 'trust';
+  | 'trust'
+  | 'audit-log';
 
 interface AppState {
   view: AppView;
