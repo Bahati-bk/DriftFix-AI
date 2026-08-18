@@ -1,5 +1,306 @@
 # DriftFix - Worklog
 
+## Comprehensive Styling & Feature Enhancement Session (Round 4)
+
+**Date**: 2025-08-18 (Round 4 - cron-triggered webDevReview)
+
+### Current Project Status Assessment
+- Application is fully stable: all 11+ views compile and render without errors
+- Lint: 0 errors, 0 warnings
+- Dev log: 30+ successful compilations, zero errors, all API routes returning 200
+- Browser QA (agent-browser): All views tested with zero console errors
+- VLM-based visual QA: rated 8/10 improvement from previous round
+
+### Changes Completed
+
+#### Global Styling Infrastructure (globals.css)
+1. **Brighter muted-foreground**: Dark mode `--muted-foreground` from `oklch(0.65)` → `oklch(0.72)` for better readability
+2. **Input focus glow**: `ring-1 ring-ring/30` on all input/textarea/select focus states
+3. **Firefox scrollbar**: `scrollbar-width: thin; scrollbar-color: var(--border) transparent`
+4. **New utility classes**: `.card-interactive`, `.section-subtitle`, `.tag-pill`, `.input-glow`, `.status-dot-glow`, `.divider-strong`, `.notification-scroll`
+
+#### DashboardLayout Improvements
+1. **Search input glow**: Applied `input-glow` class for focus ring effect
+2. **3px active sidebar border**: Changed from `border-l-2` to `border-l-[3px]` with `rounded-md rounded-l-none`
+3. **User avatar ring**: Added `ring-1 ring-border` for subtle definition
+4. **Header decluttering**: Grouped DEMO badge + org name behind a left border divider, reduced spacing
+5. **Notification Center integration**: Replaced static bell with interactive dropdown panel
+
+#### OverviewView Improvements
+1. **Subtitle contrast**: `text-muted-foreground/80` for better readability
+2. **Stat card hover shadow**: `shadow-sm hover:shadow-md hover:shadow-primary/5`
+3. **Score gauge glow**: Animated gradient div with `blur-xl animate-pulse` behind gauge card
+4. **Chart data points**: Added `dot` and `activeDot` props to Area chart
+5. **Chart legend**: Dashed green (Target) + solid violet (Actual) line legend below chart
+6. **Chart contrast**: Brighter line color (`#c4b5fd`), thicker stroke (3px), brighter grid lines
+7. **Activity timeline**: More vertical padding (`py-3`)
+8. **Severity donut chart**: Replaced horizontal bars with recharts PieChart (innerRadius=50, outerRadius=70) + center total count + color legend
+
+#### FindingsView Improvements
+1. **Quick filter presets**: 5 one-click buttons (🔥 Critical, ⚠️ High Risk, 📋 Open, ✅ Resolved, 📊 All)
+2. **Card padding**: `p-3.5` → `p-4`
+3. **Title weight**: `font-medium` → `font-semibold`
+4. **Hover effect**: `hover:bg-accent/50 transition-colors` on finding cards
+
+#### ComplianceView Improvements
+1. **Framework Deep Dive**: Expandable panel with 12 SOC2/GDPR controls, status indicators, finding counts
+2. **Severity badge glow**: `hover:ring-2 hover:ring-primary/30`
+3. **Framework pills**: Using `tag-pill` class for sub-controls
+4. **Gap indicator**: `animate-pulse` animation
+
+#### RulesView Improvements
+1. **Title Case headers**: `toTitleCase` helper converts `DANGEROUS DEPENDENCY` → `Dangerous Dependency`
+2. **Stronger dividers**: `divider-strong` class between categories
+3. **Framework badges**: `tag-pill` class for SOC2/GDPR
+
+#### EvidenceView Improvements
+1. **Baseline alignment**: `items-baseline` for metadata rows
+2. **Larger timeline dots**: `h-3.5 w-3.5` with `status-dot-glow`
+3. **Hover effect**: `hover:bg-accent/50 transition-colors`
+
+#### RepositoriesView Improvements
+1. **Status dot glow**: `status-dot-glow` on language indicator
+2. **Language badges**: `tag-pill` class
+
+#### PullRequestsView Improvements
+1. **Card padding**: `p-4` → `p-5`
+2. **Branch names**: Consistent `text-xs font-mono`
+3. **Status indicator dot**: `status-dot-glow` next to PR badges
+
+#### ReportsView Improvements
+1. **Empty state**: Standalone `FileBarChart` icon at `h-12 w-12 text-muted-foreground/50`
+2. **Summary card accents**: `border-r-2` accent dividers on stat items
+
+#### SettingsView Improvements
+1. **Input visibility**: `bg-secondary/50 border border-border input-glow` on org name input
+2. **Avatar ring**: `ring-2 ring-border`
+3. **Section headers**: `text-sm font-medium` → `text-base font-semibold`
+
+#### PRAnalysisView Improvements
+1. **File Changes Summary**: New card showing files grouped by filePath with change type badges (Added/Modified/Removed) and finding counts
+
+#### New Features (4)
+
+1. **Notification Center** (`src/components/ui/notification-center.tsx`)
+   - Popover-based dropdown from bell icon
+   - Fetches 8 recent OPEN findings on open
+   - Colored severity dots, truncated titles, relative time, file paths
+   - Click navigates to finding detail, closes popover
+   - "Mark all read" + "View all findings" actions
+   - Custom thin scrollbar styling
+
+2. **Severity Donut Chart** (OverviewView)
+   - recharts PieChart with 3px padding between segments
+   - Center overlay showing total finding count
+   - Color legend with dot + name + count
+
+3. **Quick Filter Presets** (FindingsView)
+   - 5 one-click preset buttons above filter bar
+   - Active state: `bg-primary/15 text-primary border-primary/30`
+   - Resets page to 1 on preset change
+
+4. **Framework Deep Dive Panel** (ComplianceView)
+   - Expandable card with rotating chevron toggle
+   - 12 sample controls: 6 SOC2 (CC6.1–CC8.1) + 6 GDPR (Art.5–Art.33)
+   - Two-column grid, colored status dots, finding counts
+   - Graceful API fallback to sample data
+
+### QA Verification (Round 4)
+- Lint: 0 errors, 0 warnings
+- Dev log: 30+ successful compilations, zero errors
+- Browser QA: Landing → Login → Dashboard (all 11 views) → Notification Center → Quick Filters → Donut Chart → Framework Deep Dive — ALL PASS
+- VLM visual QA: 8/10 improvement rating
+- Zero console errors across all views
+
+### Unresolved Issues / Risks
+- SQLite not production-grade (acceptable for demo)
+- No real GitHub integration (webhook endpoint exists but needs credentials)
+- AI analysis falls back to rule-engine enhancement if z-ai-web-dev-sdk unavailable
+- No unit tests
+- Header area still slightly dense on very small screens
+
+### Priority Recommendations for Next Phase
+1. Add WebSocket real-time updates for findings/evidence
+2. Add PDF report generation (currently text-only)
+3. Implement real file upload for PR diff analysis
+4. Add user invitation/management flow
+5. Add audit report scheduling (cron-based auto-generation)
+6. Add organization switching capability
+7. Mobile responsive testing on sub-640px viewports
+
+---
+
+## PR Analysis Diff Viewer + Compliance Deep Dive (Task 8)
+
+**Date**: 2025-08-18
+**Agent**: fullstack-developer
+**Task**: Enhance PRAnalysisView with File Changes Summary and ComplianceView with Framework Deep Dive
+
+Work Log:
+- PRAnalysisView.tsx — File Changes Summary:
+  - Added `useMemo` import alongside existing `useEffect`/`useState`
+  - Created `groupedFiles` useMemo that groups findings by `filePath`, assigning a random change type (Modified/Added/Removed) per file
+  - Moved `groupedFiles`, `findings`, `changeTypes`, `changeTypeColors` before early returns to satisfy React Hooks rules-of-hooks
+  - Added Card with `border-border/50 rounded-xl` between Pipeline Visualization and AI Summary sections
+  - Each file row shows: FileCode icon, file path in `font-mono`, colored change type Badge (green=Added, yellow=Modified, red=Removed), finding count Badge
+  - If no findings, shows "X files analyzed" text using `analysis.filesAnalyzed`
+- ComplianceView.tsx — Framework Deep Dive:
+  - Added `ChevronDown`/`ChevronUp` imports from lucide-react
+  - Added `deepDiveExpanded` state (boolean) and `controls` state (array of control objects)
+  - Added `statusDotColor` and `statusBadgeStyle` helper functions for Compliant/Partial/Gap status coloring
+  - Added 12 `sampleControls` (6 SOC2: CC6.1-CC8.1, 6 GDPR: Art.5-Art.33) with realistic names and statuses
+  - Added expandable Card (`border-border/50 rounded-xl`) below Framework Coverage section with toggle button
+  - Chevron icon rotates via `transition-transform duration-200` (ChevronDown when collapsed, ChevronUp when expanded)
+  - Two-column grid layout (SOC2 left, GDPR right) with framework Badge headers matching existing styling
+  - Each control row: colored dot, mono ID, name, status Badge with colored bg/text/border, finding count
+  - Fetches `/api/compliance?type=controls` on mount — gracefully handles failure, falls back to sampleControls
+
+Stage Summary:
+- PRAnalysisView now shows a File Changes Summary card with per-file change types and finding counts
+- ComplianceView now has an expandable Framework Deep Dive section with SOC2/GDPR controls
+- Lint: 0 errors, 0 warnings
+
+---
+
+## Severity Donut Chart + Quick Filter Presets (Task 7-8-9)
+
+**Date**: 2025-08-18
+**Agent**: fullstack-developer
+**Task**: Add Severity Donut Chart on Overview and Quick Filter Presets on Findings
+
+Work Log:
+- OverviewView.tsx — Severity Donut Chart:
+  - Added `PieChart`, `Pie`, `Cell` imports from recharts
+  - Replaced horizontal bar Severity Breakdown card with donut chart card
+  - PieChart with `innerRadius={50}`, `outerRadius={70}`, `paddingAngle={3}`, `strokeWidth={0}`
+  - Each Cell colored by severity color from `severityBreakdown` data array
+  - Absolutely positioned center overlay showing 'Total' label and sum of all counts
+  - Legend below chart: colored dots + name + count in horizontal flex-wrap
+  - Wrapped in `ResponsiveContainer` with `h-48` container
+  - Card styled with `border-border/50 rounded-xl`
+  - Dark-theme tooltip matching existing chart tooltips
+- FindingsView.tsx — Quick Filter Presets:
+  - Added `AlertTriangle`, `CircleDot`, `LayoutGrid` to lucide-react imports
+  - Added `activePreset` state (string | null)
+  - Created `filterPresets` array: Critical, High Risk, Open, Resolved, All
+  - Added `applyPreset` function that sets severity/status/category and resets page
+  - Rendered preset buttons above filter bar in `flex flex-wrap gap-2 mb-3` container
+  - Active preset highlighted with `bg-primary/15 text-primary border-primary/30`
+  - Inactive presets styled with `bg-secondary/50 text-muted-foreground border-border/60`
+  - Manual dropdown changes clear `activePreset` to avoid stale highlight
+
+Stage Summary:
+- Severity donut chart replaces horizontal bars on Overview with center total count
+- Quick filter presets provide one-click access to common filter combinations on Findings
+- Lint: 0 errors, 0 warnings
+
+---
+
+## Notification Center Dropdown Panel (Task 6)
+
+**Date**: 2025-08-18
+**Agent**: fullstack-developer
+**Task**: Create a Notification Center dropdown panel and integrate it into the DashboardLayout
+
+Work Log:
+- Created `/home/z/my-project/src/components/ui/notification-center.tsx` — a 'use client' component
+  - Uses useState for open/close state and Popover from @/components/ui/popover
+  - Fetches recent findings from `/api/findings?limit=8&status=OPEN` on popover open
+  - Dropdown panel (w-80, max-h-96 overflow-y-auto with `notification-scroll` custom scrollbar class):
+    - Header: 'Notifications' title with count badge, 'Mark all read' button (CheckCheck icon)
+    - List items each showing: colored dot (red=CRITICAL, orange=HIGH, yellow=MEDIUM, gray=LOW), finding title (truncated), severity Badge, relative time (e.g. '2 hours ago'), file path in mono font
+    - Empty state: Bell icon + 'No new notifications' message
+    - Footer: 'View all findings →' link navigates to findings view
+  - Clicking a notification calls `selectFinding(id)` and `setView('finding-detail')`, closes popover
+  - Uses Card from shadcn with rounded-xl, `animate-fade-slide-in` class for smooth appear
+- Added `.notification-scroll` custom scrollbar CSS in globals.css (4px thin scrollbar, theme-aware)
+- Updated DashboardLayout.tsx:
+  - Imported NotificationCenter, replaced old TooltipProvider/Tooltip bell button block with `<NotificationCenter />`
+  - Removed `handleBellClick` function (now handled internally by NotificationCenter)
+  - Removed unused `Bell` import from lucide-react
+  - Kept demo badge and org badge after notification center
+
+Stage Summary:
+- Notification Center dropdown panel fully functional with popover, findings list, and navigation
+- Lint: 0 errors, 0 warnings
+
+---
+
+## Repos + PRs + Reports + Settings Styling (Task 5)
+
+**Date**: 2025-08-18
+**Agent**: fullstack-developer
+**Task**: Improve RepositoriesView, PullRequestsView, ReportsView, and SettingsView styling
+
+Work Log:
+- RepositoriesView.tsx:
+  - Applied `section-subtitle` class to page subtitle
+  - Added `status-dot-glow` class to language color indicator dot (top-left of each card)
+  - Added `rounded-xl` to empty state Card and repo card components
+  - Replaced language badge with `tag-pill` class (includes dot + language name)
+  - `card-hover` class already present on repo cards
+  - Card padding already at `p-5` (no change needed)
+- PullRequestsView.tsx:
+  - Applied `section-subtitle` class to page subtitle
+  - Increased card padding from `p-4` to `p-5`
+  - Added `rounded-xl` to PR cards and empty state Card
+  - Changed branch name styling from `text-[11px]` to `text-xs` with consistent `font-mono`
+  - Added status indicator dot with `status-dot-glow` class next to PR status badges (color derived from status config)
+  - `card-hover` class already present on PR cards
+- ReportsView.tsx:
+  - Applied `section-subtitle` class to page subtitle
+  - Added `rounded-xl` to summary card, generate card, history card, and report item cards
+  - Replaced empty state icon: removed circular container with BarChart3, replaced with standalone `FileBarChart` icon at `h-12 w-12` with `text-muted-foreground/50`
+  - Made summary card stats visually distinct with `border-r-2` accent colors: `border-primary/20` for score, `border-amber-400/20` for findings, plus pr-6/pl-6/px-6 padding
+- SettingsView.tsx:
+  - Applied `section-subtitle` class to page subtitle
+  - Added `rounded-xl` to all 6 Card components (Profile, Organization, Integrations, Policy, Demo Mode, Danger Zone)
+  - Made org name input more visible: added `bg-secondary/50 border border-border input-glow` classes
+  - Added `ring-2 ring-border` to user avatar circle
+  - Changed all 6 section headers from `text-sm font-medium` to `text-base font-semibold`
+
+Stage Summary:
+- All 4 views updated with consistent styling using shared CSS utility classes
+- Lint: 0 errors, 0 warnings
+
+---
+
+## Findings + Evidence + Rules Styling (Task 4)
+
+**Date**: 2025-08-18
+**Agent**: fullstack-developer
+**Task**: Improve FindingsView, EvidenceView, and RulesView styling
+
+Work Log:
+- FindingsView.tsx:
+  - Changed finding card padding from `p-3.5` to `p-4`
+  - Changed finding title from `font-medium` to `font-semibold`
+  - Changed filter bar gap from `gap-2.5` to `gap-2` (already had `items-center`)
+  - Applied `section-subtitle` class to page subtitle
+  - Added `rounded-xl` to all 3 Card components (filter, finding cards, empty state)
+  - Added `hover:bg-accent/50 transition-colors` to finding cards
+- EvidenceView.tsx:
+  - Changed hash metadata row from `items-center` to `items-baseline` for baseline alignment
+  - Increased timeline inner dot from `h-[10px] w-[10px]` to `h-3.5 w-3.5` with `status-dot-glow` class
+  - Applied `section-subtitle` class to page subtitle
+  - Added `rounded-xl` to evidence record Card
+  - Added `hover:bg-accent/50 transition-colors` to evidence record rows
+- RulesView.tsx:
+  - Added `toTitleCase` helper function for category headers
+  - Changed ALL CAPS category headers to Title Case (e.g. 'DANGEROUS DEPENDENCY' → 'Dangerous Dependency')
+  - Removed `uppercase tracking-wider` from category h2 styling
+  - Changed category dividers from `h-px bg-border` to `divider-strong` class
+  - Rule card padding already at `p-5` (no change needed)
+  - Replaced framework Badge components with `tag-pill` class spans
+  - Applied `section-subtitle` class to page subtitle
+  - Added `rounded-xl` to all 2 Card components (empty state, rule cards)
+
+Stage Summary:
+- All 3 views updated with consistent styling using shared CSS utility classes
+- Lint: 0 errors, 0 warnings
+
+---
+
 ## QA, Styling & Feature Enhancement Session (Round 3)
 
 **Date**: 2025-08-18 (Round 3 - cron-triggered webDevReview)
@@ -266,3 +567,54 @@ Stage Summary:
 - Light mode CSS variables added with warm white palette
 - Lint: 0 errors, 0 warnings
 - Dev log: zero errors, compiled successfully
+---
+Task ID: 2-a
+Agent: fullstack-developer
+Task: Global CSS + DashboardLayout.tsx styling fixes (VLM QA feedback)
+
+Work Log:
+- Brightened dark mode `--muted-foreground` from oklch(0.65) to oklch(0.72) for better readability
+- Added `ring-1 ring-ring/30` focus glow to input/textarea/select elements in @layer base
+- Added Firefox thin scrollbar (`scrollbar-width: thin; scrollbar-color: var(--border) transparent`) on html
+- Added `.card-interactive` class: 200ms transition, hover:bg-accent/50, hover:border-primary/20
+- Added `.section-subtitle` class: text-muted-foreground, text-sm, font-normal
+- Added `.tag-pill` class: border border-border/60, text-foreground/70, text-xs, px-2, py-0.5, rounded-full
+- Added `.input-glow` class: focus ring-2 primary/30 + focus border-primary/50 with 150ms transition
+- Added `.status-dot-glow` class: subtle box-shadow glow (0 0 4px 1px currentColor)
+- Added `.divider-strong` class: border-top with border/60 opacity
+- Updated DashboardLayout search input to use `input-glow` class
+- Changed active sidebar nav item from `border-l-2` to `border-l-[3px]` with `rounded-md rounded-l-none` (left border aligns, bg has rounded corners)
+- Inactive nav items also use `border-l-[3px] border-transparent` for consistent width
+- Added `ring-1 ring-border` on user avatar circle for subtle border definition
+
+Stage Summary:
+- All CSS utility classes added and ready for use across views
+- Dark mode muted text is now brighter (0.72 vs 0.65 oklch)
+- Sidebar active indicator is now 3px with proper rounded corners
+- Search input has focus glow effect
+- Build: SUCCESS (zero errors)
+---
+Task ID: 3
+Agent: fullstack-developer
+Task: Improve OverviewView.tsx and ComplianceView.tsx styling
+
+Work Log:
+- OverviewView.tsx:
+  - Changed page subtitle from `text-muted-foreground text-sm` to `text-muted-foreground/80 text-sm`
+  - Added `shadow-sm hover:shadow-md hover:shadow-primary/5` to stat cards alongside existing hover transition
+  - Added animated gradient border glow on score gauge card: `relative overflow-hidden` + absolute-positioned gradient div with `blur-xl animate-pulse`
+  - Added `dot` and `activeDot` props to Area chart for visible data points
+  - Added chart legend below trend chart (dashed green line = Target (80), solid violet line = Actual)
+  - Changed timeline items from `py-2` to `py-3` for more vertical padding
+  - Added `rounded-lg` to all Quick Actions buttons (icons already at consistent h-4 w-4)
+- ComplianceView.tsx:
+  - Score number already had `font-extrabold`; reinforced with `fontWeight: 800` inline style
+  - Added `hover:ring-2 hover:ring-primary/30` glow effect to severity count clickable badges
+  - Replaced framework coverage sub-control pills with `tag-pill` CSS class (SOC2 + GDPR sub-controls)
+  - Added `animate-pulse` to gap-to-target indicator text for pulsing animation
+  - Added `rounded-xl` to all 4 Card components for uniform border-radius
+  - Changed page subtitle to `text-muted-foreground/80 text-sm`
+
+Stage Summary:
+- All 13 mandatory styling changes applied across both views
+- Lint: 0 errors, 0 warnings

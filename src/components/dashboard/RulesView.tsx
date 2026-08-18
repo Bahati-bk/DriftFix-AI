@@ -10,6 +10,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { ShieldAlert, AlertTriangle, AlertCircle, Info, RotateCcw, Search } from 'lucide-react';
 
+function toTitleCase(str: string): string {
+  return str.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 const sevConfig: Record<string, { icon: typeof ShieldAlert; color: string; bg: string; badge: string }> = {
   CRITICAL: { icon: ShieldAlert, color: 'text-red-500', bg: 'bg-red-500/15', badge: 'bg-red-500/15 text-red-400 border-red-500/30' },
   HIGH: { icon: AlertTriangle, color: 'text-orange-500', bg: 'bg-orange-500/15', badge: 'bg-orange-500/15 text-orange-400 border-orange-500/30' },
@@ -122,7 +126,7 @@ export function RulesView() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold">Compliance Rules</h1>
-          <p className="text-muted-foreground text-sm mt-1">
+          <p className="section-subtitle mt-1">
             {enabledCount} of {rules.length} rules enabled
           </p>
         </div>
@@ -143,7 +147,7 @@ export function RulesView() {
       </div>
 
       {Object.keys(grouped).length === 0 ? (
-        <Card className="border-border/50">
+        <Card className="border-border/50 rounded-xl">
           <CardContent className="p-16 text-center">
             <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">No rules found</h3>
@@ -157,10 +161,10 @@ export function RulesView() {
           {categoryOrder.map((category) => (
             <div key={category}>
               <div className="flex items-center gap-3 mb-3">
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                  {category.replace(/_/g, ' ')}
+                <h2 className="text-sm font-semibold text-muted-foreground">
+                  {toTitleCase(category)}
                 </h2>
-                <div className="flex-1 h-px bg-border" />
+                <div className="flex-1 divider-strong" />
                 <Badge variant="outline" className="text-[10px]">
                   {grouped[category].length} {grouped[category].length === 1 ? 'rule' : 'rules'}
                 </Badge>
@@ -177,7 +181,7 @@ export function RulesView() {
                   return (
                     <Card
                       key={String(rule.id)}
-                      className={`border-border/50 hover:border-primary/30 transition-all duration-200 ${!rule.enabled ? 'opacity-60' : ''}`}
+                      className={`border-border/50 hover:border-primary/30 transition-all duration-200 rounded-xl ${!rule.enabled ? 'opacity-60' : ''}`}
                     >
                       <CardContent className="p-5">
                         <div className="flex items-start gap-4">
@@ -203,9 +207,9 @@ export function RulesView() {
                                 {String(rule.category || '').replace(/_/g, ' ')}
                               </Badge>
                               {frameworks.map((fw) => (
-                                <Badge key={fw} variant="outline" className="text-[10px]">
+                                <span key={fw} className="tag-pill">
                                   {fw}
-                                </Badge>
+                                </span>
                               ))}
                             </div>
                           </div>

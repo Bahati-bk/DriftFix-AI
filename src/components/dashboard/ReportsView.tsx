@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { FileText, Download, Shield, Loader2, Hash, Copy, Check, AlertTriangle, BarChart3 } from 'lucide-react';
+import { FileText, Download, Shield, Loader2, Hash, Copy, Check, AlertTriangle, FileBarChart } from 'lucide-react';
 
 const frameworkDescriptions: Record<string, string> = {
   SOC2: 'SOC 2 Type II — Trust Services Criteria covering security, availability, and confidentiality.',
@@ -158,22 +158,22 @@ export function ReportsView() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h2 className="text-2xl font-bold">Reports</h2>
-          <p className="text-sm text-muted-foreground">Generate and manage compliance audit reports</p>
+          <p className="section-subtitle">Generate and manage compliance audit reports</p>
         </div>
       </div>
 
-      <Card className="border-border/50">
+      <Card className="border-border/50 rounded-xl">
         <CardContent className="p-6">
-          <div className="grid grid-cols-3 gap-6 text-center">
-            <div>
+          <div className="grid grid-cols-3 text-center">
+            <div className="border-r-2 border-primary/20 pr-6">
               <div className={`text-3xl font-bold ${scoreColor(complianceScore)}`}>{complianceScore}</div>
               <div className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">Current Score</div>
             </div>
-            <div>
+            <div className="border-r-2 border-amber-400/20 px-6">
               <div className="text-3xl font-bold text-amber-400">{openFindings}</div>
               <div className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">Open Findings</div>
             </div>
-            <div>
+            <div className="pl-6">
               <div className="text-lg font-semibold mt-1">{lastReportDate}</div>
               <div className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">Last Report</div>
             </div>
@@ -181,7 +181,7 @@ export function ReportsView() {
         </CardContent>
       </Card>
 
-      <Card className="border-border/50">
+      <Card className="border-border/50 rounded-xl">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium">Generate Report</CardTitle>
         </CardHeader>
@@ -232,16 +232,14 @@ export function ReportsView() {
         </CardContent>
       </Card>
 
-      <Card className="border-border/50">
+      <Card className="border-border/50 rounded-xl">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium">Report History</CardTitle>
         </CardHeader>
         <CardContent>
           {reports.length === 0 ? (
             <div className="py-12 text-center">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                <BarChart3 className="h-8 w-8 text-primary" />
-              </div>
+              <FileBarChart className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
               <h3 className="text-lg font-semibold mb-2">No reports generated yet</h3>
               <p className="text-sm text-muted-foreground max-w-sm mx-auto">
                 Select a compliance framework and click &quot;Generate Report&quot; to create your first audit report.
@@ -254,7 +252,7 @@ export function ReportsView() {
                   ? `${r.integrityHash.slice(0, 16)}...${r.integrityHash.slice(-8)}`
                   : 'N/A';
                 return (
-                  <Card key={r.id} className="border-border hover:border-primary/30 transition-colors">
+                  <Card key={r.id} className="border-border hover:border-primary/30 transition-colors rounded-xl">
                     <CardContent className="p-4">
                       <div className="flex items-start gap-4">
                         <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">

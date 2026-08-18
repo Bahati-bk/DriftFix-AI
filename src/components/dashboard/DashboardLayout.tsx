@@ -11,10 +11,11 @@ import { toast } from 'sonner';
 import {
   LayoutDashboard, GitPullRequest, AlertTriangle, ShieldCheck,
   Settings, FileText, Scale, Database,
-  LogOut, Search, Zap, Menu, X, History, Bell, PanelLeftClose, PanelLeft
+  LogOut, Search, Zap, Menu, X, History, PanelLeftClose, PanelLeft
 } from 'lucide-react';
 import { CommandPalette } from '@/components/ui/command-palette';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { NotificationCenter } from '@/components/ui/notification-center';
 import { OnboardingTour } from '@/components/ui/onboarding-tour';
 import { KeyboardShortcutsPanel } from '@/components/ui/keyboard-shortcuts';
 import { OverviewView } from './OverviewView';
@@ -101,10 +102,10 @@ function SidebarNav({
                     <button
                       onClick={() => handleNav(item.view)}
                       data-tour={item.view === 'overview' ? 'step-2' : item.view === 'findings' ? 'step-3' : undefined}
-                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-r-md text-sm transition-all ${
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-all ${
                         active
-                          ? 'bg-primary/10 text-primary border-l-2 border-primary font-medium'
-                          : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground border-l-2 border-transparent'
+                          ? 'bg-primary/10 text-primary border-l-[3px] border-primary font-medium rounded-l-none'
+                          : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground border-l-[3px] border-transparent'
                       } ${!sidebarOpen ? 'justify-center' : ''}`}
                     >
                       <div className="relative">
@@ -143,7 +144,7 @@ function SidebarNav({
       <Separator className="bg-border/50" />
       <div className="p-3">
         <div className={`flex items-center gap-3 ${!sidebarOpen ? 'justify-center' : ''}`}>
-          <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary shrink-0">
+          <div className="h-8 w-8 rounded-full bg-primary/20 ring-1 ring-border flex items-center justify-center text-xs font-bold text-primary shrink-0">
             {currentUser?.name?.charAt(0) || 'U'}
           </div>
           {sidebarOpen && (
@@ -239,11 +240,6 @@ export function DashboardLayout() {
     }
   };
 
-  const handleBellClick = () => {
-    useAppStore.getState().selectFinding(null);
-    useAppStore.getState().setView('findings');
-  };
-
   const renderView = () => {
     switch (view) {
       case 'overview': return <OverviewView />;
@@ -316,40 +312,24 @@ export function DashboardLayout() {
                 onChange={(e) => setHeaderSearch(e.target.value)}
                 onKeyDown={handleSearch}
                 placeholder="Search findings, repos, PRs..."
-                className="w-full h-9 pl-9 pr-16 rounded-md bg-secondary border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                className="input-glow w-full h-9 pl-9 pr-16 rounded-md bg-secondary border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               />
               <kbd className="absolute right-2 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-0.5 rounded border border-border bg-background px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground pointer-events-none">
                 <span className="text-xs">⌘</span>K
               </kbd>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <ThemeToggle />
-            {/* Notification Bell */}
-            <TooltipProvider delayDuration={0}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={handleBellClick}
-                    className="relative p-2 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <Bell className="h-4 w-4" />
-                    {findingsCount > 0 && (
-                      <span className="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold leading-none">
-                        {findingsCount > 99 ? '99+' : findingsCount}
-                      </span>
-                    )}
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>{findingsCount} open findings</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            {demoMode && (
-              <Badge variant="outline" className="text-xs border-primary/40 text-primary">
-                <Zap className="h-3 w-3 mr-1" />DEMO
-              </Badge>
-            )}
-            <Badge variant="outline" className="text-xs hidden sm:flex">Acme Corp</Badge>
+            <NotificationCenter />
+            <div className="hidden sm:flex items-center gap-1.5 ml-1 pl-3 border-l border-border/50">
+              {demoMode && (
+                <Badge variant="outline" className="text-[10px] border-primary/40 text-primary px-1.5 py-0">
+                  <Zap className="h-2.5 w-2.5 mr-0.5" />DEMO
+                </Badge>
+              )}
+              <span className="text-xs text-muted-foreground">Acme Corp</span>
+            </div>
           </div>
         </header>
         <main className="flex-1 overflow-auto">

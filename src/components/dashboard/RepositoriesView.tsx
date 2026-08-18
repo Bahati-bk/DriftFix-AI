@@ -84,7 +84,7 @@ export function RepositoriesView() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold">Repositories</h1>
-          <p className="text-muted-foreground text-sm mt-1">
+          <p className="section-subtitle mt-1">
             {repos.length} connected {repos.length === 1 ? 'repository' : 'repositories'} being monitored
           </p>
         </div>
@@ -98,7 +98,7 @@ export function RepositoriesView() {
       </div>
 
       {repos.length === 0 ? (
-        <Card className="border-border/50">
+        <Card className="border-border/50 rounded-xl">
           <CardContent className="p-16 text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
               <GitBranch className="h-8 w-8 text-primary" />
@@ -125,14 +125,14 @@ export function RepositoriesView() {
             return (
               <Card
                 key={repo.id}
-                className="border-border/50 card-hover group relative overflow-hidden"
+                className="border-border/50 card-hover rounded-xl group relative overflow-hidden"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
                 <CardContent className="p-5 relative">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div
-                        className="h-3 w-3 rounded-full shrink-0 ring-2 ring-background"
+                        className="h-3 w-3 rounded-full shrink-0 ring-2 ring-background status-dot-glow"
                         style={{ backgroundColor: langColor }}
                       />
                       <div className="min-w-0">
@@ -151,7 +151,7 @@ export function RepositoriesView() {
 
                   <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
                     {lang && (
-                      <span className="flex items-center gap-1.5">
+                      <span className="tag-pill flex items-center gap-1.5">
                         <span
                           className="h-2 w-2 rounded-full"
                           style={{ backgroundColor: langColor }}

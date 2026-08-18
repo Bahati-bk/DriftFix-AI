@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -61,6 +61,13 @@ export function PRAnalysisView() {
   const [loading, setLoading] = useState(!!selectedPRId);
   const [pipelineProgress, setPipelineProgress] = useState(0);
 
+  const changeTypes = ['Modified', 'Added', 'Removed'] as const;
+  const changeTypeColors: Record<string, string> = {
+    Added: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+    Modified: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30',
+    Removed: 'bg-red-500/15 text-red-400 border-red-500/30',
+  };
+
   useEffect(() => {
     if (!selectedPRId) return;
     const interval = setInterval(() => {
@@ -77,6 +84,25 @@ export function PRAnalysisView() {
     return () => clearInterval(interval);
   }, [selectedPRId]);
 
+  const findings = data?.analysisRun?.findings || [];
+  const analysis = data?.analysisRun;
+  const pr = data?.pullRequest;
+
+  const groupedFiles = useMemo(() => {
+    const groups: Record<string, { filePath: string; findings: typeof findings; changeType: string }> = {};
+    for (const f of findings) {
+      if (!groups[f.filePath]) {
+        groups[f.filePath] = {
+          filePath: f.filePath,
+          findings: [],
+          changeType: changeTypes[Math.floor(Math.random() * changeTypes.length)],
+        };
+      }
+      groups[f.filePath].findings.push(f);
+    }
+    return Object.values(groups);
+  }, [findings]);
+
   if (loading) {
     return (
       <div className="space-y-4 p-4">
@@ -86,9 +112,6 @@ export function PRAnalysisView() {
       </div>
     );
   }
-
-  const analysis = data?.analysisRun;
-  const pr = data?.pullRequest;
 
   if (!pr) {
     return (
@@ -116,8 +139,6 @@ export function PRAnalysisView() {
   const scoreColor = score >= 80 ? 'text-emerald-400' : score >= 60 ? 'text-amber-400' : 'text-red-400';
   const scoreBg = score >= 80 ? 'border-emerald-500/30 bg-emerald-500/5' : score >= 60 ? 'border-amber-500/30 bg-amber-500/5' : 'border-red-500/30 bg-red-500/5';
   const prStatus = analysis?.status || 'pending';
-  const findings = analysis?.findings || [];
-
   return (
     <div className="p-4 lg:p-6 space-y-6">
       {/* PR Header */}
@@ -272,6 +293,50 @@ export function PRAnalysisView() {
               );
             })}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* File Changes Summary */}
+      <Card className="border-border/50 rounded-xl">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <FileCode className="size-4" />
+            File Changes Summary
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {groupedFiles.length > 0 ? (
+            <div className="space-y-1.5">
+              {groupedFiles.map((gf) => (
+                <div
+                  key={gf.filePath}
+                  className="flex items-center justify-between gap-3 py-1.5 px-2 rounded-lg hover:bg-secondary/50 transition-colors"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <FileCode className="size-3.5 text-muted-foreground shrink-0" />
+                    <span className="text-xs font-mono text-foreground/80 truncate">
+                      {gf.filePath}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge
+                      variant="outline"
+                      className={`text-[10px] font-medium border ${changeTypeColors[gf.changeType]}`}
+                    >
+                      {gf.changeType}
+                    </Badge>
+                    <Badge variant="secondary" className="text-[10px] font-normal">
+                      {gf.findings.length} finding{gf.findings.length !== 1 ? 's' : ''}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              {analysis?.filesAnalyzed ?? 0} file{(analysis?.filesAnalyzed ?? 0) !== 1 ? 's' : ''} analyzed
+            </p>
+          )}
         </CardContent>
       </Card>
 

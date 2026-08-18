@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAppStore } from '@/stores/app';
 import { toast } from 'sonner';
-import { Search, ShieldOff, ChevronLeft, ChevronRight, Zap, Download, CheckCircle2, XCircle, Ban, Loader2 } from 'lucide-react';
+import { Search, ShieldOff, ChevronLeft, ChevronRight, Zap, Download, CheckCircle2, XCircle, Ban, Loader2, AlertTriangle, CircleDot, LayoutGrid } from 'lucide-react';
 
 export function FindingsView() {
   const selectFinding = useAppStore((s) => s.selectFinding);
@@ -27,6 +27,23 @@ export function FindingsView() {
   const [runningAnalysis, setRunningAnalysis] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState<string | null>(null);
+  const [activePreset, setActivePreset] = useState<string | null>(null);
+
+  const filterPresets = [
+    { label: '🔥 Critical', filter: { severity: 'CRITICAL', status: 'OPEN' }, icon: AlertTriangle },
+    { label: '⚠️ High Risk', filter: { severity: 'HIGH', status: 'OPEN' }, icon: AlertTriangle },
+    { label: '📋 Open', filter: { status: 'OPEN' }, icon: CircleDot },
+    { label: '✅ Resolved', filter: { status: 'RESOLVED' }, icon: CheckCircle2 },
+    { label: '📊 All', filter: {}, icon: LayoutGrid },
+  ];
+
+  const applyPreset = (preset: typeof filterPresets[number]) => {
+    setSeverity((preset.filter as Record<string, string>).severity || 'ALL');
+    setStatus((preset.filter as Record<string, string>).status || 'ALL');
+    setCategory('ALL');
+    setActivePreset(preset.label);
+    setPage(1);
+  };
 
   const runAnalysis = async () => {
     setRunningAnalysis(true);
@@ -169,7 +186,7 @@ export function FindingsView() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Findings</h1>
-          <p className="text-muted-foreground text-sm mt-1">
+          <p className="section-subtitle mt-1">
             Compliance and security findings across all repositories
           </p>
         </div>
@@ -223,10 +240,32 @@ export function FindingsView() {
         </div>
       )}
 
+      {/* Quick Filter Presets */}
+      <div className="flex flex-wrap gap-2 mb-3">
+        {filterPresets.map((preset) => {
+          const Icon = preset.icon;
+          const isActive = activePreset === preset.label;
+          return (
+            <button
+              key={preset.label}
+              onClick={() => applyPreset(preset)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                isActive
+                  ? 'bg-primary/15 text-primary border-primary/30'
+                  : 'bg-secondary/50 text-muted-foreground border-border/60 hover:border-primary/20 hover:text-foreground'
+              }`}
+            >
+              <Icon className="h-3.5 w-3.5" />
+              {preset.label}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Filters */}
-      <Card className="border-border/50">
+      <Card className="border-border/50 rounded-xl">
         <CardContent className="p-3">
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2">
             <div className="relative flex-1 min-w-[180px]">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input
@@ -236,7 +275,7 @@ export function FindingsView() {
                 className="pl-8 h-8 text-sm"
               />
             </div>
-            <Select value={severity} onValueChange={(v) => { setSeverity(v); setPage(1); }}>
+            <Select value={severity} onValueChange={(v) => { setSeverity(v); setActivePreset(null); setPage(1); }}>
               <SelectTrigger className="w-[120px] h-8 text-sm"><SelectValue placeholder="Severity" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">All Severity</SelectItem>
@@ -246,7 +285,7 @@ export function FindingsView() {
                 <SelectItem value="LOW">Low</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={status} onValueChange={(v) => { setStatus(v); setPage(1); }}>
+            <Select value={status} onValueChange={(v) => { setStatus(v); setActivePreset(null); setPage(1); }}>
               <SelectTrigger className="w-[120px] h-8 text-sm"><SelectValue placeholder="Status" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">All Status</SelectItem>
@@ -257,7 +296,7 @@ export function FindingsView() {
                 <SelectItem value="ACCEPTED_RISK">Accepted Risk</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={category} onValueChange={(v) => { setCategory(v); setPage(1); }}>
+            <Select value={category} onValueChange={(v) => { setCategory(v); setActivePreset(null); setPage(1); }}>
               <SelectTrigger className="w-[150px] h-8 text-sm"><SelectValue placeholder="Category" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">All Categories</SelectItem>
@@ -306,10 +345,10 @@ export function FindingsView() {
               return (
                 <Card
                   key={String(f.id)}
-                  className={`border-border/50 card-hover cursor-pointer transition-all ${isSelected ? 'ring-1 ring-primary/50 bg-primary/5' : ''}`}
+                  className={`border-border/50 card-hover cursor-pointer transition-all rounded-xl hover:bg-accent/50 transition-colors ${isSelected ? 'ring-1 ring-primary/50 bg-primary/5' : ''}`}
                   onClick={() => selectFinding(String(f.id))}
                 >
-                  <CardContent className="p-3.5 flex items-center gap-3">
+                  <CardContent className="p-4 flex items-center gap-3">
                     <div onClick={(e) => { e.stopPropagation(); toggleSelect(String(f.id)); }} className="shrink-0">
                       <Checkbox checked={isSelected} className="h-4 w-4" />
                     </div>
@@ -317,7 +356,7 @@ export function FindingsView() {
                       {String(f.severity)}
                     </Badge>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate">{String(f.title)}</div>
+                      <div className="text-sm font-semibold truncate">{String(f.title)}</div>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className="text-xs text-muted-foreground font-mono truncate">
                           {String(f.filePath)}{f.lineStart ? `:${f.lineStart}` : ''}
@@ -347,7 +386,7 @@ export function FindingsView() {
             })
         }
         {findings.length === 0 && !loading && (
-          <Card className="border-border/50">
+          <Card className="border-border/50 rounded-xl">
             <CardContent className="p-12 text-center">
               <ShieldOff className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="font-semibold mb-2">No findings match your filters</h3>

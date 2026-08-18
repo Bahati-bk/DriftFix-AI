@@ -131,7 +131,7 @@ export function SettingsView() {
     <div className="p-4 lg:p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="text-muted-foreground text-sm mt-1">Manage your account and organization</p>
+        <p className="section-subtitle mt-1">Manage your account and organization</p>
       </div>
 
       {loading ? (
@@ -143,15 +143,15 @@ export function SettingsView() {
         </div>
       ) : (
         <>
-          <Card className="border-border/50">
+          <Card className="border-border/50 rounded-xl">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <User className="size-4" /> Profile
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-4">
-                <div className="size-14 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xl font-bold shrink-0">
+                <div className="size-14 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xl font-bold shrink-0 ring-2 ring-border">
                   {currentUser?.name?.charAt(0).toUpperCase() || 'U'}
                 </div>
                 <div>
@@ -165,9 +165,9 @@ export function SettingsView() {
             </CardContent>
           </Card>
 
-          <Card className="border-border/50">
+          <Card className="border-border/50 rounded-xl">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <Building2 className="size-4" /> Organization
               </CardTitle>
             </CardHeader>
@@ -180,7 +180,7 @@ export function SettingsView() {
                     value={orgName}
                     onChange={(e) => setOrgName(e.target.value)}
                     placeholder="Enter organization name"
-                    className="flex-1"
+                    className="flex-1 bg-secondary/50 border border-border input-glow"
                   />
                   <Button
                     variant="outline"
@@ -211,9 +211,9 @@ export function SettingsView() {
             </CardContent>
           </Card>
 
-          <Card className="border-border/50">
+          <Card className="border-border/50 rounded-xl">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <Github className="size-4" /> Integrations
               </CardTitle>
             </CardHeader>
@@ -261,9 +261,9 @@ export function SettingsView() {
             </CardContent>
           </Card>
 
-          <Card className="border-border/50">
+          <Card className="border-border/50 rounded-xl">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <Shield className="size-4" /> Policy Configuration
               </CardTitle>
             </CardHeader>
@@ -320,9 +320,9 @@ export function SettingsView() {
             </CardContent>
           </Card>
 
-          <Card className="border-border/50">
+          <Card className="border-border/50 rounded-xl">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <Zap className="size-4 text-amber-400" /> Demo Mode
               </CardTitle>
             </CardHeader>
@@ -343,9 +343,9 @@ export function SettingsView() {
             </CardContent>
           </Card>
 
-          <Card className="border-red-500/30 bg-red-500/5">
+          <Card className="border-red-500/30 bg-red-500/5 rounded-xl">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2 text-red-400">
+              <CardTitle className="text-base font-semibold flex items-center gap-2 text-red-400">
                 <AlertTriangle className="size-4" /> Danger Zone
               </CardTitle>
             </CardHeader>

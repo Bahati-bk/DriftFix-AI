@@ -53,7 +53,7 @@ export function PullRequestsView() {
     <div className="p-4 lg:p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Pull Requests</h1>
-        <p className="text-muted-foreground text-sm mt-1">
+        <p className="section-subtitle mt-1">
           {prs.length} total {"\u2022 "} {openCount} open {"\u2022 "} {mergedCount} merged {"\u2022 "} {closedCount} closed
         </p>
       </div>
@@ -89,10 +89,10 @@ export function PullRequestsView() {
           return (
             <Card
               key={String(pr.id)}
-              className="border-border/50 card-hover cursor-pointer group"
+              className="border-border/50 card-hover rounded-xl cursor-pointer group"
               onClick={() => selectPR(String(pr.id))}
             >
-              <CardContent className="p-4 flex items-center gap-4">
+              <CardContent className="p-5 flex items-center gap-4">
                 <div className="h-9 w-9 rounded-full bg-primary/15 flex items-center justify-center shrink-0 text-primary text-sm font-bold">
                   {authorName.charAt(0).toUpperCase()}
                 </div>
@@ -105,12 +105,12 @@ export function PullRequestsView() {
                     <span className="font-semibold text-sm truncate">{String(pr.title)}</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
-                    <span className="flex items-center gap-1.5 font-mono text-[11px] bg-secondary/50 px-1.5 py-0.5 rounded">
+                    <span className="flex items-center gap-1.5 font-mono text-xs bg-secondary/50 px-1.5 py-0.5 rounded">
                       <GitBranch className="h-3 w-3" />
                       {String(pr.sourceBranch)}
                     </span>
                     <ArrowRight className="h-3 w-3 text-muted-foreground/60" />
-                    <span className="flex items-center gap-1.5 font-mono text-[11px] bg-secondary/50 px-1.5 py-0.5 rounded">
+                    <span className="flex items-center gap-1.5 font-mono text-xs bg-secondary/50 px-1.5 py-0.5 rounded">
                       {String(pr.targetBranch)}
                     </span>
                     {repoName && (
@@ -122,18 +122,23 @@ export function PullRequestsView() {
                   </div>
                 </div>
 
-                <Badge
-                  className={`shrink-0 text-[10px] font-semibold ${cfg.bg} ${cfg.text} border ${cfg.border}`}
-                >
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
-                </Badge>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span
+                    className={`h-2 w-2 rounded-full status-dot-glow ${cfg.text.replace('text-', 'bg-')}`}
+                  />
+                  <Badge
+                    className={`text-[10px] font-semibold ${cfg.bg} ${cfg.text} border ${cfg.border}`}
+                  >
+                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                  </Badge>
+                </div>
               </CardContent>
             </Card>
           );
         })}
 
         {filtered.length === 0 && (
-          <Card className="border-border/50">
+          <Card className="border-border/50 rounded-xl">
             <CardContent className="p-16 text-center">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
                 <GitPullRequest className="h-8 w-8 text-primary" />

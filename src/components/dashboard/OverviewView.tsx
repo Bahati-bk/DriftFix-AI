@@ -27,6 +27,9 @@ import {
   ResponsiveContainer,
   ReferenceLine,
   Tooltip as RTooltip,
+  PieChart,
+  Pie,
+  Cell,
 } from 'recharts';
 
 const severityColorMap: Record<string, string> = {
@@ -283,7 +286,7 @@ export function OverviewView() {
     <div className="p-4 lg:p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Dashboard Overview</h1>
-        <p className="text-muted-foreground text-sm mt-1">
+        <p className="text-muted-foreground/80 text-sm mt-1">
           Real-time compliance posture for your organization
         </p>
       </div>
@@ -293,7 +296,7 @@ export function OverviewView() {
         {stats.map((s) => (
           <Card
             key={s.label}
-            className={`border-border/50 border-r-2 ${s.accent} hover:border-primary/30 transition-colors`}
+            className={`border-border/50 border-r-2 ${s.accent} shadow-sm hover:shadow-md hover:shadow-primary/5 hover:border-primary/30 transition-colors`}
           >
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-3">
@@ -311,13 +314,15 @@ export function OverviewView() {
       {/* Hero Score + Trend Chart */}
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Score gauge */}
-        <Card className="border-border/50 hover:border-primary/30 transition-colors">
+        <Card className="border-border/50 hover:border-primary/30 transition-colors relative overflow-hidden">
+          {/* Animated gradient border glow */}
+          <div className="absolute -inset-px rounded-xl bg-gradient-to-br from-primary/20 via-purple-500/10 to-cyan-500/20 blur-xl opacity-60 animate-pulse pointer-events-none" />
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Compliance Posture
             </CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-col items-center pb-6">
+          <CardContent className="flex flex-col items-center pb-6 relative">
             <div className="relative w-44 h-44">
               <svg className="w-full h-full -rotate-90" viewBox="0 0 160 160">
                 <circle
@@ -407,7 +412,8 @@ export function OverviewView() {
                   </defs>
                   <CartesianGrid
                     strokeDasharray="3 3"
-                    stroke="oklch(0.28 0.01 260)"
+                    stroke="oklch(0.32 0.01 260)"
+                    strokeOpacity={0.6}
                   />
                   <XAxis
                     dataKey="weekLabel"
@@ -445,12 +451,25 @@ export function OverviewView() {
                   <Area
                     type="monotone"
                     dataKey="score"
-                    stroke="#a78bfa"
+                    stroke="#c4b5fd"
                     fill="url(#scoreGrad)"
-                    strokeWidth={2.5}
+                    strokeWidth={3}
+                    dot={{ r: 3, fill: '#c4b5fd', strokeWidth: 0 }}
+                    activeDot={{ r: 6, fill: '#c4b5fd', stroke: '#c4b5fd', strokeWidth: 2, strokeOpacity: 0.3 }}
                   />
                 </AreaChart>
               </ResponsiveContainer>
+            </div>
+            {/* Legend */}
+            <div className="flex items-center justify-center gap-5 mt-3 text-[11px] text-muted-foreground">
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-0 bg-emerald-500 rounded" style={{ borderTop: '2px dashed #22c55e' }} />
+                <span>Target (80)</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-0.5 bg-violet-400 rounded" />
+                <span>Actual</span>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -535,36 +554,58 @@ export function OverviewView() {
           </CardContent>
         </Card>
 
-        {/* Severity Breakdown - horizontal bars */}
-        <Card className="border-border/50 hover:border-primary/30 transition-colors">
+        {/* Severity Breakdown - Donut Chart */}
+        <Card className="border-border/50 hover:border-primary/30 transition-colors rounded-xl">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Severity Breakdown
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="relative h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <RTooltip
+                    contentStyle={{
+                      background: 'oklch(0.17 0.008 260)',
+                      border: '1px solid oklch(0.28 0.01 260)',
+                      borderRadius: 8,
+                      fontSize: 12,
+                    }}
+                  />
+                  <Pie
+                    data={severityBreakdown}
+                    dataKey="count"
+                    nameKey="name"
+                    innerRadius={50}
+                    outerRadius={70}
+                    paddingAngle={3}
+                    strokeWidth={0}
+                  >
+                    {severityBreakdown.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+              {/* Center text */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-xs text-muted-foreground">Total</span>
+                <span className="text-2xl font-bold tabular-nums">
+                  {severityBreakdown.reduce((sum, s) => sum + s.count, 0)}
+                </span>
+              </div>
+            </div>
+            {/* Legend */}
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 mt-1">
               {severityBreakdown.map((sev) => (
-                <div key={sev.name}>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="h-2.5 w-2.5 rounded-full"
-                        style={{ backgroundColor: sev.color }}
-                      />
-                      <span className="text-sm font-medium">{sev.name}</span>
-                    </div>
-                    <span className="text-sm font-bold tabular-nums">{sev.count}</span>
-                  </div>
-                  <div className="w-full h-2.5 rounded-full bg-secondary overflow-hidden">
-                    <div
-                      className={`h-full rounded-full ${sev.barClass}`}
-                      style={{
-                        width: `${maxSevCount > 0 ? (sev.count / maxSevCount) * 100 : 0}%`,
-                        transition: 'width 0.8s ease-out',
-                      }}
-                    />
-                  </div>
+                <div key={sev.name} className="flex items-center gap-1.5">
+                  <div
+                    className="h-2 w-2 rounded-full"
+                    style={{ backgroundColor: sev.color }}
+                  />
+                  <span className="text-xs text-muted-foreground">{sev.name}</span>
+                  <span className="text-xs font-semibold tabular-nums">{sev.count}</span>
                 </div>
               ))}
             </div>
@@ -584,7 +625,7 @@ export function OverviewView() {
             <Button
               onClick={handleRunAnalysis}
               disabled={actionLoading === 'analyze'}
-              className="gap-2"
+              className="gap-2 rounded-lg"
             >
               <Play className="h-4 w-4" />
               {actionLoading === 'analyze' ? 'Analyzing...' : 'Run Analysis'}
@@ -593,7 +634,7 @@ export function OverviewView() {
               variant="outline"
               onClick={handleGenerateReport}
               disabled={actionLoading === 'report'}
-              className="gap-2"
+              className="gap-2 rounded-lg"
             >
               <FileBarChart className="h-4 w-4" />
               {actionLoading === 'report' ? 'Generating...' : 'Generate Report'}
@@ -601,7 +642,7 @@ export function OverviewView() {
             <Button
               variant="secondary"
               onClick={handleViewEvidence}
-              className="gap-2"
+              className="gap-2 rounded-lg"
             >
               <Search className="h-4 w-4" />
               View Evidence
@@ -631,7 +672,7 @@ export function OverviewView() {
               <div className="absolute left-[7px] top-2 bottom-2 w-px bg-border" />
               <div className="space-y-0.5">
                 {data.evidence.map((evt, i) => (
-                  <div key={evt.id || i} className="flex items-start gap-4 py-2 relative">
+                  <div key={evt.id || i} className="flex items-start gap-4 py-3 relative">
                     <div
                       className={`h-3.5 w-3.5 rounded-full shrink-0 mt-0.5 ring-4 ring-background z-10 ${evtDotColors[evt.eventType || ''] || 'bg-secondary'}`}
                     />

@@ -1,0 +1,680 @@
+    50→  FINDING_ACKNOWLEDGED: 'bg-yellow-500/20 text-yellow-400',
+    51→};
+    52→
+    53→const evtDotColors: Record<string, string> = {
+    54→  FINDING_DETECTED: 'bg-red-500',
+    55→  FINDING_RESOLVED: 'bg-emerald-500',
+    56→  FINDING_DISMISSED: 'bg-slate-500',
+    57→  PR_ANALYZED: 'bg-primary',
+    58→  REPOSITORY_CONNECTED: 'bg-blue-500',
+    59→  SCORE_UPDATED: 'bg-yellow-500',
+    60→  POLICY_CHANGED: 'bg-purple-500',
+    61→  AUDIT_REPORT_GENERATED: 'bg-emerald-500',
+    62→  INTEGRATION_CONNECTED: 'bg-blue-500',
+    63→  COMPLIANCE_POSTURE_CHANGED: 'bg-emerald-500',
+    64→  FINDING_ACKNOWLEDGED: 'bg-yellow-500',
+    65→};
+    66→
+    67→function relativeTime(dateStr: string): string {
+    68→  const now = Date.now();
+    69→  const then = new Date(dateStr || '').getTime();
+    70→  if (isNaN(then)) return '';
+    71→  const diffMs = now - then;
+    72→  const diffSec = Math.floor(diffMs / 1000);
+    73→  if (diffSec < 60) return 'just now';
+    74→  const diffMin = Math.floor(diffSec / 60);
+    75→  if (diffMin < 60) return `${diffMin} minute${diffMin > 1 ? 's' : ''} ago`;
+    76→  const diffHr = Math.floor(diffMin / 60);
+    77→  if (diffHr < 24) return `${diffHr} hour${diffHr > 1 ? 's' : ''} ago`;
+    78→  const diffDay = Math.floor(diffHr / 24);
+    79→  if (diffDay < 30) return `${diffDay} day${diffDay > 1 ? 's' : ''} ago`;
+    80→  const diffMo = Math.floor(diffDay / 30);
+    81→  return `${diffMo} month${diffMo > 1 ? 's' : ''} ago`;
+    82→}
+    83→
+    84→function formatEventType(type: string): string {
+    85→  return type?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) || '';
+    86→}
+    87→
+    88→interface ComplianceData {
+    89→  score: number;
+    90→  severityBreakdown: Record<string, number>;
+    91→  prsAnalyzed: number;
+    92→  resolvedCount: number;
+    93→  evidenceCount: number;
+    94→  criticalCount: number;
+    95→  highCount: number;
+    96→  mediumCount: number;
+    97→  openFindings: number;
+    98→}
+    99→
+   100→interface Finding {
+   101→  id: string;
+   102→  title: string;
+   103→  severity: string;
+   104→  status: string;
+   105→  confidence: number;
+   106→  filePath: string;
+   107→  category: string;
+   108→  lineStart: number;
+   109→  createdAt: string;
+   110→}
+   111→
+   112→interface EvidenceRecord {
+   113→  id: string;
+   114→  eventType: string;
+   115→  actor: string;
+   116→  payload: string;
+   117→  hash: string;
+   118→  createdAt: string;
+   119→}
+   120→
+   121→interface TrendPoint {
+   122→  weekLabel: string;
+   123→  score: number;
+   124→}
+   125→
+   126→interface PullRequest {
+   127→  id: string;
+   128→  number: number;
+   129→  title: string;
+   130→  status: string;
+   131→  sourceBranch: string;
+   132→  targetBranch: string;
+   133→}
+   134→
+   135→interface ViewData {
+   136→  compliance: ComplianceData;
+   137→  findings: Finding[];
+   138→  evidence: EvidenceRecord[];
+   139→  trends: TrendPoint[];
+   140→  pullRequests: PullRequest[];
+   141→  stats: {
+   142→    openFindings: number;
+   143→    criticalFindings: number;
+   144→    prsAnalyzed: number;
+   145→    resolved: number;
+   146→    evidenceRecords: number;
+   147→  };
+   148→}
+   149→
+   150→export function OverviewView() {
+   151→  const selectFinding = useAppStore((s) => s.selectFinding);
+   152→  const selectPR = useAppStore((s) => s.selectPR);
+   153→  const setView = useAppStore((s) => s.setView);
+   154→  const [data, setData] = useState<ViewData | null>(null);
+   155→  const [loading, setLoading] = useState(true);
+   156→  const [actionLoading, setActionLoading] = useState<string | null>(null);
+   157→
+   158→  useEffect(() => {
+   159→    Promise.all([
+   160→      fetch('/api/compliance').then((r) => r.json()),
+   161→      fetch('/api/findings?limit=5').then((r) => r.json()),
+   162→      fetch('/api/evidence?limit=5').then((r) => r.json()),
+   163→      fetch('/api/compliance?type=trends').then((r) => r.json()),
+   164→      fetch('/api/pull-requests?limit=3').then((r) => r.json()),
+   165→    ]).then(([compliance, findings, evidence, trends, prs]) => {
+   166→      const allFindings = findings.findings || [];
+   167→      const open = allFindings.filter(
+   168→        (f: Finding) => f.status === 'OPEN' || f.status === 'IN_REVIEW'
+   169→      );
+   170→      const critical = open.filter((f: Finding) => f.severity === 'CRITICAL');
+   171→      setData({
+   172→        compliance,
+   173→        findings: allFindings,
+   174→        evidence: evidence.records || [],
+   175→        trends: trends.history || [],
+   176→        pullRequests: prs.pullRequests || [],
+   177→        stats: {
+   178→          openFindings: open.length,
+   179→          criticalFindings: critical.length,
+   180→          prsAnalyzed: compliance.prsAnalyzed || 0,
+   181→          resolved: compliance.resolvedCount || 0,
+   182→          evidenceRecords: compliance.evidenceCount || 0,
+   183→        },
+   184→      });
+   185→      setLoading(false);
+   186→    }).catch(() => setLoading(false));
+   187→  }, []);
+   188→
+   189→  const handleRunAnalysis = useCallback(async () => {
+   190→    setActionLoading('analyze');
+   191→    try {
+   192→      await fetch('/api/demo/analyze', { method: 'POST' });
+   193→      toast.success('Analysis started successfully');
+   194→      setView('findings');
+   195→    } catch {
+   196→      toast.error('Failed to start analysis');
+   197→    } finally {
+   198→      setActionLoading(null);
+   199→    }
+   200→  }, [setView]);
+   201→
+   202→  const handleGenerateReport = useCallback(async () => {
+   203→    setActionLoading('report');
+   204→    try {
+   205→      await fetch('/api/reports', { method: 'POST' });
+   206→      toast.success('Report generation started');
+   207→    } catch {
+   208→      toast.error('Failed to generate report');
+   209→    } finally {
+   210→      setActionLoading(null);
+   211→    }
+   212→  }, []);
+   213→
+   214→  const handleViewEvidence = useCallback(() => {
+   215→    setView('evidence');
+   216→  }, [setView]);
+   217→
+   218→  if (loading || !data) {
+   219→    return (
+   220→      <div className="p-4 lg:p-6 space-y-6">
+   221→        <div className="h-8 w-48 bg-muted rounded animate-pulse" />
+   222→        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+   223→          {Array.from({ length: 5 }).map((_, i) => (
+   224→            <div key={i} className="h-28 bg-muted rounded-lg animate-pulse" />
+   225→          ))}
+   226→        </div>
+   227→        <div className="grid lg:grid-cols-3 gap-6">
+   228→          <div className="h-64 bg-muted rounded-lg animate-pulse" />
+   229→          <div className="h-64 bg-muted rounded-lg animate-pulse lg:col-span-2" />
+   230→        </div>
+   231→      </div>
+   232→    );
+   233→  }
+   234→
+   235→  const score = Number(data.compliance.score || 0);
+   236→  const scoreColor =
+   237→    score >= 80 ? '#22c55e' : score >= 60 ? '#eab308' : '#ef4444';
+   238→  const scoreGlow =
+   239→    score >= 80
+   240→      ? '0 0 40px rgba(34,197,94,0.35), 0 0 80px rgba(34,197,94,0.15)'
+   241→      : score >= 60
+   242→        ? '0 0 40px rgba(234,179,8,0.35), 0 0 80px rgba(234,179,8,0.15)'
+   243→        : '0 0 40px rgba(239,68,68,0.35), 0 0 80px rgba(239,68,68,0.15)';
+   244→  const circumference = 2 * Math.PI * 70;
+   245→  const offset = circumference - (score / 100) * circumference;
+   246→
+   247→  const scoreLabel =
+   248→    score >= 90
+   249→      ? 'Excellent'
+   250→      : score >= 80
+   251→        ? 'Good'
+   252→        : score >= 70
+   253→          ? 'Fair'
+   254→          : score >= 60
+   255→            ? 'Needs Attention'
+   256→            : 'Critical';
+   257→
+   258→  const trends = data.trends as TrendPoint[];
+   259→  const trendChange =
+   260→    trends.length >= 2
+   261→      ? Number(trends[trends.length - 1].score) - Number(trends[0].score)
+   262→      : 0;
+   263→  const trendPositive = trendChange >= 0;
+   264→
+   265→  const severityBreakdown = [
+   266→    { name: 'CRITICAL', count: data.compliance.criticalCount || 0, color: '#ef4444', barClass: 'bg-red-500' },
+   267→    { name: 'HIGH', count: data.compliance.highCount || 0, color: '#f97316', barClass: 'bg-orange-500' },
+   268→    { name: 'MEDIUM', count: data.compliance.mediumCount || 0, color: '#eab308', barClass: 'bg-yellow-500' },
+   269→    { name: 'LOW', count: Math.max(0, (data.compliance.openFindings || 0) - (data.compliance.criticalCount || 0) - (data.compliance.highCount || 0) - (data.compliance.mediumCount || 0)), color: '#64748b', barClass: 'bg-slate-500' },
+   270→  ];
+   271→
+   272→  const maxSevCount = Math.max(1, ...severityBreakdown.map((s) => s.count));
+   273→
+   274→  const stats = [
+   275→    { label: 'Open Findings', value: data.stats.openFindings, icon: AlertTriangle, color: data.stats.openFindings > 0 ? 'text-orange-500' : 'text-emerald-500', iconBg: data.stats.openFindings > 0 ? 'bg-orange-500/15' : 'bg-emerald-500/15', accent: data.stats.openFindings > 0 ? 'border-r-orange-500/40' : 'border-r-emerald-500/40' },
+   276→    { label: 'Critical', value: data.stats.criticalFindings, icon: data.stats.criticalFindings > 0 ? AlertTriangle : CheckCircle2, color: data.stats.criticalFindings > 0 ? 'text-red-500' : 'text-emerald-500', iconBg: data.stats.criticalFindings > 0 ? 'bg-red-500/15' : 'bg-emerald-500/15', accent: data.stats.criticalFindings > 0 ? 'border-r-red-500/40' : 'border-r-emerald-500/40' },
+   277→    { label: 'PRs Analyzed', value: data.stats.prsAnalyzed, icon: GitPullRequest, color: 'text-primary', iconBg: 'bg-primary/15', accent: 'border-r-primary/40' },
+   278→    { label: 'Risks Resolved', value: data.stats.resolved, icon: CheckCircle2, color: 'text-emerald-500', iconBg: 'bg-emerald-500/15', accent: 'border-r-emerald-500/40' },
+   279→    { label: 'Evidence Records', value: data.stats.evidenceRecords, icon: FileText, color: 'text-violet-500', iconBg: 'bg-violet-500/15', accent: 'border-r-violet-500/40' },
+   280→  ];
+   281→
+   282→  return (
+   283→    <div className="p-4 lg:p-6 space-y-6">
+   284→      <div>
+   285→        <h1 className="text-2xl font-bold">Dashboard Overview</h1>
+   286→        <p className="text-muted-foreground text-sm mt-1">
+   287→          Real-time compliance posture for your organization
+   288→        </p>
+   289→      </div>
+   290→
+   291→      {/* Stats row */}
+   292→      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+   293→        {stats.map((s) => (
+   294→          <Card
+   295→            key={s.label}
+   296→            className={`border-border/50 border-r-2 ${s.accent} hover:border-primary/30 transition-colors`}
+   297→          >
+   298→            <CardContent className="p-4">
+   299→              <div className="flex items-center gap-2 mb-3">
+   300→                <div className={`rounded-full ${s.iconBg} p-1.5`}>
+   301→                  <s.icon className={`h-3.5 w-3.5 ${s.color}`} />
+   302→                </div>
+   303→              </div>
+   304→              <div className="text-2xl font-bold tabular-nums">{s.value}</div>
+   305→              <div className="text-[11px] text-muted-foreground mt-1 leading-tight">{s.label}</div>
+   306→            </CardContent>
+   307→          </Card>
+   308→        ))}
+   309→      </div>
+   310→
+   311→      {/* Hero Score + Trend Chart */}
+   312→      <div className="grid lg:grid-cols-3 gap-6">
+   313→        {/* Score gauge */}
+   314→        <Card className="border-border/50 hover:border-primary/30 transition-colors">
+   315→          <CardHeader className="pb-2">
+   316→            <CardTitle className="text-sm font-medium text-muted-foreground">
+   317→              Compliance Posture
+   318→            </CardTitle>
+   319→          </CardHeader>
+   320→          <CardContent className="flex flex-col items-center pb-6">
+   321→            <div className="relative w-44 h-44">
+   322→              <svg className="w-full h-full -rotate-90" viewBox="0 0 160 160">
+   323→                <circle
+   324→                  cx="80"
+   325→                  cy="80"
+   326→                  r="70"
+   327→                  fill="none"
+   328→                  stroke="currentColor"
+   329→                  strokeWidth="10"
+   330→                  className="text-secondary"
+   331→                />
+   332→                <circle
+   333→                  cx="80"
+   334→                  cy="80"
+   335→                  r="70"
+   336→                  fill="none"
+   337→                  stroke={scoreColor}
+   338→                  strokeWidth="10"
+   339→                  strokeLinecap="round"
+   340→                  strokeDasharray={circumference}
+   341→                  strokeDashoffset={offset}
+   342→                  style={{
+   343→                    transition: 'stroke-dashoffset 1.2s ease-out',
+   344→                    filter: `drop-shadow(${scoreGlow})`,
+   345→                  }}
+   346→                />
+   347→              </svg>
+   348→              <div className="absolute inset-0 flex flex-col items-center justify-center">
+   349→                <span
+   350→                  className="text-5xl font-extrabold tracking-tight"
+   351→                  style={{
+   352→                    color: scoreColor,
+   353→                    textShadow: scoreGlow,
+   354→                  }}
+   355→                >
+   356→                  <AnimatedScore value={score} duration={1200} />
+   357→                </span>
+   358→                <span className="text-[11px] text-muted-foreground mt-0.5 tracking-wide">
+   359→                  COMPLIANCE SCORE
+   360→                </span>
+   361→                <div className="text-[10px] text-muted-foreground mt-0.5 opacity-70">
+   362→                  target: 80
+   363→                </div>
+   364→              </div>
+   365→            </div>
+   366→            <div
+   367→              className="text-base mt-4 font-semibold"
+   368→              style={{ color: scoreColor }}
+   369→            >
+   370→              {scoreLabel}
+   371→            </div>
+   372→            {trends.length >= 2 && (
+   373→              <div className="flex items-center gap-1 mt-2">
+   374→                {trendPositive ? (
+   375→                  <ArrowUpRight className="h-4 w-4 text-emerald-500" />
+   376→                ) : (
+   377→                  <ArrowDownRight className="h-4 w-4 text-red-500" />
+   378→                )}
+   379→                <span
+   380→                  className={`text-sm font-medium ${trendPositive ? 'text-emerald-500' : 'text-red-500'}`}
+   381→                >
+   382→                  {trendPositive ? '+' : ''}{trendChange}
+   383→                </span>
+   384→                <span className="text-xs text-muted-foreground ml-1">vs first recorded</span>
+   385→              </div>
+   386→            )}
+   387→          </CardContent>
+   388→        </Card>
+   389→
+   390→        {/* Trend chart */}
+   391→        <Card className="border-border/50 hover:border-primary/30 transition-colors lg:col-span-2">
+   392→          <CardHeader className="pb-2">
+   393→            <CardTitle className="text-sm font-medium text-muted-foreground">
+   394→              Compliance Trend
+   395→            </CardTitle>
+   396→          </CardHeader>
+   397→          <CardContent>
+   398→            <div className="h-56">
+   399→              <ResponsiveContainer width="100%" height="100%">
+   400→                <AreaChart data={trends}>
+   401→                  <defs>
+   402→                    <linearGradient id="scoreGrad" x1="0" y1="0" x2="0" y2="1">
+   403→                      <stop offset="5%" stopColor="#a78bfa" stopOpacity={0.4} />
+   404→                      <stop offset="50%" stopColor="#a78bfa" stopOpacity={0.15} />
+   405→                      <stop offset="95%" stopColor="#a78bfa" stopOpacity={0} />
+   406→                    </linearGradient>
+   407→                  </defs>
+   408→                  <CartesianGrid
+   409→                    strokeDasharray="3 3"
+   410→                    stroke="oklch(0.28 0.01 260)"
+   411→                  />
+   412→                  <XAxis
+   413→                    dataKey="weekLabel"
+   414→                    tick={{ fontSize: 11, fill: 'oklch(0.65 0.01 260)' }}
+   415→                    axisLine={false}
+   416→                    tickLine={false}
+   417→                  />
+   418→                  <YAxis
+   419→                    domain={[0, 100]}
+   420→                    tick={{ fontSize: 11, fill: 'oklch(0.65 0.01 260)' }}
+   421→                    axisLine={false}
+   422→                    tickLine={false}
+   423→                  />
+   424→                  <RTooltip
+   425→                    contentStyle={{
+   426→                      background: 'oklch(0.17 0.008 260)',
+   427→                      border: '1px solid oklch(0.28 0.01 260)',
+   428→                      borderRadius: 8,
+   429→                      fontSize: 12,
+   430→                    }}
+   431→                  />
+   432→                  <ReferenceLine
+   433→                    y={80}
+   434→                    stroke="#22c55e"
+   435→                    strokeDasharray="6 4"
+   436→                    strokeWidth={1.5}
+   437→                    strokeOpacity={0.6}
+   438→                    label={{
+   439→                      value: 'Good',
+   440→                      position: 'right',
+   441→                      fill: 'oklch(0.55 0.02 145)',
+   442→                      fontSize: 10,
+   443→                    }}
+   444→                  />
+   445→                  <Area
+   446→                    type="monotone"
+   447→                    dataKey="score"
+   448→                    stroke="#a78bfa"
+   449→                    fill="url(#scoreGrad)"
+   450→                    strokeWidth={2.5}
+   451→                  />
+   452→                </AreaChart>
+   453→              </ResponsiveContainer>
+   454→            </div>
+   455→          </CardContent>
+   456→        </Card>
+   457→      </div>
+   458→
+   459→      {/* Recent Findings + Severity Breakdown */}
+   460→      <div className="grid lg:grid-cols-3 gap-6">
+   461→        <Card className="border-border/50 hover:border-primary/30 transition-colors lg:col-span-2">
+   462→          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+   463→            <CardTitle className="text-sm font-medium text-muted-foreground">
+   464→              Recent Findings
+   465→            </CardTitle>
+   466→            <button
+   467→              onClick={() => setView('findings')}
+   468→              className="text-xs text-primary hover:underline"
+   469→            >
+   470→              View all →
+   471→            </button>
+   472→          </CardHeader>
+   473→          <CardContent>
+   474→            <div className="space-y-1 max-h-[280px] overflow-y-auto">
+   475→              {data.findings.slice(0, 5).map((f) => (
+   476→                <button
+   477→                  key={f.id}
+   478→                  onClick={() => selectFinding(String(f.id))}
+   479→                  className="w-full flex items-center gap-3 p-2.5 rounded-md hover:bg-accent transition-colors text-left"
+   480→                >
+   481→                  <div
+   482→                    className="h-2 w-2 rounded-full shrink-0"
+   483→                    style={{
+   484→                      backgroundColor: severityColorMap[f.severity] || '#64748b',
+   485→                    }}
+   486→                  />
+   487→                  <Badge
+   488→                    className={`severity-${f.severity?.toLowerCase()} text-[10px] px-1.5 py-0 font-bold`}
+   489→                  >
+   490→                    {f.severity}
+   491→                  </Badge>
+   492→                  <div className="flex-1 min-w-0">
+   493→                    <div className="text-sm truncate">{f.title}</div>
+   494→                    <div className="text-xs text-muted-foreground font-mono truncate">
+   495→                      {f.filePath}
+   496→                    </div>
+   497→                  </div>
+   498→                  <div className="flex items-center gap-2 shrink-0">
+   499→                    <div className="flex flex-col items-end gap-0.5">
+   500→                      <div className="flex items-center gap-1.5">
+   501→                        <div className="w-12 h-1.5 rounded-full bg-secondary overflow-hidden">
+   502→                          <div
+   503→                            className="h-full rounded-full"
+   504→                            style={{
+   505→                              width: `${f.confidence || 0}%`,
+   506→                              backgroundColor:
+   507→                                (f.confidence || 0) >= 80
+   508→                                  ? '#22c55e'
+   509→                                  : (f.confidence || 0) >= 50
+   510→                                    ? '#eab308'
+   511→                                    : '#ef4444',
+   512→                            }}
+   513→                          />
+   514→                        </div>
+   515→                        <span className="text-[10px] text-muted-foreground tabular-nums w-7 text-right">
+   516→                          {f.confidence || 0}%
+   517→                        </span>
+   518→                      </div>
+   519→                      <Badge
+   520→                        variant={f.status === 'OPEN' ? 'destructive' : 'secondary'}
+   521→                        className="text-[10px]"
+   522→                      >
+   523→                        {f.status}
+   524→                      </Badge>
+   525→                    </div>
+   526→                  </div>
+   527→                </button>
+   528→              ))}
+   529→              {data.findings.length === 0 && (
+   530→                <p className="text-sm text-muted-foreground text-center py-4">
+   531→                  No findings yet
+   532→                </p>
+   533→              )}
+   534→            </div>
+   535→          </CardContent>
+   536→        </Card>
+   537→
+   538→        {/* Severity Breakdown - horizontal bars */}
+   539→        <Card className="border-border/50 hover:border-primary/30 transition-colors">
+   540→          <CardHeader className="pb-2">
+   541→            <CardTitle className="text-sm font-medium text-muted-foreground">
+   542→              Severity Breakdown
+   543→            </CardTitle>
+   544→          </CardHeader>
+   545→          <CardContent>
+   546→            <div className="space-y-4">
+   547→              {severityBreakdown.map((sev) => (
+   548→                <div key={sev.name}>
+   549→                  <div className="flex items-center justify-between mb-1.5">
+   550→                    <div className="flex items-center gap-2">
+   551→                      <div
+   552→                        className="h-2.5 w-2.5 rounded-full"
+   553→                        style={{ backgroundColor: sev.color }}
+   554→                      />
+   555→                      <span className="text-sm font-medium">{sev.name}</span>
+   556→                    </div>
+   557→                    <span className="text-sm font-bold tabular-nums">{sev.count}</span>
+   558→                  </div>
+   559→                  <div className="w-full h-2.5 rounded-full bg-secondary overflow-hidden">
+   560→                    <div
+   561→                      className={`h-full rounded-full ${sev.barClass}`}
+   562→                      style={{
+   563→                        width: `${maxSevCount > 0 ? (sev.count / maxSevCount) * 100 : 0}%`,
+   564→                        transition: 'width 0.8s ease-out',
+   565→                      }}
+   566→                    />
+   567→                  </div>
+   568→                </div>
+   569→              ))}
+   570→            </div>
+   571→          </CardContent>
+   572→        </Card>
+   573→      </div>
+   574→
+   575→      {/* Quick Actions */}
+   576→      <Card className="border-border/50 hover:border-primary/30 transition-colors">
+   577→        <CardHeader className="pb-2">
+   578→          <CardTitle className="text-sm font-medium text-muted-foreground">
+   579→            Quick Actions
+   580→          </CardTitle>
+   581→        </CardHeader>
+   582→        <CardContent>
+   583→          <div className="flex flex-wrap gap-3">
+   584→            <Button
+   585→              onClick={handleRunAnalysis}
+   586→              disabled={actionLoading === 'analyze'}
+   587→              className="gap-2"
+   588→            >
+   589→              <Play className="h-4 w-4" />
+   590→              {actionLoading === 'analyze' ? 'Analyzing...' : 'Run Analysis'}
+   591→            </Button>
+   592→            <Button
+   593→              variant="outline"
+   594→              onClick={handleGenerateReport}
+   595→              disabled={actionLoading === 'report'}
+   596→              className="gap-2"
+   597→            >
+   598→              <FileBarChart className="h-4 w-4" />
+   599→              {actionLoading === 'report' ? 'Generating...' : 'Generate Report'}
+   600→            </Button>
+   601→            <Button
+   602→              variant="secondary"
+   603→              onClick={handleViewEvidence}
+   604→              className="gap-2"
+   605→            >
+   606→              <Search className="h-4 w-4" />
+   607→              View Evidence
+   608→            </Button>
+   609→          </div>
+   610→        </CardContent>
+   611→      </Card>
+   612→
+   613→      {/* Activity Feed + Recent PRs */}
+   614→      <div className="grid lg:grid-cols-3 gap-6">
+   615→        {/* Activity feed */}
+   616→        <Card className="border-border/50 hover:border-primary/30 transition-colors lg:col-span-2">
+   617→          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+   618→            <CardTitle className="text-sm font-medium text-muted-foreground">
+   619→              Recent Activity
+   620→            </CardTitle>
+   621→            <button
+   622→              onClick={() => setView('evidence')}
+   623→              className="text-xs text-primary hover:underline"
+   624→            >
+   625→              View ledger →
+   626→            </button>
+   627→          </CardHeader>
+   628→          <CardContent>
+   629→            <div className="relative max-h-64 overflow-y-auto">
+   630→              {/* Timeline line */}
+   631→              <div className="absolute left-[7px] top-2 bottom-2 w-px bg-border" />
+   632→              <div className="space-y-0.5">
+   633→                {data.evidence.map((evt, i) => (
+   634→                  <div key={evt.id || i} className="flex items-start gap-4 py-2 relative">
+   635→                    <div
+   636→                      className={`h-3.5 w-3.5 rounded-full shrink-0 mt-0.5 ring-4 ring-background z-10 ${evtDotColors[evt.eventType || ''] || 'bg-secondary'}`}
+   637→                    />
+   638→                    <div className="flex-1 min-w-0">
+   639→                      <div className="flex items-center gap-2">
+   640→                        <Badge
+   641→                          className={`text-[10px] px-1.5 py-0 border-0 ${evtTypeColors[evt.eventType || ''] || 'bg-secondary text-muted-foreground'}`}
+   642→                        >
+   643→                          {formatEventType(evt.eventType)}
+   644→                        </Badge>
+   645→                        <span className="text-sm text-muted-foreground truncate">
+   646→                          {evt.actor}
+   647→                        </span>
+   648→                      </div>
+   649→                    </div>
+   650→                    <span className="text-xs text-muted-foreground shrink-0 mt-0.5">
+   651→                      {relativeTime(evt.createdAt)}
+   652→                    </span>
+   653→                  </div>
+   654→                ))}
+   655→                {data.evidence.length === 0 && (
+   656→                  <p className="text-sm text-muted-foreground text-center py-4">
+   657→                    No activity yet
+   658→                  </p>
+   659→                )}
+   660→              </div>
+   661→            </div>
+   662→          </CardContent>
+   663→        </Card>
+   664→
+   665→        {/* Recent Pull Requests */}
+   666→        <Card className="border-border/50 hover:border-primary/30 transition-colors">
+   667→          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+   668→            <CardTitle className="text-sm font-medium text-muted-foreground">
+   669→              Recent Pull Requests
+   670→            </CardTitle>
+   671→            <button
+   672→              onClick={() => setView('pull-requests')}
+   673→              className="text-xs text-primary hover:underline"
+   674→            >
+   675→              View all →
+   676→            </button>
+   677→          </CardHeader>
+   678→          <CardContent>
+   679→            <div className="space-y-1 max-h-52 overflow-y-auto">
+   680→              {data.pullRequests.map((pr) => (
+   681→                <button
+   682→                  key={pr.id}
+   683→                  onClick={() => selectPR(String(pr.id))}
+   684→                  className="w-full flex items-start gap-3 p-2.5 rounded-md hover:bg-accent transition-colors text-left"
+   685→                >
+   686→                  <GitPullRequest className="h-4 w-4 mt-0.5 text-primary shrink-0" />
+   687→                  <div className="flex-1 min-w-0">
+   688→                    <div className="text-sm font-medium truncate">{pr.title}</div>
+   689→                    <div className="text-xs text-muted-foreground">
+   690→                      <span className="font-mono">#{pr.number}</span>
+   691→                      <span className="mx-1.5">·</span>
+   692→                      <span>{pr.sourceBranch}</span>
+   693→                      <span className="mx-1 text-muted-foreground">→</span>
+   694→                      <span>{pr.targetBranch}</span>
+   695→                    </div>
+   696→                  </div>
+   697→                  <Badge
+   698→                    variant={
+   699→                      pr.status === 'MERGED'
+   700→                        ? 'default'
+   701→                        : pr.status === 'OPEN'
+   702→                          ? 'secondary'
+   703→                          : 'outline'
+   704→                    }
+   705→                    className="text-[10px] shrink-0"
+   706→                  >
+   707→                    {pr.status}
+   708→                  </Badge>
+   709→                </button>
+   710→              ))}
+   711→              {data.pullRequests.length === 0 && (
+   712→                <p className="text-sm text-muted-foreground text-center py-4">
+   713→                  No pull requests yet
+   714→                </p>
+   715→              )}
+   716→            </div>
+   717→          </CardContent>
+   718→        </Card>
+   719→      </div>
+   720→
+   721→      {/* Disclaimer */}
+   722→      <p className="text-[11px] text-muted-foreground text-center pb-4">
+   723→        DriftFix provides engineering compliance guidance and evidence automation. It is not
+   724→        legal advice or a certification.
+   725→      </p>
+   726→    </div>
+   727→  );
+   728→}
+   729→

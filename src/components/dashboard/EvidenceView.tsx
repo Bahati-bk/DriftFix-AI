@@ -176,7 +176,7 @@ export function EvidenceView() {
             <ScrollText className="h-6 w-6 text-primary" />
             Evidence Ledger
           </h1>
-          <p className="text-muted-foreground text-sm mt-1">
+          <p className="section-subtitle mt-1">
             Tamper-evident audit trail of all compliance events
           </p>
         </div>
@@ -275,17 +275,17 @@ export function EvidenceView() {
                   {/* Timeline dot */}
                   <div className="relative z-10 flex flex-col items-center shrink-0 pt-4">
                     <div
-                      className={`h-[22px] w-[22px] rounded-full border-2 border-background flex items-center justify-center shadow-sm ${
+                      className={`h-[22px] w-[22px] rounded-full border-2 border-background flex items-center justify-center shadow-sm status-dot-glow ${
                         dotColors[evtType] || 'bg-muted-foreground'
                       }`}
                     >
-                      <div className="h-[10px] w-[10px] rounded-full bg-background" />
+                      <div className="h-3.5 w-3.5 rounded-full bg-background" />
                     </div>
                   </div>
 
                   {/* Content card */}
                   <div className={`flex-1 min-w-0 ${isLast ? '' : 'pb-3'}`}>
-                    <Card className="border-border/50 hover:border-border transition-colors">
+                    <Card className="border-border/50 hover:border-border transition-colors rounded-xl hover:bg-accent/50 transition-colors">
                       <CardContent className="p-4">
                         {/* Top row: badge, actor, time */}
                         <div className="flex items-center gap-2 flex-wrap mb-2">
@@ -311,7 +311,7 @@ export function EvidenceView() {
 
                         {/* Bottom row: hash */}
                         {fullHash && (
-                          <div className="flex items-center gap-2 mt-3 pt-2 border-t border-border/30">
+                          <div className="flex items-baseline gap-2 mt-3 pt-2 border-t border-border/30">
                             <span className="text-[10px] text-muted-foreground shrink-0">Hash</span>
                             <code className="text-[11px] font-mono text-muted-foreground/80 truncate flex-1">
                               {fullHash.length > 24
