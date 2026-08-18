@@ -170,7 +170,7 @@ export function ReportsView() {
               <div className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">Current Score</div>
             </div>
             <div className="border-r-2 border-amber-400/20 px-6">
-              <div className="text-3xl font-bold text-amber-400">{openFindings}</div>
+              <div className="text-2xl font-semibold text-muted-foreground">{openFindings}</div>
               <div className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">Open Findings</div>
             </div>
             <div className="pl-6">
@@ -190,7 +190,7 @@ export function ReportsView() {
             <div className="space-y-2 flex-1">
               <label className="text-sm text-muted-foreground">Framework</label>
               <Select value={framework} onValueChange={setFramework}>
-                <SelectTrigger className="w-full sm:w-56">
+                <SelectTrigger className="w-full sm:w-56 [&>svg:last-child]:opacity-80">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

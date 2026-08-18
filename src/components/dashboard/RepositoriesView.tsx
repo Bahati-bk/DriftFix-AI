@@ -20,6 +20,54 @@ const languageColors: Record<string, string> = {
   'C++': '#64748b',
 };
 
+function getRepoHealth(repo: Record<string, string>, prCount: number): { score: number; label: string; color: string } {
+  // Simple heuristic: use PR count to vary scores, otherwise demo range 85-95
+  let score: number;
+  if (prCount > 0) {
+    // More PRs can indicate activity but also potential drift
+    score = Math.max(40, Math.min(98, 90 - prCount * 3 + Math.floor(Math.random() * 6)));
+  } else {
+    // No PRs: use repo name hash for deterministic demo scores 85-95
+    const hash = repo.name ? repo.name.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) : 0;
+    score = 85 + (hash % 11);
+  }
+  const label = score >= 80 ? 'Healthy' : score >= 60 ? 'Needs Attention' : 'At Risk';
+  const color = score >= 80 ? '#22c55e' : score >= 60 ? '#eab308' : '#ef4444';
+  return { score, label, color };
+}
+
+function HealthBadge({ score, label, color }: { score: number; label: string; color: string }) {
+  const r = 12;
+  const circ = 2 * Math.PI * r;
+  const offset = circ - (score / 100) * circ;
+  return (
+    <div className="absolute top-3 right-3 group/badge" title={`Compliance Health: ${score}/100`}>
+      <svg width="32" height="32" viewBox="0 0 32 32" className="-rotate-90">
+        <circle cx="16" cy="16" r={r} fill="none" stroke="currentColor" strokeWidth="3" className="text-secondary" />
+        <circle
+          cx="16" cy="16" r={r}
+          fill="none"
+          stroke={color}
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeDasharray={circ}
+          strokeDashoffset={offset}
+          style={{ transition: 'stroke-dashoffset 0.6s ease-out' }}
+        />
+      </svg>
+      <span
+        className="absolute inset-0 flex items-center justify-center text-[8px] font-bold"
+        style={{ color }}
+      >
+        {score}
+      </span>
+      <span className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 text-[8px] text-muted-foreground whitespace-nowrap opacity-0 group-hover/badge:opacity-100 transition-opacity">
+        {label}
+      </span>
+    </div>
+  );
+}
+
 function relativeTime(dateStr: string): string {
   try {
     const now = Date.now();
@@ -117,7 +165,7 @@ export function RepositoriesView() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
           {repos.map((repo) => {
             const lang = repo.language || '';
             const langColor = languageColors[lang] || '#64748b';
@@ -128,6 +176,7 @@ export function RepositoriesView() {
                 className="border-border/50 card-hover rounded-xl group relative overflow-hidden"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
+                <HealthBadge {...getRepoHealth(repo, prCount)} />
                 <CardContent className="p-5 relative">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2.5 min-w-0">
@@ -135,6 +184,7 @@ export function RepositoriesView() {
                         className="h-3 w-3 rounded-full shrink-0 ring-2 ring-background status-dot-glow"
                         style={{ backgroundColor: langColor }}
                       />
+                      <span className="text-xs text-muted-foreground">{lang}</span>
                       <div className="min-w-0">
                         <div className="font-bold text-sm truncate">{repo.name}</div>
                         <div className="text-xs text-muted-foreground truncate">{repo.fullName}</div>

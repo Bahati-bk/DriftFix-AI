@@ -255,7 +255,7 @@ export function EvidenceView() {
       ) : (
         <div className="relative">
           {/* Timeline vertical line */}
-          <div className="absolute left-[11px] top-0 bottom-0 w-px bg-border/40" />
+          <div className="absolute left-[11px] top-0 bottom-0 w-0.5 bg-border/40" />
 
           <div className="space-y-3">
             {records.map((rec, i) => {
@@ -313,7 +313,7 @@ export function EvidenceView() {
                         {fullHash && (
                           <div className="flex items-baseline gap-2 mt-3 pt-2 border-t border-border/30">
                             <span className="text-[10px] text-muted-foreground shrink-0">Hash</span>
-                            <code className="text-[11px] font-mono text-muted-foreground/80 truncate flex-1">
+                            <code className="text-[11px] font-mono text-muted-foreground/80 truncate flex-1 cursor-pointer hover:text-foreground transition-colors">
                               {fullHash.length > 24
                                 ? `${fullHash.substring(0, 16)}...${fullHash.substring(fullHash.length - 8)}`
                                 : fullHash}

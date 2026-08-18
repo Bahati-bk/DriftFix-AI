@@ -9,12 +9,15 @@ import { Button } from '@/components/ui/button';
 import {
   AreaChart,
   Area,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   ResponsiveContainer,
   ReferenceLine,
   Tooltip as RTooltip,
+  Cell,
 } from 'recharts';
 import { TrendingUp, TrendingDown, Minus, ArrowRight, Target, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAppStore } from '@/stores/app';
@@ -165,7 +168,7 @@ export function ComplianceView() {
 
   return (
     <div className="p-4 lg:p-6 space-y-6">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Compliance</h1>
           <p className="text-muted-foreground/80 text-sm mt-1">
@@ -313,7 +316,7 @@ export function ComplianceView() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                  <XAxis dataKey="weekLabel" tick={{ fontSize: 11, fill: '#888' }} axisLine={false} tickLine={false} />
+                  <XAxis dataKey="weekLabel" tick={{ fontSize: 11, fill: 'oklch(0.72 0.01 260)' }} axisLine={false} tickLine={false} angle={-30} textAnchor="end" height={40} />
                   <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: '#888' }} axisLine={false} tickLine={false} />
                   <RTooltip contentStyle={{ background: '#1a1a2e', border: '1px solid #333', borderRadius: 8, fontSize: 12 }} />
                   <ReferenceLine
@@ -336,6 +339,56 @@ export function ComplianceView() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Score History Bar Chart */}
+      <Card className="border-border/50 rounded-xl">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium text-muted-foreground">
+            Score History
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-40">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={trends as { weekLabel: string; score: number }[]}>
+                <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.28 0.01 260)" />
+                <XAxis
+                  dataKey="weekLabel"
+                  tick={{ fontSize: 11, fill: 'oklch(0.72 0.01 260)' }}
+                  axisLine={false}
+                  tickLine={false}
+                  angle={-30}
+                  textAnchor="end"
+                  height={40}
+                />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: '#888' }} axisLine={false} tickLine={false} />
+                <RTooltip contentStyle={{ background: '#1a1a2e', border: '1px solid #333', borderRadius: 8, fontSize: 12 }} />
+                <ReferenceLine
+                  y={TARGET_SCORE}
+                  stroke="#22c55e"
+                  strokeDasharray="6 4"
+                  strokeWidth={1.5}
+                  strokeOpacity={0.6}
+                  label={{
+                    value: 'Target',
+                    position: 'right',
+                    fill: '#22c55e',
+                    fontSize: 10,
+                  }}
+                />
+                <Bar dataKey="score" radius={[4, 4, 0, 0]}>
+                  {(trends as { weekLabel: string; score: number }[]).map((entry, index) => (
+                    <Cell
+                      key={`bar-${index}`}
+                      fill={entry.score >= 80 ? '#22c55e' : entry.score >= 60 ? '#eab308' : '#ef4444'}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid lg:grid-cols-2 gap-6">
         <Card className="border-border/50 hover:border-primary/30 transition-colors rounded-xl">

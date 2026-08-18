@@ -286,7 +286,7 @@ export function OverviewView() {
     <div className="p-4 lg:p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Dashboard Overview</h1>
-        <p className="text-muted-foreground/80 text-sm mt-1">
+        <p className="text-muted-foreground text-[15px] leading-relaxed mt-1">
           Real-time compliance posture for your organization
         </p>
       </div>
@@ -298,7 +298,7 @@ export function OverviewView() {
             key={s.label}
             className={`border-border/50 border-r-2 ${s.accent} shadow-sm hover:shadow-md hover:shadow-primary/5 hover:border-primary/30 transition-colors`}
           >
-            <CardContent className="p-4">
+            <CardContent className="p-5 flex flex-col justify-center">
               <div className="flex items-center gap-2 mb-3">
                 <div className={`rounded-full ${s.iconBg} p-1.5`}>
                   <s.icon className={`h-3.5 w-3.5 ${s.color}`} />
@@ -314,7 +314,7 @@ export function OverviewView() {
       {/* Hero Score + Trend Chart */}
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Score gauge */}
-        <Card className="border-border/50 hover:border-primary/30 transition-colors relative overflow-hidden">
+        <Card className="border-border/50 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-colors relative overflow-hidden">
           {/* Animated gradient border glow */}
           <div className="absolute -inset-px rounded-xl bg-gradient-to-br from-primary/20 via-purple-500/10 to-cyan-500/20 blur-xl opacity-60 animate-pulse pointer-events-none" />
           <CardHeader className="pb-2">

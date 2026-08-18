@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Textarea } from '@/components/ui/textarea';
 import { useAppStore } from '@/stores/app';
 import { toast } from 'sonner';
-import { ArrowLeft, CheckCircle2, XCircle, AlertTriangle, ShieldCheck, FileCode, Lightbulb, Scale, Wrench, Clock, Tag } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, XCircle, AlertTriangle, ShieldCheck, FileCode, Lightbulb, Scale, Wrench, Clock, Tag, Copy } from 'lucide-react';
 
 export function FindingDetailView() {
   const findingId = useAppStore((s) => s.selectFinding);
@@ -108,11 +108,59 @@ export function FindingDetailView() {
             <CardContent><p className="text-sm leading-relaxed text-muted-foreground">{String(finding.recommendation || 'No recommendation available.')}</p></CardContent>
           </Card>
 
-          {/* Suggested Fix */}
-          {finding.suggestedFix && (
-            <Card className="border-border/50 border-emerald-500/20 bg-emerald-500/5">
-              <CardHeader className="pb-3"><CardTitle className="text-sm font-medium flex items-center gap-2"><Wrench className="h-4 w-4 text-emerald-500" />Suggested Fix</CardTitle></CardHeader>
-              <CardContent><pre className="bg-secondary/80 rounded-lg p-4 text-sm font-mono overflow-x-auto border border-border/50 text-emerald-300">{String(finding.suggestedFix)}</pre></CardContent>
+          {/* Code Diff Viewer */}
+          {(finding.evidence || finding.suggestedFix) ? (
+            <Card className="border-border/50 rounded-xl">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Wrench className="h-4 w-4 text-emerald-500" />Code Diff
+                  <button
+                    onClick={() => {
+                      if (finding.suggestedFix) {
+                        navigator.clipboard.writeText(String(finding.suggestedFix));
+                        toast.success('Copied to clipboard');
+                      }
+                    }}
+                    className="ml-auto p-1 rounded hover:bg-secondary transition-colors"
+                    title="Copy suggested fix"
+                  >
+                    <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                  </button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-[#0d1117] rounded-lg border border-border/50 overflow-hidden">
+                  <div className="max-h-64 overflow-y-auto overflow-x-auto">
+                    {finding.evidence && (
+                      <>
+                        <div className="px-4 pt-3 pb-1 text-xs font-medium text-red-400">- Before</div>
+                        {String(finding.evidence).split('\n').map((line: string, i: number) => (
+                          <div key={`before-${i}`} className="flex bg-red-500/10 border-l-2 border-red-500">
+                            <span className="text-muted-foreground/50 text-xs font-mono w-8 shrink-0 text-right pr-3 py-0.5 select-none">{i + 1}</span>
+                            <pre className="font-mono text-sm text-foreground/90 py-0.5 pr-4 whitespace-pre">{line}</pre>
+                          </div>
+                        ))}
+                      </>
+                    )}
+                    {finding.suggestedFix && (
+                      <>
+                        <div className="px-4 pt-3 pb-1 text-xs font-medium text-emerald-400">+ After</div>
+                        {String(finding.suggestedFix).split('\n').map((line: string, i: number) => (
+                          <div key={`after-${i}`} className="flex bg-emerald-500/10 border-l-2 border-emerald-500">
+                            <span className="text-muted-foreground/50 text-xs font-mono w-8 shrink-0 text-right pr-3 py-0.5 select-none">{i + 1}</span>
+                            <pre className="font-mono text-sm text-foreground/90 py-0.5 pr-4 whitespace-pre">{line}</pre>
+                          </div>
+                        ))}
+                      </>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="border-border/50 rounded-xl">
+              <CardHeader className="pb-3"><CardTitle className="text-sm font-medium flex items-center gap-2"><Wrench className="h-4 w-4 text-emerald-500" />Code Diff</CardTitle></CardHeader>
+              <CardContent><p className="text-sm text-muted-foreground">No code diff available</p></CardContent>
             </Card>
           )}
 

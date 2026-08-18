@@ -261,6 +261,7 @@ export function FindingsView() {
           );
         })}
       </div>
+      <div className="h-px bg-border/60 my-3" />
 
       {/* Filters */}
       <Card className="border-border/50 rounded-xl">
@@ -348,7 +349,7 @@ export function FindingsView() {
                   className={`border-border/50 card-hover cursor-pointer transition-all rounded-xl hover:bg-accent/50 transition-colors ${isSelected ? 'ring-1 ring-primary/50 bg-primary/5' : ''}`}
                   onClick={() => selectFinding(String(f.id))}
                 >
-                  <CardContent className="p-4 flex items-center gap-3">
+                  <CardContent className="p-5 flex items-center gap-3">
                     <div onClick={(e) => { e.stopPropagation(); toggleSelect(String(f.id)); }} className="shrink-0">
                       <Checkbox checked={isSelected} className="h-4 w-4" />
                     </div>
@@ -357,7 +358,7 @@ export function FindingsView() {
                     </Badge>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-semibold truncate">{String(f.title)}</div>
-                      <div className="flex items-center gap-2 mt-0.5">
+                      <div className="flex items-center gap-2 mt-1">
                         <span className="text-xs text-muted-foreground font-mono truncate">
                           {String(f.filePath)}{f.lineStart ? `:${f.lineStart}` : ''}
                         </span>
@@ -371,8 +372,8 @@ export function FindingsView() {
                       <div className="w-10 h-1.5 rounded-full bg-secondary overflow-hidden">
                         <div className={`h-full rounded-full ${confBarColor}`} style={{ width: `${confVal}%`, transition: 'width 0.5s ease-out' }} />
                       </div>
-                      <span className={`text-[11px] font-medium tabular-nums w-8 text-right ${confColor}`}>{confVal}%</span>
-                      <span className="text-[9px] text-muted-foreground hidden lg:inline">conf</span>
+                      <span className={`text-xs font-medium tabular-nums w-8 text-right ${confColor}`}>{confVal}%</span>
+                      <span className={`text-xs font-medium hidden lg:inline ${confColor}`}>conf</span>
                     </div>
                     <Badge
                       variant={f.status === 'OPEN' ? 'destructive' : f.status === 'RESOLVED' ? 'default' : 'secondary'}

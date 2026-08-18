@@ -161,7 +161,7 @@ export function RulesView() {
           {categoryOrder.map((category) => (
             <div key={category}>
               <div className="flex items-center gap-3 mb-3">
-                <h2 className="text-sm font-semibold text-muted-foreground">
+                <h2 className="text-lg font-bold text-foreground">
                   {toTitleCase(category)}
                 </h2>
                 <div className="flex-1 divider-strong" />
@@ -190,7 +190,7 @@ export function RulesView() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              <span className="font-bold text-sm">
+                              <span className="text-sm font-semibold">
                                 {ruleName.replace(/_/g, ' ')}
                               </span>
                               <Badge
@@ -199,7 +199,7 @@ export function RulesView() {
                                 {sev}
                               </Badge>
                             </div>
-                            <p className="text-sm text-muted-foreground mb-2">
+                            <p className="text-sm text-muted-foreground mb-1.5">
                               {String(rule.description)}
                             </p>
                             <div className="flex items-center gap-1.5 flex-wrap">

@@ -105,12 +105,12 @@ export function PullRequestsView() {
                     <span className="font-semibold text-sm truncate">{String(pr.title)}</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
-                    <span className="flex items-center gap-1.5 font-mono text-xs bg-secondary/50 px-1.5 py-0.5 rounded">
+                    <span className="flex items-center gap-1.5 font-mono text-xs bg-secondary/50 px-1.5 py-0.5 rounded text-foreground/70">
                       <GitBranch className="h-3 w-3" />
                       {String(pr.sourceBranch)}
                     </span>
                     <ArrowRight className="h-3 w-3 text-muted-foreground/60" />
-                    <span className="flex items-center gap-1.5 font-mono text-xs bg-secondary/50 px-1.5 py-0.5 rounded">
+                    <span className="flex items-center gap-1.5 font-mono text-xs bg-secondary/50 px-1.5 py-0.5 rounded text-foreground/70">
                       {String(pr.targetBranch)}
                     </span>
                     {repoName && (
@@ -122,7 +122,7 @@ export function PullRequestsView() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-2 shrink-0 self-center">
                   <span
                     className={`h-2 w-2 rounded-full status-dot-glow ${cfg.text.replace('text-', 'bg-')}`}
                   />

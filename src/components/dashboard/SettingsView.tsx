@@ -143,14 +143,14 @@ export function SettingsView() {
         </div>
       ) : (
         <>
-          <Card className="border-border/50 rounded-xl">
-            <CardHeader className="pb-3">
+          <Card className="border-border/50 rounded-xl py-5">
+            <CardHeader className="pb-3 px-5">
               <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <User className="size-4" /> Profile
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-4">
+            <CardContent className="px-5">
+              <div className="flex items-center gap-5">
                 <div className="size-14 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xl font-bold shrink-0 ring-2 ring-border">
                   {currentUser?.name?.charAt(0).toUpperCase() || 'U'}
                 </div>
@@ -180,7 +180,7 @@ export function SettingsView() {
                     value={orgName}
                     onChange={(e) => setOrgName(e.target.value)}
                     placeholder="Enter organization name"
-                    className="flex-1 bg-secondary/50 border border-border input-glow"
+                    className="flex-1 bg-secondary/50 border border-border input-glow focus:ring-2 focus:ring-primary/30"
                   />
                   <Button
                     variant="outline"
