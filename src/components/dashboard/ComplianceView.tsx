@@ -87,7 +87,8 @@ export function ComplianceView() {
                   <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: '#888' }} axisLine={false} tickLine={false} />
                   <RTooltip contentStyle={{ background: '#1a1a2e', border: '1px solid #333', borderRadius: 8, fontSize: 12 }} />
                   <Area type="monotone" dataKey="score" stroke="#a78bfa" fill="url(#tGrad)" strokeWidth={2} />
-                </ResponsiveContainer>
+                </AreaChart>
+              </ResponsiveContainer>
               </div>
           </CardContent>
         </Card>
@@ -105,7 +106,8 @@ export function ComplianceView() {
                     <Bar dataKey="value" radius={[0, 4, 4, 0]}>
                       {sevBreakdown.map((entry, i) => <Cell key={i} fill={entry.color} />)}
                     </Bar>
-                  </ResponsiveContainer>
+                  </BarChart>
+              </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
@@ -118,8 +120,9 @@ export function ComplianceView() {
                   <PieChart>
                     <Pie data={sevBreakdown} cx="50%" cy="50%" innerRadius={40} outerRadius={65} paddingAngle={3} dataKey="value">
                       {sevBreakdown.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-                    </PieChart>
-                  <RTooltip contentStyle={{ background: '#1a1a2e', border: '1px solid #333', borderRadius: 8, fontSize: 12 }} />
+                    </Pie>
+                    <RTooltip contentStyle={{ background: '#1a1a2e', border: '1px solid #333', borderRadius: 8, fontSize: 12 }} />
+                  </PieChart>
                 </ResponsiveContainer>
               </div>
               <div className="flex flex-wrap gap-3 justify-center mt-2">

@@ -20,10 +20,10 @@ export function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ action: 'login', email, password }),
       });
       if (res.ok) {
         const data = await res.json();
@@ -42,7 +42,7 @@ export function LoginPage() {
   const handleDemo = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/demo-login', { method: 'POST' });
+      const res = await fetch('/api/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'demo-login' }) });
       if (res.ok) {
         const data = await res.json();
         login(data.user, data.orgId);

@@ -1,5 +1,51 @@
 # DriftFix - Worklog
 
+## Error Fixing Session
+
+**Date**: 2025-07-14
+
+### Issues Found and Fixed
+
+1. **ComplianceView.tsx — JSX Structural Errors (CRITICAL - 500 error on all pages)**
+   - Missing `</AreaChart>` closing tag before `</ResponsiveContainer>`
+   - Missing `</BarChart>` closing tag before `</ResponsiveContainer>`
+   - Missing `</Pie>` closing tag before `</PieChart>`, and `<RTooltip>` was outside `<PieChart>`
+   - **Fix**: Added all 3 missing closing tags and moved `<RTooltip>` inside `<PieChart>`
+
+2. **Auth API URL Mismatch (Login/Demo broken)**
+   - Frontend called `/api/auth/login`, `/api/auth/demo-login`, `/api/auth/register` (separate paths)
+   - Backend expected POST to `/api/auth` with `{ action: 'login' }` in body
+   - **Fix**: Updated LandingPage.tsx, LoginPage.tsx, RegisterPage.tsx to use correct URL + action field
+
+3. **Database Empty (No findings/repos/PRs showing)**
+   - Database had been recreated via `db:push` without re-seeding
+   - **Fix**: Re-ran `bunx tsx scripts/seed.ts` successfully
+
+4. **next.config.ts — Cross-Origin Warning**
+   - `allowedDevOrigins` not configured for preview panel access
+   - **Fix**: Added `allowedDevOrigins: [".*"]` to next.config.ts
+
+### Verification Results
+- Lint passes clean (0 errors, 0 warnings)
+- All 9 dashboard views render correctly:
+  - Overview (score gauge, stats, trend chart, findings, severity pie, activity feed)
+  - Repositories (4 repos displayed)
+  - Pull Requests (8 PRs displayed, click navigates to PR Analysis)
+  - Findings (12 findings with 4 filter dropdowns, pagination)
+  - Finding Detail (evidence, AI explanation, compliance mapping, action buttons)
+  - PR Analysis (pipeline visualization, 4 findings, metadata)
+  - Compliance (score gauge, trend AreaChart, severity BarChart, PieChart)
+  - Rules (8 rule toggles)
+  - Evidence (ledger with Verify Chain Integrity)
+  - Reports (framework selector, generate button, report history)
+  - Settings (profile, org, integrations, demo toggle, policy summary)
+- Demo login works (Start Demo → Dashboard)
+- All API endpoints return 200
+- No browser console errors
+- No dev server runtime errors
+
+---
+
 ## Backend API Routes Implementation
 
 **Date**: $(date -u +%Y-%m-%d)

@@ -22,10 +22,10 @@ export function RegisterPage() {
     if (!name || !email || !password) { toast.error('All fields required'); return; }
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/register', {
+      const res = await fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, name }),
+        body: JSON.stringify({ action: 'register', email, password, name }),
       });
       if (res.ok) {
         const data = await res.json();
