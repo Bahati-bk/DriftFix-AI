@@ -27,6 +27,7 @@ import {
   Link2,
   SearchX,
   Clock,
+  Keyboard,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -106,6 +107,12 @@ function buildCommands(): CommandItem[] {
       } catch {
         toast.error('Verification failed');
       }
+    } },
+    // Help
+    { id: 'help-shortcuts', label: 'Show Keyboard Shortcuts', icon: Keyboard, category: 'action', shortcut: '⌘/', execute: () => {
+      // Dispatch a synthetic keyboard event to open the shortcuts panel
+      const ev = new KeyboardEvent('keydown', { key: '/', metaKey: true, ctrlKey: !navigator.userAgent.includes('Mac'), bubbles: true });
+      document.dispatchEvent(ev);
     } },
     // Quick search
     { id: 'quick-search', label: 'Search findings...', icon: Search, category: 'quick-search', execute: () => {} },

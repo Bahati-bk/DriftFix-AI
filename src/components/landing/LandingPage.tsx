@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Shield, Zap, Eye, FileText, Lock, Cpu, GitBranch, Activity, ArrowRight, CheckCircle2, BarChart3, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useAppStore } from '@/stores/app';
 import { toast } from 'sonner';
 
@@ -98,6 +99,7 @@ export function LandingPage() {
             <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full hidden sm:inline">AI</span>
           </div>
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <Button variant="ghost" size="sm" onClick={() => setView('login')}>Sign In</Button>
             <Button size="sm" onClick={handleDemo}>
               <Zap className="h-4 w-4 mr-1.5" />

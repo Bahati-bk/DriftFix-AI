@@ -14,7 +14,9 @@ import {
   LogOut, Search, Zap, Menu, X, History, Bell, PanelLeftClose, PanelLeft
 } from 'lucide-react';
 import { CommandPalette } from '@/components/ui/command-palette';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { OnboardingTour } from '@/components/ui/onboarding-tour';
+import { KeyboardShortcutsPanel } from '@/components/ui/keyboard-shortcuts';
 import { OverviewView } from './OverviewView';
 import { RepositoriesView } from './RepositoriesView';
 import { PullRequestsView } from './PullRequestsView';
@@ -322,6 +324,7 @@ export function DashboardLayout() {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             {/* Notification Bell */}
             <TooltipProvider delayDuration={0}>
               <Tooltip>
@@ -354,6 +357,7 @@ export function DashboardLayout() {
         </main>
       </div>
       <CommandPalette />
+      <KeyboardShortcutsPanel />
       <OnboardingTour
         steps={[
           {

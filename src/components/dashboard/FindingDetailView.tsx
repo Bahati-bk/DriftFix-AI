@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Textarea } from '@/components/ui/textarea';
 import { useAppStore } from '@/stores/app';
 import { toast } from 'sonner';
-import { ArrowLeft, CheckCircle2, XCircle, AlertTriangle, ShieldCheck, FileCode, Lightbulb, Scale } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, XCircle, AlertTriangle, ShieldCheck, FileCode, Lightbulb, Scale, Wrench, Clock, Tag } from 'lucide-react';
 
 export function FindingDetailView() {
   const findingId = useAppStore((s) => s.selectFinding);
@@ -55,6 +55,8 @@ export function FindingDetailView() {
 
   const confidence = Number(finding.confidence) || 0;
   const confLabel = confidence >= 0.9 ? 'High confidence' : confidence >= 0.7 ? 'Moderate confidence' : 'Needs review';
+  const confColor = confidence >= 0.9 ? '#22c55e' : confidence >= 0.7 ? '#eab308' : '#ef4444';
+  const confBarColor = confidence >= 0.9 ? 'bg-emerald-500' : confidence >= 0.7 ? 'bg-yellow-500' : 'bg-red-500';
 
   return (
     <div className="p-4 lg:p-6 space-y-6">
@@ -106,6 +108,14 @@ export function FindingDetailView() {
             <CardContent><p className="text-sm leading-relaxed text-muted-foreground">{String(finding.recommendation || 'No recommendation available.')}</p></CardContent>
           </Card>
 
+          {/* Suggested Fix */}
+          {finding.suggestedFix && (
+            <Card className="border-border/50 border-emerald-500/20 bg-emerald-500/5">
+              <CardHeader className="pb-3"><CardTitle className="text-sm font-medium flex items-center gap-2"><Wrench className="h-4 w-4 text-emerald-500" />Suggested Fix</CardTitle></CardHeader>
+              <CardContent><pre className="bg-secondary/80 rounded-lg p-4 text-sm font-mono overflow-x-auto border border-border/50 text-emerald-300">{String(finding.suggestedFix)}</pre></CardContent>
+            </Card>
+          )}
+
           {/* Compliance Mappings */}
           {mappings.length > 0 && (
             <Card className="border-border/50">
@@ -131,16 +141,21 @@ export function FindingDetailView() {
           <Card className="border-border/50">
             <CardContent className="p-4 space-y-4">
               <div>
-                <div className="text-xs text-muted-foreground mb-1">Confidence</div>
-                <div className="text-2xl font-bold">{Math.round(confidence * 100)}%</div>
-                <div className="text-xs text-muted-foreground">{confLabel}</div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="text-xs text-muted-foreground">Confidence Score</div>
+                  <div className="text-lg font-bold tabular-nums" style={{ color: confColor }}>{Math.round(confidence * 100)}%</div>
+                </div>
+                <div className="h-2 w-full rounded-full bg-secondary overflow-hidden">
+                  <div className={`h-full rounded-full ${confBarColor}`} style={{ width: `${confidence * 100}%`, transition: 'width 0.8s ease-out' }} />
+                </div>
+                <div className="text-[10px] text-muted-foreground mt-1">{confLabel}</div>
               </div>
               <Separator className="bg-border/50" />
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <div><div className="text-xs text-muted-foreground">Category</div><div className="font-medium text-xs mt-0.5">{String(finding.category).replace(/_/g, ' ')}</div></div>
-                <div><div className="text-xs text-muted-foreground">File</div><div className="font-medium text-xs mt-0.5 truncate">{String(finding.filePath || 'N/A')}</div></div>
-                <div><div className="text-xs text-muted-foreground">Line</div><div className="font-medium text-xs mt-0.5">{finding.lineStart || 'N/A'}</div></div>
-                <div><div className="text-xs text-muted-foreground">Created</div><div className="font-medium text-xs mt-0.5">{finding.createdAt ? new Date(String(finding.createdAt)).toLocaleDateString() : 'N/A'}</div></div>
+                <div className="flex items-start gap-1.5"><Tag className="h-3 w-3 mt-1 text-muted-foreground shrink-0" /><div><div className="text-[10px] text-muted-foreground">Category</div><div className="font-medium text-xs mt-0.5">{String(finding.category).replace(/_/g, ' ')}</div></div></div>
+                <div className="flex items-start gap-1.5"><FileCode className="h-3 w-3 mt-1 text-muted-foreground shrink-0" /><div><div className="text-[10px] text-muted-foreground">File</div><div className="font-medium text-xs mt-0.5 truncate">{String(finding.filePath || 'N/A')}</div></div></div>
+                <div className="flex items-start gap-1.5"><ShieldCheck className="h-3 w-3 mt-1 text-muted-foreground shrink-0" /><div><div className="text-[10px] text-muted-foreground">Line</div><div className="font-medium text-xs mt-0.5">{finding.lineStart || 'N/A'}{finding.lineEnd && finding.lineEnd !== finding.lineStart ? `-${finding.lineEnd}` : ''}</div></div></div>
+                <div className="flex items-start gap-1.5"><Clock className="h-3 w-3 mt-1 text-muted-foreground shrink-0" /><div><div className="text-[10px] text-muted-foreground">Created</div><div className="font-medium text-xs mt-0.5">{finding.createdAt ? new Date(String(finding.createdAt)).toLocaleDateString() : 'N/A'}</div></div></div>
               </div>
             </CardContent>
           </Card>

@@ -174,16 +174,39 @@ export function SettingsView() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="org-name">Organization Name</Label>
-                <Input
-                  id="org-name"
-                  value={orgName}
-                  onChange={(e) => setOrgName(e.target.value)}
-                  placeholder="Organization name"
-                />
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="org-name"
+                    value={orgName}
+                    onChange={(e) => setOrgName(e.target.value)}
+                    placeholder="Enter organization name"
+                    className="flex-1"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => toast.success('Organization name updated')}
+                    className="shrink-0 gap-1.5"
+                  >
+                    <Save className="size-3.5" />
+                    Save
+                  </Button>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Users className="size-4" />
-                <span>{memberCount} {memberCount === 1 ? 'member' : 'members'}</span>
+              <div className="flex items-center gap-3 pt-1">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Users className="size-4" />
+                  <span>{memberCount} {memberCount === 1 ? 'member' : 'members'}</span>
+                </div>
+                {githubConnected && (
+                  <Badge variant="outline" className="text-[10px] border-emerald-500/30 text-emerald-400">
+                    <span className="relative flex h-1.5 w-1.5 mr-1">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                    </span>
+                    Active Plan
+                  </Badge>
+                )}
               </div>
             </CardContent>
           </Card>

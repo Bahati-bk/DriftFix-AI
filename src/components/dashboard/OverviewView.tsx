@@ -272,8 +272,8 @@ export function OverviewView() {
   const maxSevCount = Math.max(1, ...severityBreakdown.map((s) => s.count));
 
   const stats = [
-    { label: 'Open Findings', value: data.stats.openFindings, icon: AlertTriangle, color: 'text-orange-500', iconBg: 'bg-orange-500/15', accent: 'border-r-orange-500/40' },
-    { label: 'Critical', value: data.stats.criticalFindings, icon: AlertTriangle, color: 'text-red-500', iconBg: 'bg-red-500/15', accent: 'border-r-red-500/40' },
+    { label: 'Open Findings', value: data.stats.openFindings, icon: AlertTriangle, color: data.stats.openFindings > 0 ? 'text-orange-500' : 'text-emerald-500', iconBg: data.stats.openFindings > 0 ? 'bg-orange-500/15' : 'bg-emerald-500/15', accent: data.stats.openFindings > 0 ? 'border-r-orange-500/40' : 'border-r-emerald-500/40' },
+    { label: 'Critical', value: data.stats.criticalFindings, icon: data.stats.criticalFindings > 0 ? AlertTriangle : CheckCircle2, color: data.stats.criticalFindings > 0 ? 'text-red-500' : 'text-emerald-500', iconBg: data.stats.criticalFindings > 0 ? 'bg-red-500/15' : 'bg-emerald-500/15', accent: data.stats.criticalFindings > 0 ? 'border-r-red-500/40' : 'border-r-emerald-500/40' },
     { label: 'PRs Analyzed', value: data.stats.prsAnalyzed, icon: GitPullRequest, color: 'text-primary', iconBg: 'bg-primary/15', accent: 'border-r-primary/40' },
     { label: 'Risks Resolved', value: data.stats.resolved, icon: CheckCircle2, color: 'text-emerald-500', iconBg: 'bg-emerald-500/15', accent: 'border-r-emerald-500/40' },
     { label: 'Evidence Records', value: data.stats.evidenceRecords, icon: FileText, color: 'text-violet-500', iconBg: 'bg-violet-500/15', accent: 'border-r-violet-500/40' },
@@ -302,7 +302,7 @@ export function OverviewView() {
                 </div>
               </div>
               <div className="text-2xl font-bold tabular-nums">{s.value}</div>
-              <div className="text-xs text-muted-foreground mt-1">{s.label}</div>
+              <div className="text-[11px] text-muted-foreground mt-1 leading-tight">{s.label}</div>
             </CardContent>
           </Card>
         ))}
@@ -355,9 +355,12 @@ export function OverviewView() {
                 >
                   <AnimatedScore value={score} duration={1200} />
                 </span>
-                <span className="text-[11px] text-muted-foreground mt-0.5">
-                  out of 100
+                <span className="text-[11px] text-muted-foreground mt-0.5 tracking-wide">
+                  COMPLIANCE SCORE
                 </span>
+                <div className="text-[10px] text-muted-foreground mt-0.5 opacity-70">
+                  target: 80
+                </div>
               </div>
             </div>
             <div
@@ -378,7 +381,7 @@ export function OverviewView() {
                 >
                   {trendPositive ? '+' : ''}{trendChange}
                 </span>
-                <span className="text-xs text-muted-foreground ml-1">vs first week</span>
+                <span className="text-xs text-muted-foreground ml-1">vs first recorded</span>
               </div>
             )}
           </CardContent>

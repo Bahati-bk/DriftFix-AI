@@ -1,5 +1,104 @@
 # DriftFix - Worklog
 
+## QA, Styling & Feature Enhancement Session (Round 3)
+
+**Date**: 2025-08-18 (Round 3 - cron-triggered webDevReview)
+
+### Current Project Status Assessment
+- Application is stable: all 11+ views compile and render without errors
+- Lint: 0 errors, 0 warnings
+- Dev log: zero compilation errors, all 200 responses on API routes
+- Browser QA (agent-browser): Landing → Login → All 11 dashboard views verified, zero console errors
+- VLM-based visual QA identified 12+ styling improvement opportunities across Overview, Findings, Compliance, and Settings views
+
+### Changes Completed
+
+#### Styling Fixes (4 views)
+
+1. **OverviewView** — Dynamic stat card colors
+   - Critical:0 now shows green (CheckCircle2) instead of red (AlertTriangle)
+   - Open Findings:0 shows green icon too
+   - Added "COMPLIANCE SCORE" label + "target: 80" sublabel to gauge center
+   - Changed "vs first week" to "vs first recorded" for clarity
+
+2. **FindingsView** — Major UX overhaul
+   - Added **Export CSV** button (client-side CSV generation with proper quoting)
+   - Added **New Scan** button in header (previously only in sidebar)
+   - Confidence % now has a mini progress bar + "conf" label + color coding (green ≥80%, yellow ≥50%, red <50%)
+   - Added **"Showing X of Y findings"** count with page info
+   - Compact filter bar (reduced height from h-9 to h-8, reduced gap)
+   - Improved pagination: numbered page buttons (up to 5 visible) instead of just prev/next
+   - Category badge moved inline with file path for better space usage
+
+3. **ComplianceView** — Compact, actionable design
+   - Reduced gauge size from w-64 to w-40, score font from 5xl to 4xl
+   - Added **"target: 80"** badge in header (Target icon)
+   - **Clickable severity counts** — clicking Critical/High/Medium/Low navigates to filtered findings
+   - **Clickable severity bars** in breakdown section — same navigation behavior
+   - Added **target reference line (green dashed)** on trend chart at score=80
+   - Added **chart legend** (Target dashed line + Actual solid line)
+   - Framework coverage now shows **pill badges** for sub-controls (Security, Availability, etc.)
+   - Added **gap-to-target** indicator ("Xpts to target")
+   - Better empty state with ✅ emoji and positive messaging
+   - Severity count section separated by border-t, no longer blended with gauge
+
+4. **SettingsView** — Organization section improvements
+   - Added **Save button** inline with org name input (was missing, no way to save)
+   - Added **"Active Plan" badge** with animated pulse dot (shows when GitHub connected)
+   - Org name input has explicit placeholder "Enter organization name"
+
+5. **FindingDetailView** — Enhanced detail panel
+   - **Confidence bar** — visual progress bar with color coding + percentage
+   - **Suggested Fix card** — green-bordered card showing code fix when available
+   - **Metadata icons** — Tag, FileCode, ShieldCheck, Clock icons next to metadata fields
+   - **Line range** — shows start-end (e.g. "8-12") instead of just start line
+
+#### New Features (3)
+
+1. **Keyboard Shortcuts Panel** (`src/components/ui/keyboard-shortcuts.tsx`)
+   - Triggered via **Ctrl+/** (Cmd+/ on Mac)
+   - 14 shortcuts in 3 categories: Navigation (9), Actions (4), Help (1)
+   - **G-prefix navigation**: Press G then letter to navigate (G→O for Overview, etc.)
+   - Mac-aware kbd display (⌘ vs Ctrl)
+   - Two-column grid layout, dark themed
+   - Registered in Command Palette as "Show Keyboard Shortcuts"
+
+2. **Dark/Light Mode Toggle** (`src/components/ui/theme-toggle.tsx`)
+   - next-themes integration with ThemeProvider in layout.tsx
+   - Sun icon in dark mode, Moon icon in light mode
+   - 300ms rotate/scale transition between icons
+   - Available in both Landing Page and Dashboard header
+   - Light theme uses warm white palette with proper contrast
+
+3. **Bulk Actions on Findings** (integrated into FindingsView)
+   - **Select all** checkbox in header
+   - **Individual checkboxes** on each finding card
+   - **Bulk action bar** appears when items selected (animated slide-in)
+   - Three actions: **Resolve**, **Dismiss**, **Accept Risk**
+   - Selected items highlighted with ring + bg-primary/5
+   - Clear button to deselect all
+
+### QA Verification (Round 3)
+- Lint: 0 errors, 0 warnings
+- Dev log: zero errors, all routes returning 200
+- Browser QA verified: Landing → Login → Overview → Findings (new features) → Compliance (new features) → Settings (save button) → Theme Toggle (both modes) → Keyboard Shortcuts (Ctrl+/) — ALL PASS
+
+### Unresolved Issues / Risks
+- SQLite not production-grade (acceptable for demo)
+- No real GitHub integration (webhook endpoint exists but needs credentials)
+- AI analysis falls back to rule-engine enhancement if z-ai-web-dev-sdk unavailable
+- No unit tests
+
+### Priority Recommendations for Next Phase
+1. Add WebSocket real-time updates for findings/evidence
+2. Add organization switching capability
+3. Add PDF report generation (currently text-only)
+4. Implement real file upload for PR diff analysis
+5. Add user invitation/management flow
+6. Add audit report scheduling (cron-based auto-generation)
+
+---
+
 ## Feature & UX Enhancement Session (Round 2)
 
 **Date**: 2025-08-18 (Round 2)
@@ -131,3 +230,39 @@
 4. Add organization switching
 5. Improve onboarding with interactive walkthrough
 6. Add keyboard shortcuts documentation panel
+
+---
+Task ID: 2-b
+Agent: frontend-styling-expert
+Task: Create keyboard shortcuts panel component
+
+Work Log:
+- Created /home/z/my-project/src/components/ui/keyboard-shortcuts.tsx
+- Registered Ctrl+/ global shortcut
+- Added to DashboardLayout.tsx
+- Updated Command Palette with shortcuts entry
+
+Stage Summary:
+- Keyboard shortcuts panel with 14 shortcuts in 3 categories
+- Triggered via Ctrl+/ (Cmd+/)
+- Integrated into DashboardLayout
+---
+Task ID: 2-c
+Agent: fullstack-developer
+Task: Add dark/light mode toggle
+
+Work Log:
+- next-themes already installed (v0.4.6)
+- Created ThemeToggle component with useSyncExternalStore for hydration-safe mounting
+- Updated layout.tsx with ThemeProvider (attribute="class", defaultTheme="dark", enableSystem={false})
+- Added light theme CSS variables in globals.css (:root for light, .dark for dark)
+- Updated scrollbar, grid-pattern, and severity badges for theme-aware styling
+- Integrated toggle in DashboardLayout header (next to notification bell)
+- Added toggle to LandingPage header as well
+
+Stage Summary:
+- Dark/light mode toggle working with next-themes
+- Default theme is dark
+- Light mode CSS variables added with warm white palette
+- Lint: 0 errors, 0 warnings
+- Dev log: zero errors, compiled successfully
