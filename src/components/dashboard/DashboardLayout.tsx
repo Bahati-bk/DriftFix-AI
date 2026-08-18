@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppStore, type AppView } from '@/stores/app';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -98,9 +98,9 @@ function SidebarNav({
               (item.view === 'findings' && view === 'finding-detail');
             const isFindings = item.view === 'findings';
             return (
-              <>
-                {item.view === 'reports' && <div key="sep" className="my-2 h-px bg-border/40 mx-2" />}
-                <TooltipProvider key={item.view} delayDuration={0}>
+              <React.Fragment key={item.view}>
+                {item.view === 'reports' && <div className="my-2 h-px bg-border/40 mx-2" />}
+                <TooltipProvider delayDuration={0}>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
@@ -131,7 +131,7 @@ function SidebarNav({
                   {!sidebarOpen && <TooltipContent side="right">{item.label}</TooltipContent>}
                 </Tooltip>
               </TooltipProvider>
-              </>
+              </React.Fragment>
             );
           })}
         </nav>
