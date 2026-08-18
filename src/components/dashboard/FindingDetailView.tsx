@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Textarea } from '@/components/ui/textarea';
 import { useAppStore } from '@/stores/app';
 import { toast } from 'sonner';
-import { ArrowLeft, CheckCircle2, XCircle, AlertTriangle, ShieldCheck, FileCode, Lightbulb, Scale, Wrench, Clock, Tag, Copy } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, XCircle, AlertTriangle, ShieldCheck, FileCode, Lightbulb, Scale, Wrench, Clock, Tag, Copy, MessageSquare, Send } from 'lucide-react';
 
 export function FindingDetailView() {
   const findingId = useAppStore((s) => s.selectFinding);
@@ -22,6 +22,9 @@ export function FindingDetailView() {
   const [riskOpen, setRiskOpen] = useState(false);
   const [riskJust, setRiskJust] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+  const currentUser = useAppStore((s) => s.currentUser);
+  const [notes, setNotes] = useState<string[]>(finding?.notes ? JSON.parse(finding.notes) : []);
+  const [newNote, setNewNote] = useState('');
 
   const fId = useAppStore.getState().selectedFindingId;
 
@@ -163,6 +166,50 @@ export function FindingDetailView() {
               <CardContent><p className="text-sm text-muted-foreground">No code diff available</p></CardContent>
             </Card>
           )}
+
+          {/* Notes */}
+          <Card className="border-border/50 rounded-xl">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <MessageSquare className="h-4 w-4" />
+                Notes ({notes.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {notes.length === 0 && <p className="text-sm text-muted-foreground">No notes yet. Add your analysis or context.</p>}
+              {notes.map((note, i) => (
+                <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-secondary/30">
+                  <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary shrink-0">{currentUser?.name?.charAt(0) || 'U'}</div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-foreground">{note}</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">Just now</p>
+                  </div>
+                </div>
+              ))}
+              <div className="flex gap-2">
+                <input
+                  value={newNote}
+                  onChange={e => setNewNote(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && newNote.trim()) {
+                      setNotes(prev => [...prev, newNote.trim()]);
+                      setNewNote('');
+                    }
+                  }}
+                  placeholder="Add a note..."
+                  className="flex-1 h-9 px-3 rounded-md bg-secondary border border-border text-sm text-foreground placeholder:text-muted-foreground input-glow focus:outline-none"
+                />
+                <Button size="sm" onClick={() => {
+                  if (newNote.trim()) {
+                    setNotes(prev => [...prev, newNote.trim()]);
+                    setNewNote('');
+                  }
+                }} disabled={!newNote.trim()}>
+                  <Send className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Compliance Mappings */}
           {mappings.length > 0 && (

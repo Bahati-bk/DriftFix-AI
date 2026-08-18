@@ -115,12 +115,12 @@ export function RepositoriesView() {
     return (
       <div className="p-4 lg:p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-9 w-40" />
+          <Skeleton className="h-8 w-48 skeleton" />
+          <Skeleton className="h-9 w-40 skeleton" />
         </div>
         <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-40 rounded-xl" />
+            <Skeleton key={i} className="h-40 rounded-xl skeleton" />
           ))}
         </div>
       </div>

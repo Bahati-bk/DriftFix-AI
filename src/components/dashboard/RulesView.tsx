@@ -213,10 +213,12 @@ export function RulesView() {
                               ))}
                             </div>
                           </div>
-                          <Switch
-                            checked={Boolean(rule.enabled)}
-                            onCheckedChange={() => toggleRule(rule)}
-                          />
+                          <div className="shrink-0 ml-auto">
+                            <Switch
+                              checked={Boolean(rule.enabled)}
+                              onCheckedChange={() => toggleRule(rule)}
+                            />
+                          </div>
                         </div>
                       </CardContent>
                     </Card>

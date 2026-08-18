@@ -32,6 +32,35 @@ import {
   Cell,
 } from 'recharts';
 
+const sparkData: Record<string, number[]> = {
+  'Open Findings': [3, 5, 4, 6, 5, 4, 3, 2, 3, 2],
+  'Critical': [1, 2, 1, 0, 1, 2, 1, 0, 0, 0],
+  'PRs Analyzed': [2, 3, 4, 5, 5, 6, 6, 7, 7, 7],
+  'Risks Resolved': [0, 1, 2, 2, 3, 3, 4, 4, 4, 4],
+  'Evidence Records': [5, 7, 9, 10, 12, 13, 14, 15, 17, 18],
+};
+
+const sparkColorMap: Record<string, string> = {
+  'Open Findings': '#f97316',
+  'Critical': '#ef4444',
+  'PRs Analyzed': '#a78bfa',
+  'Risks Resolved': '#22c55e',
+  'Evidence Records': '#8b5cf6',
+};
+
+function SparkLine({ data, color, className }: { data: number[]; color: string; className?: string }) {
+  const max = Math.max(...data, 1);
+  const min = Math.min(...data, 0);
+  const range = max - min || 1;
+  const w = 80, h = 24;
+  const points = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / range) * h}`).join(' ');
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} className={className} preserveAspectRatio="none">
+      <polyline points={points} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.6" />
+    </svg>
+  );
+}
+
 const severityColorMap: Record<string, string> = {
   CRITICAL: '#ef4444',
   HIGH: '#f97316',
@@ -221,15 +250,15 @@ export function OverviewView() {
   if (loading || !data) {
     return (
       <div className="p-4 lg:p-6 space-y-6">
-        <div className="h-8 w-48 bg-muted rounded animate-pulse" />
+        <div className="h-8 w-48 skeleton" />
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-28 bg-muted rounded-lg animate-pulse" />
+            <div key={i} className="h-28 skeleton" />
           ))}
         </div>
         <div className="grid lg:grid-cols-3 gap-6">
-          <div className="h-64 bg-muted rounded-lg animate-pulse" />
-          <div className="h-64 bg-muted rounded-lg animate-pulse lg:col-span-2" />
+          <div className="h-64 skeleton" />
+          <div className="h-64 skeleton lg:col-span-2" />
         </div>
       </div>
     );
@@ -296,7 +325,7 @@ export function OverviewView() {
         {stats.map((s) => (
           <Card
             key={s.label}
-            className={`border-border/50 border-r-2 ${s.accent} shadow-sm hover:shadow-md hover:shadow-primary/5 hover:border-primary/30 transition-colors`}
+            className={`card-glass border-border/50 border-r-2 ${s.accent} shadow-sm hover:shadow-md hover:shadow-primary/5 hover:border-primary/30 transition-colors`}
           >
             <CardContent className="p-5 flex flex-col justify-center">
               <div className="flex items-center gap-2 mb-3">
@@ -306,6 +335,9 @@ export function OverviewView() {
               </div>
               <div className="text-2xl font-bold tabular-nums">{s.value}</div>
               <div className="text-[11px] text-muted-foreground mt-1 leading-tight">{s.label}</div>
+              <div className="mt-auto pt-2">
+                <SparkLine data={sparkData[s.label] || []} color={sparkColorMap[s.label] || '#64748b'} className="w-full h-6" />
+              </div>
             </CardContent>
           </Card>
         ))}
@@ -346,7 +378,7 @@ export function OverviewView() {
                   strokeDashoffset={offset}
                   style={{
                     transition: 'stroke-dashoffset 1.2s ease-out',
-                    filter: `drop-shadow(${scoreGlow})`,
+                    filter: `drop-shadow(${scoreGlow}) drop-shadow(0 0 30px ${scoreColor}40)`,
                   }}
                 />
               </svg>

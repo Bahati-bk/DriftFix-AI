@@ -133,14 +133,14 @@ export function ComplianceView() {
   if (loading) {
     return (
       <div className="p-4 lg:p-6 space-y-6">
-        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-8 w-48 skeleton" />
         <div className="grid lg:grid-cols-3 gap-6">
-          <Skeleton className="h-72 rounded-xl" />
-          <Skeleton className="h-72 rounded-xl lg:col-span-2" />
+          <Skeleton className="h-72 rounded-xl skeleton" />
+          <Skeleton className="h-72 rounded-xl lg:col-span-2 skeleton" />
         </div>
         <div className="grid lg:grid-cols-2 gap-6">
-          <Skeleton className="h-64 rounded-xl" />
-          <Skeleton className="h-64 rounded-xl" />
+          <Skeleton className="h-64 rounded-xl skeleton" />
+          <Skeleton className="h-64 rounded-xl skeleton" />
         </div>
       </div>
     );

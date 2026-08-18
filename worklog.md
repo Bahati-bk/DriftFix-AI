@@ -1,5 +1,122 @@
 # DriftFix - Worklog
 
+## Premium Visual Polish + 3 New Features (Round 6)
+
+**Date**: 2025-08-18 (Round 6 - cron-triggered webDevReview)
+
+### Current Project Status Assessment
+- Application is fully stable: all 11+ views compile and render without errors
+- Lint: 0 errors, 0 warnings
+- Dev log: 8+ successful compilations, zero errors, all API routes returning 200
+- Browser QA: All views + new features tested, zero console errors
+- VLM visual QA: Dashboard rated 8.5-9/10 across views; 8/10 improvement from Round 5
+
+### Changes Completed
+
+#### Premium Styling Enhancements (6 changes)
+
+1. **Skeleton shimmer loading states** (globals.css + 4 views)
+   - `@keyframes shimmer` animation with gradient sweep (oklch dark tones, 1.5s loop)
+   - `.skeleton` class with `background-size: 200%` for smooth sweep
+   - Applied to OverviewView, FindingsView, ComplianceView, RepositoriesView loading states
+   - Replaces flat `bg-muted animate-pulse` with directional shimmer
+
+2. **Glassmorphism stat cards** (globals.css + OverviewView)
+   - `.card-glass` utility: `background: oklch(0.17 0.008 260 / 0.8)`
+   - `backdrop-filter: blur(12px)`, subtle border, depth shadow
+   - Applied to all 5 overview stat cards for premium floating effect
+
+3. **Enhanced gauge glow** (OverviewView)
+   - Added secondary `drop-shadow(0 0 30px ${scoreColor}40)` for wider softer glow
+   - Double-layer glow effect: tight inner + diffuse outer
+
+4. **Finding rows hover lift + Eye quick action** (FindingsView)
+   - Added `group` class, hover lift (`-translate-y-px shadow-lg shadow-primary/5`)
+   - Hidden Eye icon button reveals on `group-hover:opacity-100`
+   - Eye button navigates to finding detail view
+
+5. **PR left-border status accent** (PullRequestsView)
+   - OPEN: `border-l-2 border-l-emerald-500/60`
+   - MERGED: `border-l-2 border-l-blue-500/60`
+   - CLOSED: `border-l-2 border-l-slate-500/40`
+
+6. **Rules toggle alignment + Evidence links** (RulesView + EvidenceView)
+   - Toggle switches wrapped in `ml-auto shrink-0` for right-alignment
+   - Evidence 'View details' links: added ExternalLink icon + `text-primary hover:underline`
+
+#### New Features (3)
+
+1. **Dashboard Stats Sparklines** (OverviewView)
+   - Inline SVG `SparkLine` component with `<polyline>` (no recharts dependency)
+   - 10-point fake trend data per stat card
+   - Color-coded: orange (Open Findings), red (Critical), purple (PRs), green (Resolved), violet (Evidence)
+   - Rendered at `w-full h-6` below each stat card label
+
+2. **Keyboard-navigable Findings** (FindingsView)
+   - `focusedIndex` state + `handleListKeyDown` handler
+   - ArrowUp/Down to move focus, Enter to open finding detail
+   - Focused row: `ring-2 ring-primary ring-offset-2 ring-offset-background`
+   - Screen reader hint: `sr-only` "Use arrow keys to navigate, Enter to open"
+
+3. **Finding Notes System** (FindingDetailView)
+   - Notes Card with MessageSquare icon + count badge
+   - Note list with user avatar, timestamp, content
+   - Text input + Send button (Enter key or click)
+   - Client-side state (notes from `finding.notes` JSON field)
+   - Empty state: "No notes yet. Add your analysis or context."
+
+### QA Verification (Round 6)
+- Lint: 0 errors, 0 warnings
+- Dev log: 8+ successful compilations, zero errors
+- Browser QA: Landing → Login → Overview (sparklines + glass cards) → Findings (hover lift + eye icon) → Finding Detail (notes + code diff) → Compliance (bar chart) → Repos (health badges) → Rules (toggle alignment) → Evidence (link icons) → Reports → Settings → PRs (left border) — ALL PASS
+- VLM visual QA: 8/10 improvement from Round 5, glassmorphism and sparklines confirmed visible
+- Zero console errors
+
+### Unresolved Issues / Risks
+- SQLite not production-grade (acceptable for demo)
+- No real GitHub integration (webhook endpoint exists but needs credentials)
+- AI analysis falls back to rule-engine enhancement if z-ai-web-dev-sdk unavailable
+- No unit tests
+- Finding notes are client-side only (not persisted to DB)
+
+### Priority Recommendations for Next Phase
+1. Persist finding notes to database (add notes table + API)
+2. Add WebSocket real-time updates for findings/evidence
+3. Add PDF report generation
+4. Implement real file upload for PR diff analysis
+5. Add user invitation/management flow
+6. Add audit report scheduling (cron-based auto-generation)
+7. Add mobile responsive testing on sub-640px viewports
+8. Add simple syntax highlighting to code diff viewer (keyword-based)
+
+---
+
+## Skeleton Shimmer + Glassmorphism + Gauge Glow (Task 2-3)
+
+**Date**: 2025-08-18 (Task 2-3)
+
+### Changes Completed
+
+#### Part 1: Skeleton Shimmer Loading States
+- Added `@keyframes shimmer` and `.skeleton` CSS class to `globals.css` — gradient-based shimmer animation replacing flat pulse
+- **OverviewView.tsx**: Replaced `bg-muted animate-pulse` with `skeleton` on loading placeholders (title bar, 5 stat card placeholders, 2 chart placeholders)
+- **FindingsView.tsx**: Replaced `bg-muted rounded-lg animate-pulse` with `skeleton` on 5 finding row placeholders
+- **ComplianceView.tsx**: Added `skeleton` class to all 5 `<Skeleton>` components in loading state
+- **RepositoriesView.tsx**: Added `skeleton` class to all 6 `<Skeleton>` components in loading state
+
+#### Part 2: Glassmorphism Card Enhancement
+- Added `.card-glass` utility class to `globals.css` — semi-transparent background, backdrop blur, subtle border, and depth shadow
+- Applied `card-glass` to all 5 stat cards (Open Findings, Critical, PRs Analyzed, Risks Resolved, Evidence Records) in OverviewView.tsx
+
+#### Part 3: Gauge Glow Enhancement
+- Enhanced SVG score gauge circle filter: added secondary `drop-shadow(0 0 30px ${scoreColor}40)` for softer wider glow
+- Score number already had `textShadow: scoreGlow` — confirmed no change needed
+
+### Verification
+- `bun run lint`: 0 errors, 0 warnings
+
+---
+
 ## VLM-Precision Styling Polish + 3 New Features (Round 5)
 
 **Date**: 2025-08-18 (Round 5 - cron-triggered webDevReview)
@@ -833,3 +950,66 @@ Lint: 0 errors, 0 warnings
 
 ### Lint Result
 0 errors, 0 warnings.
+
+---
+
+## Hover Lift + PR/Rules/Evidence Fixes (Task 4-5-6)
+
+**Date**: 2025-08-18 (Task 4-5-6)
+
+### Changes Completed
+
+#### 1. FindingsView — Hover Lift + Quick Action Reveal
+- Added `group` class to finding row Card
+- Replaced `transition-colors` with full hover set: `transition-all duration-200 hover:bg-accent/50 hover:-translate-y-px hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20`
+- Added hidden Eye icon button (`opacity-0 group-hover:opacity-100 transition-opacity duration-200`) at row end; clicking navigates to finding-detail via `selectFinding` + `setView('finding-detail')`
+- Imported `Eye` from lucide-react, added `setView` store selector
+
+#### 2. PullRequestsView — Left-Border Status Accent
+- Added `statusBorderAccent` map: OPEN → `border-l-2 border-l-emerald-500/60`, MERGED → `border-l-2 border-l-blue-500/60`, CLOSED → `border-l-2 border-l-slate-500/40`
+- Applied dynamically to each PR Card's className based on parsed status
+
+#### 3. RulesView — Toggle Switch Right Alignment
+- Wrapped `<Switch>` in `<div className="shrink-0 ml-auto">` to push it to the right edge of each rule card for consistent visual rhythm
+
+#### 4. EvidenceView — 'View details' Link Prominence
+- Changed CollapsibleTrigger text color from `text-muted-foreground` to `text-primary`
+- Added `hover:underline` class
+- Added `ExternalLink` icon (from lucide-react) next to the 'View details' text
+
+### Verification
+- `bun run lint`: 0 errors, 0 warnings
+
+---
+
+## Dashboard Sparklines + Keyboard Nav + Finding Notes (Task 7-8-9)
+
+**Date**: 2025-08-18 (Task 7-8-9)
+
+### Changes Completed
+
+#### Feature 1: Dashboard Stats Sparklines (OverviewView.tsx)
+- Added `sparkData` map with fake realistic trend data for all 5 stat cards
+- Added `sparkColorMap` mapping each stat label to its sparkline color
+- Created inline `SparkLine` SVG component using `<polyline>` (no recharts dependency)
+- Added sparkline below the label text in each stat card with `mt-auto pt-2` positioning
+- Colors: Open Findings `#f97316`, Critical `#ef4444`, PRs Analyzed `#a78bfa`, Risks Resolved `#22c55e`, Evidence Records `#8b5cf6`
+
+#### Feature 2: Keyboard-navigable Findings (FindingsView.tsx)
+- Added `focusedIndex` state for tracking keyboard focus position
+- Added `handleListKeyDown` handler: ArrowDown/ArrowUp to move focus, Enter to open finding detail
+- Added `tabIndex={0}` and `onKeyDown={handleListKeyDown}` to the findings list container div
+- Each finding row shows `ring-2 ring-primary ring-offset-2 ring-offset-background` when focused
+- Added `index` parameter to `findings.map()` callback to support focused index comparison
+- Added visually hidden `<span className="sr-only">` hint for screen reader users
+
+#### Feature 3: Finding Notes Section (FindingDetailView.tsx)
+- Imported `MessageSquare` and `Send` icons from lucide-react
+- Added `currentUser` from `useAppStore` for user avatar initial
+- Added `notes` and `newNote` state (notes initialized from `finding.notes` JSON if present)
+- Added Notes card with: empty state message, note list with avatar initials, timestamp, and input+send button
+- Notes can be added via Enter key or Send button click
+- Input uses `input-glow` class with proper dark theme styling
+
+### Verification
+- `bun run lint`: 0 errors, 0 warnings

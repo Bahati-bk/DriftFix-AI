@@ -14,6 +14,12 @@ const statusConfig: Record<string, { bg: string; text: string; border: string }>
   merged: { bg: 'bg-purple-500/15', text: 'text-purple-400', border: 'border-purple-500/30' },
 };
 
+const statusBorderAccent: Record<string, string> = {
+  open: 'border-l-2 border-l-emerald-500/60',
+  merged: 'border-l-2 border-l-blue-500/60',
+  closed: 'border-l-2 border-l-slate-500/40',
+};
+
 export function PullRequestsView() {
   const selectPR = useAppStore((s) => s.selectPR);
   const [prs, setPrs] = useState<Record<string, unknown>[]>([]);
@@ -89,7 +95,7 @@ export function PullRequestsView() {
           return (
             <Card
               key={String(pr.id)}
-              className="border-border/50 card-hover rounded-xl cursor-pointer group"
+              className={`border-border/50 card-hover rounded-xl cursor-pointer group ${statusBorderAccent[status] || ''}`}
               onClick={() => selectPR(String(pr.id))}
             >
               <CardContent className="p-5 flex items-center gap-4">

@@ -9,10 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAppStore } from '@/stores/app';
 import { toast } from 'sonner';
-import { Search, ShieldOff, ChevronLeft, ChevronRight, Zap, Download, CheckCircle2, XCircle, Ban, Loader2, AlertTriangle, CircleDot, LayoutGrid } from 'lucide-react';
+import { Search, ShieldOff, ChevronLeft, ChevronRight, Zap, Download, CheckCircle2, XCircle, Ban, Loader2, AlertTriangle, CircleDot, LayoutGrid, Eye } from 'lucide-react';
 
 export function FindingsView() {
   const selectFinding = useAppStore((s) => s.selectFinding);
+  const setView = useAppStore((s) => s.setView);
   const searchQuery = useAppStore((s) => s.searchQuery);
   const setSearchQuery = useAppStore((s) => s.setSearchQuery);
   const [findings, setFindings] = useState<Record<string, unknown>[]>([]);
@@ -28,6 +29,7 @@ export function FindingsView() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState<string | null>(null);
   const [activePreset, setActivePreset] = useState<string | null>(null);
+  const [focusedIndex, setFocusedIndex] = useState(-1);
 
   const filterPresets = [
     { label: '🔥 Critical', filter: { severity: 'CRITICAL', status: 'OPEN' }, icon: AlertTriangle },
@@ -180,6 +182,21 @@ export function FindingsView() {
   }, [severity, status, category, search, page]);
 
   const allSelected = findings.length > 0 && selectedIds.size === findings.length;
+
+  const currentFindings = findings;
+
+  const handleListKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setFocusedIndex(prev => Math.min(prev + 1, currentFindings.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setFocusedIndex(prev => Math.max(prev - 1, 0));
+    } else if (e.key === 'Enter' && focusedIndex >= 0 && currentFindings[focusedIndex]) {
+      selectFinding(String(currentFindings[focusedIndex].id));
+      setView('finding-detail');
+    }
+  };
 
   return (
     <div className="p-4 lg:p-6 space-y-5">
@@ -335,10 +352,11 @@ export function FindingsView() {
       )}
 
       {/* Table */}
-      <div className="space-y-2">
+      <div className="space-y-2" tabIndex={0} onKeyDown={handleListKeyDown}>
+        <span className="sr-only">Use arrow keys to navigate, Enter to open</span>
         {loading
-          ? Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-16 bg-muted rounded-lg animate-pulse" />)
-          : findings.map((f) => {
+          ? Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-16 skeleton" />)
+          : findings.map((f, index) => {
               const isSelected = selectedIds.has(String(f.id));
               const confVal = Math.round(Number(f.confidence) * 100);
               const confColor = confVal >= 80 ? 'text-emerald-400' : confVal >= 50 ? 'text-yellow-400' : 'text-red-400';
@@ -346,7 +364,7 @@ export function FindingsView() {
               return (
                 <Card
                   key={String(f.id)}
-                  className={`border-border/50 card-hover cursor-pointer transition-all rounded-xl hover:bg-accent/50 transition-colors ${isSelected ? 'ring-1 ring-primary/50 bg-primary/5' : ''}`}
+                  className={`group border-border/50 card-hover cursor-pointer transition-all duration-200 rounded-xl hover:bg-accent/50 hover:-translate-y-px hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 ${isSelected ? 'ring-1 ring-primary/50 bg-primary/5' : ''} ${focusedIndex === index ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}`}
                   onClick={() => selectFinding(String(f.id))}
                 >
                   <CardContent className="p-5 flex items-center gap-3">
@@ -381,6 +399,13 @@ export function FindingsView() {
                     >
                       {String(f.status).replace(/_/g, ' ')}
                     </Badge>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); selectFinding(String(f.id)); setView('finding-detail'); }}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary"
+                      aria-label="View finding details"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </button>
                   </CardContent>
                 </Card>
               );

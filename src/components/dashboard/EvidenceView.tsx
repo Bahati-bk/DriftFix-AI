@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   ShieldCheck, CheckCircle2, XCircle, User, Clock, ChevronDown,
-  ChevronRight, ChevronLeft, Copy, Check, ScrollText, FileSearch,
+  ChevronRight, ChevronLeft, Copy, Check, ScrollText, FileSearch, ExternalLink,
 } from 'lucide-react';
 
 const evtColors: Record<string, string> = {
@@ -94,9 +94,10 @@ function PayloadSection({ payload }: { payload: Record<string, unknown> }) {
 
   return (
     <Collapsible className="mt-2">
-      <CollapsibleTrigger className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors py-1 px-2 rounded hover:bg-accent">
+      <CollapsibleTrigger className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline transition-colors py-1 px-2 rounded hover:bg-accent">
         <ChevronRight className="h-3 w-3 transition-transform [[data-state=open]>&]:rotate-90" />
         <span>View details</span>
+        <ExternalLink className="h-3 w-3" />
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div className="mt-2 rounded-md bg-secondary/50 border border-border/50 p-3 space-y-1.5">
