@@ -335,6 +335,18 @@ export function FindingsView() {
                     <Badge className={`severity-${String(f.severity).toLowerCase()} text-[10px] px-1.5 py-0 font-bold shrink-0 border-l-2`}>
                       {String(f.severity)}
                     </Badge>
+                    {f.actionLevel && f.actionLevel !== 'INFO' && (
+                      <Badge className={`text-[10px] px-1.5 py-0 font-bold shrink-0 border ${
+                        String(f.actionLevel) === 'BLOCKING'
+                          ? 'bg-red-500/15 text-red-400 border-red-500/30'
+                          : String(f.actionLevel) === 'WARNING'
+                            ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
+                            : 'bg-slate-500/15 text-slate-400 border-slate-500/30'
+                      }`}>
+                        <Ban className="h-2.5 w-2.5 mr-0.5" />
+                        {String(f.actionLevel)}
+                      </Badge>
+                    )}
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-semibold truncate">{String(f.title)}</div>
                       <div className="flex items-center gap-2 mt-1">

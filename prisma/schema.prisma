@@ -119,6 +119,7 @@ model Finding {
   aiExplanation   String?
   suggestedFix    String?
   dismissReason   String?
+  actionLevel     String    @default("INFO")
   createdAt       DateTime  @default(now())
   resolvedAt      DateTime?
 

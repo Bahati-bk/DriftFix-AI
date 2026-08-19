@@ -12,7 +12,7 @@ import {
   LayoutDashboard, GitPullRequest, AlertTriangle, ShieldCheck,
   Settings, FileText, Scale, Database,
   LogOut, Search, Zap, Menu, X, History, PanelLeftClose, PanelLeft, Activity,
-  Building2, Check
+  Building2, Check, Terminal
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -37,6 +37,7 @@ import { EvidenceView } from './EvidenceView';
 import { ReportsView } from './ReportsView';
 import { SettingsView } from './SettingsView';
 import { PRAnalysisView } from './PRAnalysisView';
+import { DiffAnalyzerView } from './DiffAnalyzerView';
 import { AuditLogView } from './AuditLogView';
 
 const navItems: { view: AppView; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
@@ -48,6 +49,7 @@ const navItems: { view: AppView; label: string; icon: React.ComponentType<{ clas
   { view: 'rules', label: 'Rules', icon: ShieldCheck },
   { view: 'evidence', label: 'Evidence', icon: FileText },
   { view: 'audit-log', label: 'Audit Log', icon: Activity },
+  { view: 'diff-analyzer', label: 'Diff Analyzer', icon: Terminal },
   { view: 'reports', label: 'Reports', icon: History },
   { view: 'settings', label: 'Settings', icon: Settings },
 ];
@@ -282,6 +284,7 @@ export function DashboardLayout() {
       case 'audit-log': return <AuditLogView />;
       case 'settings': return <SettingsView />;
       case 'pr-analysis': return <PRAnalysisView />;
+      case 'diff-analyzer': return <DiffAnalyzerView />;
       default: return <OverviewView />;
     }
   };

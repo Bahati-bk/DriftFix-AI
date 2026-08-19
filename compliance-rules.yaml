@@ -1,0 +1,137 @@
+# compliance-rules.yaml - DriftFix Compliance Rule Configuration
+# Edit this file to customize compliance checks without modifying code.
+# Each rule maps to one or more framework controls.
+# tier determines the GitHub Action behavior:
+#   BLOCKING  -> fails the GitHub check, prevents merge
+#   WARNING   -> posts as PR comment only, check passes
+#   INFO      -> informational note, check passes
+
+version: "1.0"
+
+# ── Severity Tier Definitions ─────────────────────────────────────────
+tiers:
+  BLOCKING:
+    label: "Blocking"
+    description: "Prevents PR merge. Must be resolved before merging."
+    check_conclusion: "failure"
+  WARNING:
+    label: "Warning"
+    description: "Posted as PR comment. Does not prevent merge."
+    check_conclusion: "neutral"
+  INFO:
+    label: "Info"
+    description: "Informational note posted as PR comment."
+    check_conclusion: "neutral"
+
+# ── Domain Allowlist (for NET-001) ────────────────────────────────────
+network_allowlist:
+  - "github.com"
+  - "api.github.com"
+  - "github-enterprise.*"
+  - "*.auth0.com"
+  - "*.okta.com"
+  - "api.stripe.com"
+  - "*.sentry.io"
+  - "logs.datadoghq.com"
+
+# ── Rule Definitions ──────────────────────────────────────────────────
+rules:
+  # ── Secrets ─────────────────────────────────────────────────────────
+  - id: "SEC-001"
+    name: "Hardcoded API Key"
+    category: "secrets"
+    tier: BLOCKING
+    description: "Detects hardcoded API keys, tokens, or secrets in source code"
+    detector: "secret_regex"
+    frameworks:
+      soc2: { control: "CC6.1", name: "Logical and Physical Access Controls" }
+      gdpr: { control: "Art.32", name: "Security of Processing" }
+      hipaa: { control: "§164.312(a)(1)", name: "Access Control" }
+    pattern: "(?i)(api[_\\-]?key|apikey|secret[_\\-]?key|password|token|auth[_\\-]?token|private[_\\-]?key|access[_\\-]?key)\\s*[:=]\\s*[\\'\\\"\`]\\\\w[^\\'\\\"\`\\\\s]{6,}"
+    suggested_fix: "Use environment variables or a secrets manager (AWS Secrets Manager, HashiCorp Vault) instead of hardcoding."
+
+  - id: "SEC-002"
+    name: "Hardcoded Database URL"
+    category: "secrets"
+    tier: BLOCKING
+    description: "Detects hardcoded database connection strings"
+    detector: "secret_regex"
+    frameworks:
+      soc2: { control: "CC6.1", name: "Logical and Physical Access Controls" }
+      gdpr: { control: "Art.32", name: "Security of Processing" }
+      hipaa: { control: "§164.312(e)(1)", name: "Transmission Security" }
+    pattern: "(?i)(mongodb(\\+srv)?|postgres(ql)?|mysql|redis|amqp)://[^\\s'\\\"]+"
+    suggested_fix: "Store connection strings in environment variables or a secrets manager."
+
+  # ── Data Protection ────────────────────────────────────────────────
+  - id: "PII-001"
+    name: "Unencrypted PII Field"
+    category: "data_protection"
+    tier: WARNING
+    description: "New database model fields storing PII without encryption annotation"
+    detector: "pii_field"
+    frameworks:
+      soc2: { control: "CC7.2", name: "Data Encryption" }
+      gdpr: { control: "Art.25", name: "Data Protection by Design" }
+      hipaa: { control: "§164.312(a)(2)(iv)", name: "Encryption" }
+    pii_fields:
+      - email
+      - ssn
+      - phone
+      - address
+      - date_of_birth
+      - social_security_number
+      - credit_card
+      - passport
+    suggested_fix: "Add an encryption annotation to PII fields (e.g., @Encrypted, encrypted: true, or column encryption)."
+
+  # ── Network ────────────────────────────────────────────────────────
+  - id: "NET-001"
+    name: "Unauthorized Outbound HTTP Call"
+    category: "network"
+    tier: WARNING
+    description: "Outbound HTTP calls to domains not in the allowlist (potential cross-border data transfer)"
+    detector: "outbound_http"
+    frameworks:
+      soc2: { control: "A1.2", name: "External Threats" }
+      gdpr: { control: "Art.44-49", name: "Cross-Border Data Transfers" }
+      hipaa: { control: "§164.312(e)(1)", name: "Transmission Security" }
+    suggested_fix: "Add the domain to the network_allowlist in compliance-rules.yaml or route through an approved proxy."
+
+  # ── Dependencies ───────────────────────────────────────────────────
+  - id: "DEP-001"
+    name: "Dependency with Known CVE"
+    category: "dependencies"
+    tier: WARNING
+    description: "New or updated dependency with known vulnerabilities (cross-referenced against OSV.dev)"
+    detector: "dependency_cve"
+    frameworks:
+      soc2: { control: "CC6.6", name: "Security Configuration" }
+      gdpr: { control: "Art.32", name: "Security of Processing" }
+      hipaa: { control: "§164.308(a)(1)", name: "Security Management Process" }
+    suggested_fix: "Update the dependency to a patched version. If no patch is available, document the risk acceptance."
+
+  # ── Audit ──────────────────────────────────────────────────────────
+  - id: "AUD-001"
+    name: "Missing Audit Log for Sensitive Operation"
+    category: "audit"
+    tier: INFO
+    description: "Sensitive operation handler (delete, payment, auth) without audit logging"
+    detector: "audit_annotation"
+    frameworks:
+      soc2: { control: "CC7.3", name: "System Monitoring" }
+      gdpr: { control: "Art.30", name: "Records of Processing Activities" }
+      hipaa: { control: "§164.312(b)", name: "Audit Controls" }
+    suggested_fix: "Add an audit log call within the handler for compliance traceability."
+
+  - id: "AUD-002"
+    name: "Hardcoded CORS Origin"
+    category: "network"
+    tier: BLOCKING
+    description: "CORS configuration using wildcard origin with credentials enabled"
+    detector: "secret_regex"
+    frameworks:
+      soc2: { control: "CC6.1", name: "Logical and Physical Access Controls" }
+      gdpr: { control: "Art.25", name: "Data Protection by Design" }
+    pattern: "(?i)(Access-Control-Allow-Origin.*\\*|cors\\(.*origin.*\\*))"
+    suggested_fix: "Replace the wildcard origin with explicit allowed origins. Never use '*' when credentials: true."

@@ -1,0 +1,29 @@
+name: 'DriftFix Compliance Check'
+description: 'Analyzes PR diffs against compliance rules (SOC2, GDPR, HIPAA) and posts inline comments'
+author: 'DriftFix'
+
+inputs:
+  diff:
+    description: 'Unified diff of the PR'
+    required: true
+  github_token:
+    description: 'GitHub token for posting comments and checks'
+    required: true
+  framework:
+    description: 'Compliance framework to use (soc2, gdpr, hipaa)'
+    required: false
+    default: 'soc2'
+
+outputs:
+  blocking_count:
+    description: 'Number of BLOCKING findings'
+  warning_count:
+    description: 'Number of WARNING findings'
+  info_count:
+    description: 'Number of INFO findings'
+  check_conclusion:
+    description: 'GitHub check conclusion (failure or success)'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
