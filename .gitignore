@@ -52,3 +52,11 @@ prompt
 server.log
 # Skills directory
 /skills/
+
+# Local artifacts
+tool-results/
+download/
+.zscripts/
+*.db
+*.db-journal
+*.pid
