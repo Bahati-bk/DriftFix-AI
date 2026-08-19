@@ -349,27 +349,15 @@ function SeverityConfigTab() {
         const data = await res.json();
         if (data.config) {
           setConfig(data.config);
-        }
-      } catch {
-        toast.error('Failed to load rules configuration');
-      } finally {
-        setLoading(false);
-      }
-    })();
-
-    (async () => {
-      try {
-        const res = await fetch('/api/rules-config');
-        const data = await res.json();
-        if (data.config) {
-          // Re-fetch to get raw YAML
-          const yamlRes = await fetch('/compliance-rules.yaml');
+          const yamlRes = await fetch('/api/rules-config?raw=yaml');
           if (yamlRes.ok) {
             setYamlSource(await yamlRes.text());
           }
         }
       } catch {
-        // YAML source is optional
+        toast.error('Failed to load rules configuration');
+      } finally {
+        setLoading(false);
       }
     })();
   }, []);

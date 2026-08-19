@@ -94,7 +94,7 @@ model AnalysisRun {
   startedAt       DateTime @default(now())
   completedAt     DateTime?
   durationMs      Int?
-  score           Int      @default(100)
+  score           Float    @default(100)
   filesAnalyzed   Int      @default(0)
   findingsCount   Int      @default(0)
   summary         String?

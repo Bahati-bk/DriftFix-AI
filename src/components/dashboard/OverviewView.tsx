@@ -287,7 +287,7 @@ export function OverviewView() {
   const handleGenerateReport = useCallback(async () => {
     setActionLoading('report');
     try {
-      await fetch('/api/reports', { method: 'POST' });
+      await fetch('/api/reports', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ framework: 'SOC2' }) });
       toast.success('Report generation started');
     } catch {
       toast.error('Failed to generate report');

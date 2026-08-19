@@ -12,7 +12,6 @@ import { toast } from 'sonner';
 import { ArrowLeft, CheckCircle2, XCircle, AlertTriangle, ShieldCheck, FileCode, Lightbulb, Scale, Wrench, Clock, Tag, Copy, MessageSquare, Send } from 'lucide-react';
 
 export function FindingDetailView() {
-  const findingId = useAppStore((s) => s.selectFinding);
   const selectFinding = useAppStore((s) => s.selectFinding);
   const [finding, setFinding] = useState<Record<string, unknown> | null>(null);
   const [mappings, setMappings] = useState<Record<string, string>[]>([]);

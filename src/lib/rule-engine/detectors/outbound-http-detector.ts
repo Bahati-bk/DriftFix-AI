@@ -1,4 +1,4 @@
-import type { Detector, DiffFile, RuleConfig, RuleFinding, FrameworkControl, SuggestedFix } from '../types';
+import type { Detector, DiffFile, RuleConfig, RuleFinding, FrameworkControl } from '../types';
 
 // Matches fetch(), axios(), http.get/post/request(), urllib.request calls
 const HTTP_CALL_RE =

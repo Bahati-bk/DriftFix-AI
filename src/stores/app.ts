@@ -18,7 +18,6 @@ export type AppView =
   | 'finding-detail'
   | 'diff-analyzer'
   | 'org-dashboard'
-  | 'trust'
   | 'audit-log';
 
 interface AppState {

@@ -1,4 +1,4 @@
-import type { Detector, DiffFile, RuleConfig, RuleFinding, FrameworkControl, SuggestedFix } from '../types';
+import type { Detector, DiffFile, RuleConfig, RuleFinding, FrameworkControl } from '../types';
 
 const DEFAULT_PII_FIELDS = [
   'email', 'ssn', 'phone', 'address', 'date_of_birth',

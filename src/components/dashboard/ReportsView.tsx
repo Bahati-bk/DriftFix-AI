@@ -39,7 +39,7 @@ export function ReportsView() {
   const [complianceScore, setComplianceScore] = useState(0);
   const [openFindings, setOpenFindings] = useState(0);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [downloadingPdf, setDownloadingPdf] = useState<string | null>(null);
+  const [downloadingReport, setDownloadingReport] = useState<string | null>(null);
 
   const loadReports = useCallback(() => {
     return fetch('/api/evidence?limit=50')
@@ -123,8 +123,8 @@ export function ReportsView() {
     }
   };
 
-  const handleDownloadPdf = async (fw: string, id: string) => {
-    setDownloadingPdf(id);
+  const handleDownloadReport = async (fw: string, id: string) => {
+    setDownloadingReport(id);
     try {
       const res = await fetch('/api/reports/pdf', {
         method: 'POST',
@@ -145,11 +145,11 @@ export function ReportsView() {
     } catch {
       toast.error('Failed to download report');
     } finally {
-      setDownloadingPdf(null);
+      setDownloadingReport(null);
     }
   };
 
-  const handleGenerateAndDownloadPdf = async () => {
+  const handleGenerateAndDownloadReport = async () => {
     setGenerating(true);
     try {
       const res = await fetch('/api/reports/pdf', {
@@ -286,7 +286,7 @@ export function ReportsView() {
                 {generating ? <Loader2 className="size-4 animate-spin" /> : <FileText className="size-4" />}
                 {generating ? 'Generating...' : 'Generate Report'}
               </Button>
-              <Button variant="outline" onClick={handleGenerateAndDownloadPdf} disabled={generating} className="gap-2 btn-press ripple-btn">
+              <Button variant="outline" onClick={handleGenerateAndDownloadReport} disabled={generating} className="gap-2 btn-press ripple-btn">
                 {generating ? <Loader2 className="size-4 animate-spin" /> : <FileDown className="size-4" />}
                 Generate & Download Report
               </Button>
@@ -314,7 +314,7 @@ export function ReportsView() {
                   {generating ? <Loader2 className="size-4 animate-spin" /> : <FileText className="size-4" />}
                   Generate Your First Report
                 </Button>
-                <Button variant="outline" className="gap-2 btn-press" onClick={handleGenerateAndDownloadPdf} disabled={generating}>
+                <Button variant="outline" className="gap-2 btn-press" onClick={handleGenerateAndDownloadReport} disabled={generating}>
                   {generating ? <Loader2 className="size-4 animate-spin" /> : <FileDown className="size-4" />}
                   Generate & Download Report
                 </Button>
@@ -373,10 +373,10 @@ export function ReportsView() {
                             variant="outline"
                             size="sm"
                             className="gap-1.5 text-xs h-8"
-                            onClick={() => handleDownloadPdf(r.framework, r.id)}
-                            disabled={downloadingPdf === r.id}
+                            onClick={() => handleDownloadReport(r.framework, r.id)}
+                            disabled={downloadingReport === r.id}
                           >
-                            {downloadingPdf === r.id ? <Loader2 className="size-3 animate-spin" /> : <FileDown className="size-3" />}
+                            {downloadingReport === r.id ? <Loader2 className="size-3 animate-spin" /> : <FileDown className="size-3" />}
                             Report
                           </Button>
                         </div>
