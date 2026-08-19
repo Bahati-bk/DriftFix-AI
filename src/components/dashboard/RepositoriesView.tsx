@@ -1,12 +1,33 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
-import { GitBranch, Globe, Lock, Plus, GitPullRequest } from 'lucide-react';
+import { GitBranch, Globe, Lock, Plus, GitPullRequest, ChevronDown } from 'lucide-react';
+
+const VALID_FRAMEWORKS = ['soc2', 'gdpr', 'hipaa'] as const;
+type Framework = (typeof VALID_FRAMEWORKS)[number];
+
+const FRAMEWORK_COLORS: Record<Framework, string> = {
+  soc2: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+  gdpr: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
+  hipaa: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
+};
+
+const FRAMEWORK_LABELS: Record<Framework, string> = {
+  soc2: 'SOC2',
+  gdpr: 'GDPR',
+  hipaa: 'HIPAA',
+};
 
 const languageColors: Record<string, string> = {
   TypeScript: '#3b82f6',
@@ -92,6 +113,26 @@ export function RepositoriesView() {
   const [prCounts, setPrCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
+  const handleFrameworkChange = useCallback(async (repoId: string, framework: Framework) => {
+    try {
+      const res = await fetch('/api/repositories/framework', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ repositoryId: repoId, framework }),
+      });
+      if (res.ok) {
+        setRepos((prev) =>
+          prev.map((r) => (r.id === repoId ? { ...r, framework } : r))
+        );
+        toast.success(`Framework updated to ${FRAMEWORK_LABELS[framework]}`);
+      } else {
+        toast.error('Failed to update framework');
+      }
+    } catch {
+      toast.error('Failed to update framework');
+    }
+  }, []);
+
   useEffect(() => {
     Promise.all([
       fetch('/api/repositories').then(r => r.json()),
@@ -170,6 +211,7 @@ export function RepositoriesView() {
             const lang = repo.language || '';
             const langColor = languageColors[lang] || '#64748b';
             const prCount = prCounts[repo.id] || 0;
+            const repoFramework = (repo.framework as Framework) || 'soc2';
             return (
               <Card
                 key={repo.id}
@@ -191,13 +233,37 @@ export function RepositoriesView() {
                         <div className="text-xs text-muted-foreground truncate">{repo.fullName}</div>
                       </div>
                     </div>
-                    <Badge variant="outline" className="text-[10px] shrink-0">
-                      {repo.visibility === 'public' ? (
-                        <><Globe className="h-3 w-3 mr-1" />Public</>
-                      ) : (
-                        <><Lock className="h-3 w-3 mr-1" />Private</>
-                      )}
-                    </Badge>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className={`text-[10px] border px-1.5 py-0 rounded font-bold cursor-pointer hover:opacity-80 transition-opacity ${FRAMEWORK_COLORS[repoFramework]}`}>
+                            {FRAMEWORK_LABELS[repoFramework]}
+                            <ChevronDown className="h-2.5 w-2.5 ml-0.5 inline" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {VALID_FRAMEWORKS.map((fw) => (
+                            <DropdownMenuItem
+                              key={fw}
+                              onClick={() => handleFrameworkChange(repo.id, fw)}
+                              className={fw === repoFramework ? 'font-semibold' : ''}
+                            >
+                              <span className={`inline-block w-2 h-2 rounded-full mr-2 ${
+                                fw === 'soc2' ? 'bg-emerald-400' : fw === 'gdpr' ? 'bg-blue-400' : 'bg-amber-400'
+                              }`} />
+                              {FRAMEWORK_LABELS[fw]}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                      <Badge variant="outline" className="text-[10px]">
+                        {repo.visibility === 'public' ? (
+                          <><Globe className="h-3 w-3 mr-1" />Public</>
+                        ) : (
+                          <><Lock className="h-3 w-3 mr-1" />Private</>
+                        )}
+                      </Badge>
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">

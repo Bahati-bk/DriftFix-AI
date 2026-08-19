@@ -17,6 +17,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Progress } from '@/components/ui/progress';
 import { useAppStore } from '@/stores/app';
 import { toast } from 'sonner';
 import {
@@ -33,6 +45,9 @@ import {
   Trash2,
   Users,
   Link2,
+  CreditCard,
+  ArrowUpCircle,
+  ArrowDownCircle,
 } from 'lucide-react';
 
 export function SettingsView() {
@@ -52,6 +67,51 @@ export function SettingsView() {
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
+
+  // Billing state
+  const [billing, setBilling] = useState<{
+    subscription: {
+      id: string;
+      status: string;
+      currentPeriodStart: string | null;
+      currentPeriodEnd: string | null;
+      cancelAtPeriodEnd: boolean;
+    } | null;
+    usage: {
+      month: string;
+      prsAnalyzed: number;
+      prsIncluded: number;
+      overagePrs: number;
+      overageCostCents: number;
+    };
+    plan: {
+      key: string;
+      label: string;
+      prsIncluded: number;
+      reposIncluded: number;
+      priceCents: number;
+    };
+  } | null>(null);
+  const [billingLoading, setBillingLoading] = useState(true);
+  const [billingAction, setBillingAction] = useState<string | null>(null);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+
+  useEffect(() => {
+    async function loadBilling() {
+      try {
+        const res = await fetch('/api/billing');
+        if (res.ok) {
+          const data = await res.json();
+          setBilling(data);
+        }
+      } catch (err) {
+        console.error('Failed to load billing:', err);
+      } finally {
+        setBillingLoading(false);
+      }
+    }
+    loadBilling();
+  }, []);
 
   useEffect(() => {
     async function load() {
@@ -340,6 +400,311 @@ export function SettingsView() {
                   }}
                 />
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Billing & Usage */}
+          <Card className="border-border/50 rounded-xl">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <CreditCard className="size-4" /> Billing & Usage
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              {billingLoading ? (
+                <Skeleton className="h-32 w-full rounded-lg" />
+              ) : billing ? (
+                <>
+                  {/* Plan badge */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-medium">Current Plan</span>
+                      <Badge
+                        className={
+                          billing.plan.key === 'ENTERPRISE'
+                            ? 'bg-purple-500/15 text-purple-400 border-purple-500/20'
+                            : billing.plan.key === 'PRO'
+                              ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20'
+                              : 'bg-zinc-500/15 text-zinc-400 border-zinc-500/20'
+                        }
+                      >
+                        {billing.plan.label}
+                      </Badge>
+                    </div>
+                    {billing.plan.priceCents > 0 && (
+                      <span className="text-sm text-secondary-bright">
+                        ${(billing.plan.priceCents / 100).toFixed(0)}/month
+                      </span>
+                    )}
+                    {billing.plan.key === 'ENTERPRISE' && (
+                      <span className="text-sm text-secondary-bright">Custom pricing</span>
+                    )}
+                  </div>
+
+                  {/* Canceled notice */}
+                  {billing.subscription?.cancelAtPeriodEnd && billing.subscription.currentPeriodEnd && (
+                    <div className="flex items-center gap-2 p-3 rounded-lg border border-amber-500/30 bg-amber-500/5">
+                      <AlertTriangle className="size-4 text-amber-400 shrink-0" />
+                      <p className="text-sm text-amber-300">
+                        Your plan ends on{' '}
+                        {new Date(billing.subscription.currentPeriodEnd).toLocaleDateString()}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Usage progress */}
+                  {billing.plan.key === 'FREE' && billing.usage.prsIncluded > 0 && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-secondary-bright">PRs analyzed this month</span>
+                        <span className="font-medium">
+                          {billing.usage.prsAnalyzed} / {billing.usage.prsIncluded}
+                        </span>
+                      </div>
+                      <Progress
+                        value={Math.min(
+                          (billing.usage.prsAnalyzed / billing.usage.prsIncluded) * 100,
+                          100
+                        )}
+                        className={`h-2 ${
+                          billing.usage.prsAnalyzed > billing.usage.prsIncluded
+                            ? '[&>div]:bg-red-500'
+                            : billing.usage.prsAnalyzed > billing.usage.prsIncluded * 0.8
+                              ? '[&>div]:bg-amber-400'
+                              : '[&>div]:bg-emerald-500'
+                        }`}
+                      />
+                      <div className="flex items-center justify-between text-xs text-secondary-bright">
+                        <span>
+                          {Math.round(
+                            (billing.usage.prsAnalyzed / billing.usage.prsIncluded) * 100
+                          )}
+                          % used
+                        </span>
+                        {billing.usage.prsAnalyzed > billing.usage.prsIncluded * 0.8 &&
+                          billing.usage.prsAnalyzed <= billing.usage.prsIncluded && (
+                            <span className="text-amber-400 flex items-center gap-1">
+                              <AlertTriangle className="size-3" />
+                              Approaching limit
+                            </span>
+                          )}
+                      </div>
+                    </div>
+                  )}
+
+                  {billing.plan.key === 'FREE' && billing.usage.prsIncluded === -1 && (
+                    <p className="text-sm text-secondary-bright">
+                      Unlimited PRs analyzed this month
+                    </p>
+                  )}
+
+                  {/* Overage warning */}
+                  {billing.usage.overagePrs > 0 && billing.plan.key === 'FREE' && (
+                    <div className="flex items-center justify-between p-3 rounded-lg border border-red-500/30 bg-red-500/5">
+                      <span className="text-sm text-red-400">
+                        {billing.usage.overagePrs} PRs over limit
+                      </span>
+                      <span className="text-sm font-medium text-red-400">
+                        Estimated overage: ${(billing.usage.overageCostCents / 100).toFixed(2)}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Action buttons */}
+                  <Separator />
+                  <div className="flex items-center gap-3 flex-wrap">
+                    {billing.plan.key === 'FREE' && (
+                      <Button
+                        size="sm"
+                        className="gap-1.5 ripple-btn"
+                        disabled={billingAction === 'upgrade'}
+                        onClick={async () => {
+                          setBillingAction('upgrade');
+                          try {
+                            const res = await fetch('/api/billing', {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ action: 'upgrade' }),
+                            });
+                            if (res.ok) {
+                              toast.success('Upgraded to Pro!');
+                              const data = await fetch('/api/billing').then((r) => r.json());
+                              setBilling(data);
+                            }
+                          } catch {
+                            toast.error('Failed to upgrade');
+                          } finally {
+                            setBillingAction(null);
+                          }
+                        }}
+                      >
+                        {billingAction === 'upgrade' ? (
+                          <Loader2 className="size-3.5 animate-spin" />
+                        ) : (
+                          <ArrowUpCircle className="size-3.5" />
+                        )}
+                        Upgrade to Pro
+                      </Button>
+                    )}
+                    {billing.plan.key === 'PRO' && (
+                      <>
+                        <Button
+                          size="sm"
+                          className="gap-1.5 ripple-btn"
+                          disabled={billingAction === 'upgrade'}
+                          onClick={async () => {
+                            setBillingAction('upgrade');
+                            try {
+                              const res = await fetch('/api/billing', {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ action: 'upgrade' }),
+                              });
+                              if (res.ok) {
+                                toast.success('Upgraded to Enterprise!');
+                                const data = await fetch('/api/billing').then((r) => r.json());
+                                setBilling(data);
+                              }
+                            } catch {
+                              toast.error('Failed to upgrade');
+                            } finally {
+                              setBillingAction(null);
+                            }
+                          }}
+                        >
+                          {billingAction === 'upgrade' ? (
+                            <Loader2 className="size-3.5 animate-spin" />
+                          ) : (
+                            <ArrowUpCircle className="size-3.5" />
+                          )}
+                          Upgrade to Enterprise
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1.5"
+                          disabled={billingAction === 'downgrade'}
+                          onClick={async () => {
+                            setBillingAction('downgrade');
+                            try {
+                              const res = await fetch('/api/billing', {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ action: 'downgrade' }),
+                              });
+                              if (res.ok) {
+                                toast.info('Downgraded to Free');
+                                const data = await fetch('/api/billing').then((r) => r.json());
+                                setBilling(data);
+                              }
+                            } catch {
+                              toast.error('Failed to downgrade');
+                            } finally {
+                              setBillingAction(null);
+                            }
+                          }}
+                        >
+                          {billingAction === 'downgrade' ? (
+                            <Loader2 className="size-3.5 animate-spin" />
+                          ) : (
+                            <ArrowDownCircle className="size-3.5" />
+                          )}
+                          Downgrade
+                        </Button>
+                      </>
+                    )}
+                    {billing.plan.key === 'ENTERPRISE' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5"
+                        disabled={billingAction === 'downgrade'}
+                        onClick={async () => {
+                          setBillingAction('downgrade');
+                          try {
+                            const res = await fetch('/api/billing', {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ action: 'downgrade' }),
+                            });
+                            if (res.ok) {
+                              toast.info('Downgraded to Pro');
+                              const data = await fetch('/api/billing').then((r) => r.json());
+                              setBilling(data);
+                            }
+                          } catch {
+                            toast.error('Failed to downgrade');
+                          } finally {
+                            setBillingAction(null);
+                          }
+                        }}
+                      >
+                        {billingAction === 'downgrade' ? (
+                          <Loader2 className="size-3.5 animate-spin" />
+                        ) : (
+                          <ArrowDownCircle className="size-3.5" />
+                        )}
+                        Downgrade
+                      </Button>
+                    )}
+
+                    {/* Cancel button — only for paid plans not already canceled */}
+                    {(billing.plan.key === 'PRO' || billing.plan.key === 'ENTERPRISE') &&
+                      !billing.subscription?.cancelAtPeriodEnd && (
+                        <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-400 hover:text-red-300 hover:bg-red-500/10 gap-1.5"
+                            >
+                              Cancel Subscription
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Cancel your subscription?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Your plan will remain active until the end of the current billing period.
+                                After that, you will be downgraded to the Free plan.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Keep my plan</AlertDialogCancel>
+                              <AlertDialogAction
+                                className="bg-red-600 hover:bg-red-700"
+                                onClick={async () => {
+                                  setCancelDialogOpen(false);
+                                  setBillingAction('cancel');
+                                  try {
+                                    const res = await fetch('/api/billing', {
+                                      method: 'PUT',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({ action: 'cancel' }),
+                                    });
+                                    if (res.ok) {
+                                      toast.info('Subscription canceled');
+                                      const data = await fetch('/api/billing').then((r) => r.json());
+                                      setBilling(data);
+                                    }
+                                  } catch {
+                                    toast.error('Failed to cancel');
+                                  } finally {
+                                    setBillingAction(null);
+                                  }
+                                }}
+                              >
+                                Cancel Subscription
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm text-secondary-bright">Failed to load billing info.</p>
+              )}
             </CardContent>
           </Card>
 

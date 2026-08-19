@@ -1,4 +1,4 @@
-import type { Detector, DiffFile, RuleConfig, RuleFinding, FrameworkControl } from '../types';
+import type { Detector, DiffFile, RuleConfig, RuleFinding, FrameworkControl, SuggestedFix } from '../types';
 
 // Matches fetch(), axios(), http.get/post/request(), urllib.request calls
 const HTTP_CALL_RE =
@@ -65,6 +65,7 @@ export const outboundHttpDetector: Detector = {
           if (!domain) continue;
 
           if (!isAllowed(domain, allowlist)) {
+            const indent = content.match(/^(\s*)/)?.[1] ?? '';
             findings.push({
               rule_id: rule.id,
               rule_name: rule.name,
@@ -73,6 +74,13 @@ export const outboundHttpDetector: Detector = {
               line: line.newLineNumber ?? 0,
               explanation: `Outbound HTTP call to unauthorized domain: ${domain}`,
               suggested_fix: rule.suggested_fix,
+              suggested_fix_obj: {
+                description: rule.suggested_fix,
+                github_diff_lines: [
+                  content.trimStart(),
+                  `${indent}// TODO: Add ${domain} to network_allowlist in compliance-rules.yaml or route through approved proxy`,
+                ],
+              },
               framework_citations: frameworkCitations,
               match_content: content.trim(),
               confidence: 0.8,

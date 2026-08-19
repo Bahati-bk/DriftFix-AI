@@ -6,10 +6,20 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { toast } from 'sonner';
 import {
-  Terminal, Play, Loader2, ShieldCheck, ShieldX, Ban, AlertTriangle, Info, FileCode2,
+  Terminal, Play, Loader2, ShieldCheck, ShieldX, Ban, AlertTriangle, Info, FileCode2, ChevronDown,
 } from 'lucide-react';
+
+const FRAMEWORKS = ['soc2', 'gdpr', 'hipaa'] as const;
+type Framework = (typeof FRAMEWORKS)[number];
+
+const FRAMEWORK_STYLES: Record<Framework, string> = {
+  soc2: 'bg-emerald-500/15 text-emerald-400',
+  gdpr: 'bg-blue-500/15 text-blue-400',
+  hipaa: 'bg-amber-500/15 text-amber-400',
+};
 import type { AnalysisResult, RuleFinding, ActionTier } from '@/lib/rule-engine/types';
 
 // ── Tier styling ──────────────────────────────────────────────────────────
@@ -37,6 +47,8 @@ const tierStyle: Record<ActionTier, { badge: string; icon: typeof Ban; color: st
 function FindingCard({ finding }: { finding: RuleFinding }) {
   const ts = tierStyle[finding.tier];
   const TierIcon = ts.icon;
+  const [showSuggestion, setShowSuggestion] = useState(false);
+  const hasSuggestion = !!finding.suggested_fix_obj;
 
   return (
     <Card className="border-border/50 card-hover rounded-xl animate-stagger">
@@ -50,6 +62,7 @@ function FindingCard({ finding }: { finding: RuleFinding }) {
             {finding.rule_id}
           </Badge>
           <span className="text-sm font-semibold">{finding.rule_name}</span>
+          <span className="text-[10px] text-secondary-bright ml-auto font-mono">{(finding.confidence * 100).toFixed(0)}% confidence</span>
         </div>
 
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -63,10 +76,42 @@ function FindingCard({ finding }: { finding: RuleFinding }) {
 
         <p className="text-sm text-secondary-bright">{finding.explanation}</p>
 
-        <div className="p-2.5 rounded-lg bg-emerald-500/5 border border-emerald-500/20 text-xs text-secondary-bright">
-          <span className="font-semibold text-emerald-400">Fix: </span>
-          {finding.suggested_fix}
-        </div>
+        {/* Suggested Fix — One-Click (Feature 3) */}
+        {hasSuggestion ? (
+          <div className="rounded-lg border border-violet-500/20 bg-violet-500/5 overflow-hidden">
+            <button
+              onClick={() => setShowSuggestion(!showSuggestion)}
+              className="w-full flex items-center justify-between p-2.5 text-xs font-semibold text-violet-400 hover:bg-violet-500/10 transition-colors"
+            >
+              <span className="flex items-center gap-1.5">
+                <FileCode2 className="h-3.5 w-3.5" />
+                One-Click Suggested Fix
+              </span>
+              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showSuggestion ? 'rotate-180' : ''}`} />
+            </button>
+            {showSuggestion && (
+              <div className="px-2.5 pb-2.5 space-y-2">
+                <p className="text-[11px] text-secondary-bright">{finding.suggested_fix_obj!.description}</p>
+                <pre className="p-2 rounded-md bg-background text-[11px] font-mono overflow-x-auto">
+                  <code>
+                    <span className="text-red-400">{finding.suggested_fix_obj!.github_diff_lines[0]}</span>
+                    {finding.suggested_fix_obj!.github_diff_lines.slice(1).map((l, i) => (
+                      <span key={i} className={l.startsWith('+') ? 'text-emerald-400' : 'text-muted-foreground'}>
+                        {'\n'}{l.startsWith('+') ? '+' : ' '}{l.replace(/^[+-]/, '')}
+                      </span>
+                    ))}
+                  </code>
+                </pre>
+                <p className="text-[10px] text-muted-foreground">In GitHub, paste this in a PR comment wrapped in ````suggestion ... ````</p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="p-2.5 rounded-lg bg-emerald-500/5 border border-emerald-500/20 text-xs text-secondary-bright">
+            <span className="font-semibold text-emerald-400">Fix: </span>
+            {finding.suggested_fix}
+          </div>
+        )}
 
         {finding.framework_citations.length > 0 && (
           <div className="flex items-center gap-1.5 flex-wrap">
@@ -191,6 +236,7 @@ export function DiffAnalyzerView() {
   const [diffText, setDiffText] = useState('');
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [framework, setFramework] = useState<Framework>('soc2');
 
   const handleAnalyze = async () => {
     const trimmed = diffText.trim();
@@ -205,7 +251,7 @@ export function DiffAnalyzerView() {
       const res = await fetch('/api/analyze-diff', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ diff: trimmed }),
+        body: JSON.stringify({ diff: trimmed, framework }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -236,6 +282,28 @@ export function DiffAnalyzerView() {
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Framework Toggle */}
+      <div className="flex items-center gap-3 shrink-0">
+        <span className="text-xs text-muted-foreground font-medium">Framework:</span>
+        <ToggleGroup
+          type="single"
+          value={framework}
+          onValueChange={(v) => { if (v) setFramework(v as Framework); }}
+          variant="outline"
+          className="rounded-lg border border-border/50 bg-card"
+        >
+          {FRAMEWORKS.map((fw) => (
+            <ToggleGroupItem
+              key={fw}
+              value={fw}
+              className={`text-xs px-3 font-semibold ${framework === fw ? FRAMEWORK_STYLES[fw] : ''}`}
+            >
+              {fw.toUpperCase()}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
       </div>
 
       {/* Resizable Two-Panel Layout */}

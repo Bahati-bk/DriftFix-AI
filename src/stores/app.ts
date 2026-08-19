@@ -17,6 +17,7 @@ export type AppView =
   | 'pr-analysis'
   | 'finding-detail'
   | 'diff-analyzer'
+  | 'org-dashboard'
   | 'trust'
   | 'audit-log';
 

@@ -38,9 +38,11 @@ import { ReportsView } from './ReportsView';
 import { SettingsView } from './SettingsView';
 import { PRAnalysisView } from './PRAnalysisView';
 import { DiffAnalyzerView } from './DiffAnalyzerView';
+import { OrgDashboardView } from './OrgDashboardView';
 import { AuditLogView } from './AuditLogView';
 
 const navItems: { view: AppView; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { view: 'org-dashboard', label: 'Org Dashboard', icon: Building2 },
   { view: 'overview', label: 'Overview', icon: LayoutDashboard },
   { view: 'repositories', label: 'Repositories', icon: Database },
   { view: 'pull-requests', label: 'Pull Requests', icon: GitPullRequest },
@@ -285,6 +287,7 @@ export function DashboardLayout() {
       case 'settings': return <SettingsView />;
       case 'pr-analysis': return <PRAnalysisView />;
       case 'diff-analyzer': return <DiffAnalyzerView />;
+      case 'org-dashboard': return <OrgDashboardView />;
       default: return <OverviewView />;
     }
   };

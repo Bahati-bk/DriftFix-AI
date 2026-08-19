@@ -1,4 +1,4 @@
-import type { Detector, DiffFile, RuleConfig, RuleFinding, FrameworkControl } from '../types';
+import type { Detector, DiffFile, RuleConfig, RuleFinding, FrameworkControl, SuggestedFix } from '../types';
 
 const DEFAULT_PII_FIELDS = [
   'email', 'ssn', 'phone', 'address', 'date_of_birth',
@@ -69,6 +69,12 @@ export const piiFieldDetector: Detector = {
 
       if (!hasEncryption) {
         const frameworkCitations: FrameworkControl[] = Object.values(rule.frameworks);
+        const indent = addLine.content.match(/^(\s*)/)?.[1] ?? '';
+        const fieldNameMatch = addLine.content.match(/^(\s*)([a-zA-Z_][a-zA-Z0-9_]*)/);
+        const fieldNameRaw = fieldNameMatch ? fieldNameMatch[2] : fieldName;
+        const typeMatch = addLine.content.match(/[:=]\s*(\S+)/);
+        const fieldType = typeMatch ? typeMatch[1].replace(/[;,]$/, '') : 'string';
+
         findings.push({
           rule_id: rule.id,
           rule_name: rule.name,
@@ -77,6 +83,14 @@ export const piiFieldDetector: Detector = {
           line: addLine.lineNum,
           explanation: `PII field "${fieldName}" detected without encryption annotation`,
           suggested_fix: rule.suggested_fix,
+          suggested_fix_obj: {
+            description: rule.suggested_fix,
+            github_diff_lines: [
+              addLine.content.trimStart(),
+              `${indent}// @Encrypted — PII field requires encryption at rest`,
+              `${indent}${fieldNameRaw}: ${fieldType.replace(';', '')}, // encrypted: true`,
+            ],
+          },
           framework_citations: frameworkCitations,
           match_content: addLine.content.trim(),
           confidence: 0.85,

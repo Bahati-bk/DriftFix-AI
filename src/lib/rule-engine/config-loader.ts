@@ -37,11 +37,9 @@ function normalizeConfig(config: ComplianceRulesConfig): ComplianceRulesConfig {
 }
 
 /**
- * Load and parse compliance-rules.yaml from the project root.
- * Re-reads on each call (no stale cache).
+ * Internal: load, parse, validate, and normalize a YAML config file.
  */
-export function loadRulesConfig(): ComplianceRulesConfig {
-  const configPath = resolve(process.cwd(), 'compliance-rules.yaml');
+function loadAndValidateConfig(configPath: string): ComplianceRulesConfig {
   const raw = readFileSync(configPath, 'utf-8');
   const sanitized = sanitizeYaml(raw);
   const parsed = parseYaml(sanitized) as ComplianceRulesConfig;
@@ -59,6 +57,29 @@ export function loadRulesConfig(): ComplianceRulesConfig {
   }
 
   return normalized;
+}
+
+/**
+ * Load and parse compliance-rules.yaml from the project root.
+ * Re-reads on each call (no stale cache).
+ */
+export function loadRulesConfig(): ComplianceRulesConfig {
+  const configPath = resolve(process.cwd(), 'compliance-rules.yaml');
+  return loadAndValidateConfig(configPath);
+}
+
+/**
+ * Load a framework-specific YAML config from the frameworks/ directory.
+ * Falls back to the default compliance-rules.yaml if framework is not recognized.
+ */
+export function loadFrameworkConfig(framework: string): ComplianceRulesConfig {
+  const validFrameworks = ['soc2', 'gdpr', 'hipaa'];
+  if (validFrameworks.includes(framework)) {
+    const configPath = resolve(process.cwd(), `frameworks/${framework}.yaml`);
+    return loadAndValidateConfig(configPath);
+  }
+  // Fallback to default config for unknown frameworks
+  return loadRulesConfig();
 }
 
 /**

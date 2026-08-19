@@ -33,6 +33,8 @@ model Organization {
   auditReports AuditReport[]
   integrations Integration[]
   policies     Policy[]
+  subscription  Subscription?
+  usageRecords  UsageRecord[]
 }
 
 model OrganizationMember {
@@ -57,6 +59,7 @@ model Repository {
   defaultBranch  String   @default("main")
   language       String?
   visibility     String   @default("private")
+  framework      String   @default("soc2")
   connectedAt    DateTime @default(now())
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -246,4 +249,38 @@ model ComplianceScoreHistory {
   score          Int
   weekLabel      String
   createdAt      DateTime @default(now())
+}
+
+model Subscription {
+  id                  String    @id @default(cuid())
+  organizationId      String
+  stripeCustomerId   String?
+  stripeSubscriptionId String?
+  stripePriceId       String?
+  status              String    @default("free")
+  currentPeriodStart  DateTime?
+  currentPeriodEnd    DateTime?
+  cancelAtPeriodEnd   Boolean   @default(false)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@unique([organizationId])
+}
+
+model UsageRecord {
+  id              String   @id @default(cuid())
+  organizationId  String
+  month           String
+  prsAnalyzed     Int      @default(0)
+  prsIncluded     Int      @default(50)
+  overagePrs      Int      @default(0)
+  overageCostCents Int     @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@unique([organizationId, month])
 }

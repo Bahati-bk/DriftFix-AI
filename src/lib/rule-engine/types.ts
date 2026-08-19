@@ -40,7 +40,7 @@ export interface DiffHunk {
   oldLines: number;
   newStart: number;
   newLines: number;
-  content: string; // The @@ header line
+  content: string;
   lines: DiffLine[];
 }
 
@@ -59,6 +59,17 @@ export interface DiffFile {
 
 // ── Finding Types ─────────────────────────────────────────────────
 
+export interface SuggestedFix {
+  /** Human-readable explanation */
+  description: string;
+  /** 
+   * For GitHub's suggested-change API format.
+   * Each entry is a line to replace, prefixed with `` (remove) or `+` (add).
+   * The first line must be the original line to remove (no prefix).
+   */
+  github_diff_lines: string[];
+}
+
 export interface RuleFinding {
   rule_id: string;
   rule_name: string;
@@ -67,8 +78,10 @@ export interface RuleFinding {
   line: number;
   explanation: string;
   suggested_fix: string;
+  /** Structured suggested fix for GitHub's suggested-change API (Feature 3) */
+  suggested_fix_obj?: SuggestedFix;
   framework_citations: FrameworkControl[];
-  match_content: string; // The line that triggered the finding
+  match_content: string;
   confidence: number;
 }
 
@@ -88,9 +101,5 @@ export interface AnalysisResult {
 
 export interface Detector {
   name: string;
-  /**
-   * Run detection on a single file's diff.
-   * Returns findings for this file only.
-   */
   detect(file: DiffFile, rule: RuleConfig, context?: { allowlist?: string[] }): RuleFinding[];
 }

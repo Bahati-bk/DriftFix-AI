@@ -1,18 +1,25 @@
-import { NextResponse } from 'next/server';
-import { loadRulesConfig, getRulesByTier } from '@/lib/rule-engine/config-loader';
-import type { ActionTier } from '@/lib/rule-engine/types';
+import { NextRequest, NextResponse } from 'next/server';
+import { loadRulesConfig, loadFrameworkConfig } from '@/lib/rule-engine/config-loader';
+import type { ActionTier, ComplianceRulesConfig } from '@/lib/rule-engine/types';
 
-export async function GET() {
+function getRulesByTierFromConfig(config: ComplianceRulesConfig, tier: ActionTier) {
+  return config.rules.filter((r) => r.tier === tier);
+}
+
+export async function GET(request: NextRequest) {
   try {
-    const config = loadRulesConfig();
+    const { searchParams } = new URL(request.url);
+    const framework = searchParams.get('framework');
+
+    const config = framework ? loadFrameworkConfig(framework) : loadRulesConfig();
 
     const tiers = {
-      BLOCKING: getRulesByTier('BLOCKING' as ActionTier),
-      WARNING: getRulesByTier('WARNING' as ActionTier),
-      INFO: getRulesByTier('INFO' as ActionTier),
+      BLOCKING: getRulesByTierFromConfig(config, 'BLOCKING' as ActionTier),
+      WARNING: getRulesByTierFromConfig(config, 'WARNING' as ActionTier),
+      INFO: getRulesByTierFromConfig(config, 'INFO' as ActionTier),
     };
 
-    return NextResponse.json({ config, tiers });
+    return NextResponse.json({ config, tiers, framework: framework || 'all' });
   } catch (error) {
     console.error('rules-config error:', error);
     return NextResponse.json(

@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { analyzeDiff } from '@/lib/rule-engine/engine';
-import { loadRulesConfig } from '@/lib/rule-engine/config-loader';
+import { loadRulesConfig, loadFrameworkConfig } from '@/lib/rule-engine/config-loader';
 import { db } from '@/lib/db';
 import { createEvidenceRecord } from '@/lib/compliance/evidence';
+
+function getCurrentMonth(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}`;
+}
+
+const OVERAGE_RATE_CENTS_PER_PR = 50; // $0.50 per overage PR
 
 const TIER_TO_SEVERITY: Record<string, string> = {
   BLOCKING: 'HIGH',
@@ -19,7 +28,33 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing or invalid "diff" field' }, { status: 400 });
     }
 
-    const rulesConfig = loadRulesConfig();
+    // Usage limit check (demo-friendly middleware)
+    const firstOrgForCheck = await db.organization.findFirst({
+      orderBy: { createdAt: 'asc' },
+      include: { subscription: true },
+    });
+    if (firstOrgForCheck) {
+      const subStatus = firstOrgForCheck.subscription?.status ?? 'free';
+      if (subStatus === 'free') {
+        const month = getCurrentMonth();
+        const usage = await db.usageRecord.findUnique({
+          where: { organizationId_month: { organizationId: firstOrgForCheck.id, month } },
+        });
+        if (usage && usage.prsAnalyzed >= 50) {
+          return NextResponse.json(
+            {
+              error: 'Usage limit exceeded',
+              message: `You have reached the 50 PR analysis limit for this month on the Free plan. Please upgrade to Pro for unlimited analyses.`,
+              prsAnalyzed: usage.prsAnalyzed,
+              limit: 50,
+            },
+            { status: 429 }
+          );
+        }
+      }
+    }
+
+    const rulesConfig = framework ? loadFrameworkConfig(framework) : loadRulesConfig();
     const result = await analyzeDiff(diff, rulesConfig);
 
     // Persist to database: create an AnalysisRun linked to the first repo
@@ -109,6 +144,42 @@ export async function POST(request: NextRequest) {
           summary: result.summary,
         },
       });
+
+      // Increment usage counter
+      const org = await db.organization.findFirst({
+        where: { id: firstRepo.organizationId },
+        include: { subscription: true },
+      });
+      if (org) {
+        const month = getCurrentMonth();
+        const subStatus = org.subscription?.status ?? 'free';
+        const prsIncluded = subStatus === 'pro' || subStatus === 'enterprise' ? -1 : 50;
+
+        const existing = await db.usageRecord.findUnique({
+          where: { organizationId_month: { organizationId: org.id, month } },
+        });
+
+        const newPrsAnalyzed = (existing?.prsAnalyzed ?? 0) + 1;
+        const overagePrs = prsIncluded > 0 && newPrsAnalyzed > prsIncluded ? newPrsAnalyzed - prsIncluded : 0;
+        const overageCostCents = overagePrs * OVERAGE_RATE_CENTS_PER_PR;
+
+        await db.usageRecord.upsert({
+          where: { organizationId_month: { organizationId: org.id, month } },
+          create: {
+            organizationId: org.id,
+            month,
+            prsAnalyzed: 1,
+            prsIncluded,
+            overagePrs,
+            overageCostCents,
+          },
+          update: {
+            prsAnalyzed: newPrsAnalyzed,
+            overagePrs,
+            overageCostCents,
+          },
+        });
+      }
     }
 
     return NextResponse.json(result);
